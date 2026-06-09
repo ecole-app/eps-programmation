@@ -116,14 +116,14 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 .page-sub{font-size:0.76rem;color:var(--muted);margin-top:2px}
 
 /* ── GRILLE ── */
-.grid-wrap{border-radius:12px;border:1px solid var(--border);background:var(--surface);overflow:hidden}
-.grid-head{display:grid;grid-template-columns:95px repeat(4,1fr);background:var(--teal-d);color:#fff}
+.grid-wrap{border-radius:12px;border:1px solid var(--border);background:var(--surface);overflow-x:auto;width:100%}
+.grid-head{display:grid;grid-template-columns:100px repeat(4,minmax(140px,1fr));background:var(--teal-d);color:#fff;min-width:660px}
 .gh-cell{padding:9px 10px;font-family:'Syne',sans-serif;font-size:0.73rem;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,0.1)}
 .gh-cell:first-child{text-align:left}
-.trimestre-row{background:var(--teal-g);border-bottom:1px solid rgba(14,124,123,0.15);border-top:2px solid rgba(14,124,123,0.18);padding:5px 12px;display:flex;align-items:center;gap:9px;}
+.trimestre-row{background:var(--teal-g);border-bottom:1px solid rgba(14,124,123,0.15);border-top:2px solid rgba(14,124,123,0.18);padding:5px 12px;display:flex;align-items:center;gap:9px;min-width:660px}
 .t-label{font-family:'Syne',sans-serif;font-size:0.66rem;font-weight:700;color:var(--teal-d);text-transform:uppercase;letter-spacing:1px}
 .t-dates{font-size:0.66rem;color:var(--muted)}
-.periode-row{display:grid;grid-template-columns:95px repeat(4,1fr);border-bottom:1px solid var(--border)}
+.periode-row{display:grid;grid-template-columns:100px repeat(4,minmax(140px,1fr));border-bottom:1px solid var(--border);min-width:660px}
 .periode-row:last-child{border-bottom:none}
 .p-label{padding:0 9px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--border);background:rgba(14,124,123,0.02);min-height:66px}
 .p-name{font-family:'Syne',sans-serif;font-size:0.7rem;font-weight:700;color:var(--teal-d)}
@@ -339,10 +339,10 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 
   /* ── Grille planning ── */
   .grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; width: 100%; }
-  #gridBody { min-width: 555px; }
-  #gridBody .trimestre-row { min-width: 555px; width: 100%; }
-  .grid-head { display: grid; grid-template-columns: 75px repeat(4, 120px); min-width: 555px; }
-  .periode-row { display: grid; grid-template-columns: 75px repeat(4, 120px); min-width: 555px; }
+  #gridBody { min-width: 560px; }
+  #gridBody .trimestre-row { min-width: 560px; width: 100%; }
+  .grid-head { display: grid; grid-template-columns: 75px repeat(4, 120px); min-width: 560px; }
+  .periode-row { display: grid; grid-template-columns: 75px repeat(4, 120px); min-width: 560px; }
   .gh-cell { font-size: 0.64rem; padding: 7px 6px; }
   .p-label { min-height: 54px; padding: 0 6px; }
   .p-name { font-size: 0.64rem; }
