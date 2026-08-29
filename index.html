@@ -522,7 +522,116 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 }
 
 
-@media print{header,.sidebar,.modal-overlay,.toast,.add-btn,.a-del{display:none!important}.app{display:block}.main{padding:0}.page{display:flex!important}.apsa-tag{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print {
+  /* Cache tout sauf la grille */
+  header, .sidebar, .modal-overlay, .toast,
+  .add-btn, .a-del, .sidebar-toggle-btn, .sidebar-backdrop,
+  .section-card, .heures-section, .progress-section,
+  .bilan-grid, .bilan-stats, .prog-filter, .prog-grid,
+  .page-header, #page-bilan, #page-comparaison,
+  #page-programmations, #page-cycles,
+  .alert-panel, .fiche-modal-overlay { display: none !important; }
+
+  /* Layout impression */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, sans-serif; }
+  .app { display: block !important; }
+  .main { padding: 0 !important; }
+  #page-planning { display: block !important; }
+
+  /* En-tête impression */
+  #page-planning::before {
+    content: "Programmation EPS — Collège";
+    display: block;
+    font-size: 16pt;
+    font-weight: bold;
+    margin-bottom: 4pt;
+    color: #095958;
+  }
+  #page-planning::after {
+    content: attr(data-year);
+  }
+
+  /* Grille */
+  .grid-wrap {
+    overflow: visible !important;
+    width: 100% !important;
+    border: 1px solid #ccc !important;
+    border-radius: 0 !important;
+    page-break-inside: avoid;
+  }
+  .grid-head {
+    display: grid !important;
+    grid-template-columns: 80pt repeat(4, 1fr) !important;
+    background: #095958 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    min-width: unset !important;
+  }
+  .gh-cell {
+    padding: 6pt 8pt !important;
+    font-size: 9pt !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  #gridBody {
+    min-width: unset !important;
+    overflow: visible !important;
+  }
+  .periode-row {
+    display: grid !important;
+    grid-template-columns: 80pt repeat(4, 1fr) !important;
+    min-width: unset !important;
+    page-break-inside: avoid !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+  .trimestre-row {
+    min-width: unset !important;
+    width: 100% !important;
+    padding: 4pt 8pt !important;
+    font-size: 8pt !important;
+    background: #f0f9f9 !important;
+    border-top: 1.5pt solid #0e7c7b !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .p-label {
+    padding: 4pt 6pt !important;
+    min-height: unset !important;
+  }
+  .p-name { font-size: 8pt !important; font-weight: bold !important; }
+  .p-dates, .p-sem { font-size: 7pt !important; }
+  .cl-cell { padding: 4pt 5pt !important; min-height: unset !important; }
+
+  /* Tags APSA */
+  .apsa-tag {
+    padding: 3pt 5pt !important;
+    font-size: 7.5pt !important;
+    margin-bottom: 2pt !important;
+    border-radius: 4pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    break-inside: avoid !important;
+  }
+  .a-ca {
+    font-size: 6pt !important;
+    padding: 1pt 3pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .a-h { display: none !important; }
+  .a-sem { font-size: 6.5pt !important; }
+
+  /* Légende familles en bas */
+  .famille-list { display: none !important; }
+
+  /* Page setup */
+  @page {
+    size: A4 landscape;
+    margin: 10mm 8mm;
+  }
+}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 
   /* ── PROGRAMMATIONS ── */
