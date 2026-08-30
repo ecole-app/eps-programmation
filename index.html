@@ -628,7 +628,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 
   /* Page setup */
   @page {
-    size: A4 landscape;
+    size: A4 var(--print-orientation, landscape);
     margin: 10mm 8mm;
   }
 }
@@ -714,7 +714,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
   </div>
   <div class="h-actions">
     <button class="alert-btn" id="alertBtn" onclick="toggleAlertPanel()">⚠️ <span class="alert-count" id="alertCount">0</span></button>
-    <button class="btn btn-ghost" onclick="window.print()">🖨️</button>
+    <button class="btn btn-ghost" onclick="toggleOrientation()" id="orientBtn" title="Orientation impression">🖨️ Paysage</button>
     <button id="installBtn" onclick="installPWA()" class="btn btn-ghost" style="display:none;align-items:center;gap:5px">📲 Installer</button>
     <button class="btn btn-amber" onclick="openAddModal()">+ APSA</button>
   </div>
@@ -852,6 +852,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     <div class="page-header">
       <div><div class="page-title">⚙️ Gestion des cycles</div><div class="page-sub">Modifier les dates et durées</div></div>
     </div>
+    <div id="paramsSection"></div>
     <div class="section-card">
       <div class="section-title">Cycles — <span id="cyclesYear">2025–26</span></div>
       <div class="cycles-list" id="cyclesList"></div>
@@ -1174,6 +1175,8 @@ function renderGrid() {
         const h = Math.round(item.semaines * creneaux[cl].seances);
         const hasNote = item.note && item.note.trim();
         const chargeWarn = totalItems > 2 ? 'charge-warn' : '';
+        const overlaps = cycleOverlapsVacances(p.dates, currentYear);
+        const vacWarn = overlaps.length > 0 ? `<span title="Chevauche : ${overlaps.map(v=>v.nom).join(', ')}" style="font-size:0.65rem;margin-left:2px">🌴</span>` : '';
         html += `<div class="apsa-tag ${f.cls} ${chargeWarn}" onclick="openFiche('${p.id}','${cl}',${idx})">
           <span class="a-icon">${f.icon}</span>
           <div class="a-info">
@@ -1344,14 +1347,127 @@ function renderStats() {
 // ══════════════════════════════════════════════
 // CYCLES EDITOR
 // ══════════════════════════════════════════════
+
+
+function autoCalcWeeks(pid) {
+  const datesEl = document.getElementById('cdate-' + pid);
+  const semEl   = document.getElementById('csem-'  + pid);
+  if (!datesEl || !semEl) return;
+  const dates = datesEl.value;
+  const weeks = calcWeeksFromDates(dates, currentYear);
+  if (weeks && weeks > 0) {
+    semEl.value = weeks;
+    semEl.style.color = 'var(--teal)';
+    setTimeout(() => { semEl.style.color = ''; }, 1500);
+  }
+}
+
+function renderParamsSection() {
+  const container = document.getElementById('paramsSection');
+  if (!container) return;
+  const y = currentYear;
+  const params = getParams(y);
+  const vacs = getVacances(y);
+
+  container.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem">
+      <div style="font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;margin-bottom:0.875rem;color:var(--text)">
+        📅 Paramètres de l'année ${y}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
+        <div style="background:var(--bg);border-radius:8px;padding:10px">
+          <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px">📝 Fin des notes</div>
+          <input type="date" id="finNotes" value="${params.finNotes}"
+            style="width:100%;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.82rem;outline:none"
+            onchange="saveParamsNow()">
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px">
+          <div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px">🏖️ Fin d'année</div>
+          <input type="date" id="finAnnee" value="${params.finAnnee}"
+            style="width:100%;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.82rem;outline:none"
+            onchange="saveParamsNow()">
+        </div>
+      </div>
+
+      <div style="font-family:'Syne',sans-serif;font-size:0.76rem;font-weight:700;margin-bottom:0.6rem;color:var(--text)">
+        🌴 Vacances scolaires — Zone A
+      </div>
+      <div id="vacsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+        ${vacs.map((v,i) => `
+          <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:8px;padding:7px 10px;font-size:0.76rem">
+            <input value="${v.nom}" id="vnom${i}"
+              style="width:110px;border:1.5px solid var(--border);border-radius:6px;padding:4px 7px;font-size:0.76rem;font-family:'DM Sans',sans-serif;outline:none"
+              onchange="saveVacancesNow()">
+            <input type="date" value="${v.debut}" id="vdeb${i}"
+              style="flex:1;border:1.5px solid var(--border);border-radius:6px;padding:4px 7px;font-size:0.74rem;font-family:'DM Sans',sans-serif;outline:none"
+              onchange="saveVacancesNow()">
+            <span style="color:var(--muted)">→</span>
+            <input type="date" value="${v.fin}" id="vfin${i}"
+              style="flex:1;border:1.5px solid var(--border);border-radius:6px;padding:4px 7px;font-size:0.74rem;font-family:'DM Sans',sans-serif;outline:none"
+              onchange="saveVacancesNow()">
+            <button onclick="deleteVac(${i})"
+              style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:2px 5px;border-radius:4px;transition:color 0.15s"
+              onmouseover="this.style.color='#d62828'" onmouseout="this.style.color='var(--muted)'">✕</button>
+          </div>
+        `).join('')}
+      </div>
+      <button onclick="addVac()"
+        style="width:100%;background:transparent;border:1.5px dashed var(--border);color:var(--muted);border-radius:8px;padding:7px;font-size:0.74rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s"
+        onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        ＋ Ajouter des vacances
+      </button>
+    </div>
+  `;
+}
+
+function saveParamsNow() {
+  const params = {
+    finNotes: document.getElementById('finNotes')?.value || '',
+    finAnnee: document.getElementById('finAnnee')?.value || '',
+  };
+  saveParams(currentYear, params);
+  renderGrid();
+  showToast('✅ Paramètres sauvegardés');
+}
+
+function saveVacancesNow() {
+  const vacs = getVacances(currentYear);
+  const updated = vacs.map((v,i) => ({
+    nom:   document.getElementById('vnom'+i)?.value || v.nom,
+    debut: document.getElementById('vdeb'+i)?.value || v.debut,
+    fin:   document.getElementById('vfin'+i)?.value || v.fin,
+  }));
+  saveVacances(currentYear, updated);
+  renderGrid();
+  showToast('✅ Vacances sauvegardées');
+}
+
+function addVac() {
+  const vacs = getVacances(currentYear);
+  vacs.push({ nom: 'Vacances', debut: '', fin: '' });
+  saveVacances(currentYear, vacs);
+  renderCycles();
+}
+
+function deleteVac(i) {
+  const vacs = getVacances(currentYear);
+  vacs.splice(i, 1);
+  saveVacances(currentYear, vacs);
+  renderCycles();
+  renderGrid();
+}
+
 function renderCycles() {
   document.getElementById('cyclesYear').textContent = currentYear;
+  renderParamsSection();
   const ps = periodes();
   const rows = ps.map((p,i) => `
     <div class="cycle-row" style="display:flex;align-items:center;border-bottom:1px solid #e2e8f0;background:#fff;">
       <div style="font-family:'Syne',sans-serif;font-size:0.76rem;font-weight:700;color:#6b7a8d;width:88px;flex-shrink:0;padding:0 16px;border-right:1px solid #e2e8f0;align-self:stretch;display:flex;align-items:center;background:#f5f7fa;">Cycle ${i+1}</div>
-      <input style="flex:1;border:none;border-right:1px solid #e2e8f0;padding:14px 14px;font-family:'DM Sans',sans-serif;font-size:0.84rem;color:#1a2332;background:transparent;outline:none;min-width:0;" placeholder="1/09 – 17/10" value="${p.dates}" id="cdate-${p.id}" onfocus="this.style.background='rgba(14,124,123,0.06)'" onblur="this.style.background='transparent'">
-      <input style="width:68px;border:none;border-right:1px solid #e2e8f0;padding:14px 10px;font-family:'DM Sans',sans-serif;font-size:0.84rem;color:#1a2332;background:transparent;outline:none;text-align:center;flex-shrink:0;" type="number" placeholder="Sem." value="${p.semaines}" min="1" max="20" id="csem-${p.id}" onfocus="this.style.background='rgba(14,124,123,0.06)'" onblur="this.style.background='transparent'">
+      <input style="flex:1;border:none;border-right:1px solid #e2e8f0;padding:14px 14px;font-family:'DM Sans',sans-serif;font-size:0.84rem;color:#1a2332;background:transparent;outline:none;min-width:0;" placeholder="1/09 – 17/10" value="${p.dates}" id="cdate-${p.id}" onfocus="this.style.background='rgba(14,124,123,0.06)'" onblur="this.style.background='transparent'" oninput="autoCalcWeeks('${p.id}')">
+      <input style="width:68px;border:none;border-right:1px solid #e2e8f0;padding:14px 10px;font-family:'DM Sans',sans-serif;font-size:0.84rem;color:#1a2332;background:transparent;outline:none;text-align:center;flex-shrink:0;" type="number" placeholder="Sem." value="${p.semaines}" min="1" max="20" id="csem-${p.id}" onfocus="this.style.background='rgba(14,124,123,0.06)'" onblur="this.style.background='transparent'" oninput="autoCalcWeeks('${p.id}')">
       <select style="width:118px;border:none;border-right:1px solid #e2e8f0;padding:14px 10px;font-family:'DM Sans',sans-serif;font-size:0.82rem;color:#1a2332;background:transparent;outline:none;cursor:pointer;align-self:stretch;flex-shrink:0;" id="ctrim-${p.id}">
         <option value="1" ${p.trimestre===1?'selected':''}>Trimestre 1</option>
         <option value="2" ${p.trimestre===2?'selected':''}>Trimestre 2</option>
@@ -1615,17 +1731,34 @@ function renderYearButtons() {
   const list = document.getElementById('yearBtnList');
   if (!list) return;
   const years = Object.keys(periodesData).sort();
-  list.innerHTML = years.map(y => `
-    <div style="display:flex;gap:4px;align-items:center">
-      <button onclick="setYear('${y}')"
-        style="flex:1;font-size:0.72rem;padding:6px 8px;border-radius:7px;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;transition:all 0.15s;background:${y===currentYear?'var(--teal)':'var(--bg)'};color:${y===currentYear?'#fff':'var(--muted)'};border:1.5px solid ${y===currentYear?'var(--teal)':'var(--border)'}">
-        ${y}
-      </button>
-      ${years.length > 1 ? `<button onclick="deleteYear('${y}')" title="Supprimer cette année"
-        style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:4px 6px;border-radius:5px;transition:color 0.15s"
-        onmouseover="this.style.color='#d62828'" onmouseout="this.style.color='var(--muted)'">✕</button>` : ''}
-    </div>
-  `).join('');
+
+  if (years.length <= 2) {
+    // Boutons simples
+    list.innerHTML = years.map(y => `
+      <div style="display:flex;gap:4px;align-items:center">
+        <button onclick="setYear('${y}')"
+          style="flex:1;font-size:0.72rem;padding:6px 8px;border-radius:7px;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;transition:all 0.15s;background:${y===currentYear?'var(--teal)':'var(--bg)'};color:${y===currentYear?'#fff':'var(--muted)'};border:1.5px solid ${y===currentYear?'var(--teal)':'var(--border)'}">
+          ${y}
+        </button>
+        ${years.length > 1 ? `<button onclick="deleteYear('${y}')" title="Supprimer"
+          style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:4px 6px;border-radius:5px;transition:color 0.15s"
+          onmouseover="this.style.color='#d62828'" onmouseout="this.style.color='var(--muted)'">✕</button>` : ''}
+      </div>
+    `).join('');
+  } else {
+    // Menu déroulant
+    list.innerHTML = `
+      <div style="display:flex;gap:4px;align-items:center">
+        <select onchange="setYear(this.value)"
+          style="flex:1;padding:6px 8px;border-radius:7px;border:1.5px solid var(--teal);font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;color:var(--teal-d);background:var(--teal-g);cursor:pointer;outline:none;">
+          ${years.map(y => `<option value="${y}" ${y===currentYear?'selected':''}>${y}</option>`).join('')}
+        </select>
+        <button onclick="deleteYear(currentYear)" title="Supprimer l'année active"
+          style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:4px 6px;border-radius:5px;transition:color 0.15s"
+          onmouseover="this.style.color='#d62828'" onmouseout="this.style.color='var(--muted)'">✕</button>
+      </div>
+    `;
+  }
 
   // Update comparaison selects
   ['compA','compB'].forEach((id, i) => {
@@ -1871,6 +2004,143 @@ function hideSidebarBtn() {
 }
 function showSidebarBtn() {
   document.body.classList.remove('modal-open');
+}
+
+
+
+// ══════════════════════════════════════════════
+// VACANCES SCOLAIRES ZONE A — ACADÉMIE DE LYON
+// ══════════════════════════════════════════════
+const VACANCES_ZONE_A = {
+  '2026-27': [
+    { nom: 'Toussaint',  debut: '2026-10-17', fin: '2026-11-02' },
+    { nom: 'Noël',       debut: '2026-12-19', fin: '2027-01-04' },
+    { nom: 'Hiver',      debut: '2027-02-20', fin: '2027-03-08' },
+    { nom: 'Printemps',  debut: '2027-04-24', fin: '2027-05-10' },
+  ],
+  '2027-28': [
+    { nom: 'Toussaint',  debut: '2027-10-23', fin: '2027-11-08' },
+    { nom: 'Noël',       debut: '2027-12-18', fin: '2028-01-03' },
+    { nom: 'Hiver',      debut: '2028-02-19', fin: '2028-03-06' },
+    { nom: 'Printemps',  debut: '2028-04-22', fin: '2028-05-08' },
+  ],
+};
+
+// Paramètres par année (fin des notes, fin d'année)
+const ANNEE_PARAMS = {
+  '2025-26': { finNotes: '2026-06-12', finAnnee: '2026-07-04' },
+  '2026-27': { finNotes: '2027-06-11', finAnnee: '2027-07-03' },
+  '2027-28': { finNotes: '2028-06-09', finAnnee: '2028-07-01' },
+};
+
+function getVacances(year) {
+  // Merge stored custom vacances with defaults
+  const stored = JSON.parse(localStorage.getItem('vacances-' + year) || 'null');
+  return stored || VACANCES_ZONE_A[year] || [];
+}
+
+function getParams(year) {
+  const stored = JSON.parse(localStorage.getItem('params-' + year) || 'null');
+  return stored || ANNEE_PARAMS[year] || { finNotes: '', finAnnee: '' };
+}
+
+function saveParams(year, params) {
+  localStorage.setItem('params-' + year, JSON.stringify(params));
+}
+
+function saveVacances(year, vacs) {
+  localStorage.setItem('vacances-' + year, JSON.stringify(vacs));
+}
+
+// Calcule les semaines effectives entre deux dates (hors vacances + weekends)
+function calcSemainesEffectives(dateDebut, dateFin, year) {
+  if (!dateDebut || !dateFin) return null;
+  const d1 = new Date(dateDebut);
+  const d2 = new Date(dateFin);
+  if (isNaN(d1) || isNaN(d2) || d2 <= d1) return null;
+  const vacs = getVacances(year);
+
+  // Count weeks excluding vacation weeks
+  let totalDays = 0;
+  let cur = new Date(d1);
+  while (cur <= d2) {
+    const inVac = vacs.some(v => {
+      const vd = new Date(v.debut);
+      const vf = new Date(v.fin);
+      return cur >= vd && cur <= vf;
+    });
+    if (!inVac && cur.getDay() !== 0 && cur.getDay() !== 6) {
+      totalDays++;
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+  return Math.round(totalDays / 5); // 5 jours ouvrés par semaine
+}
+
+function dateToInput(str) {
+  // Convert "1/09" or "1/09 – 17/10" to ISO date for current year
+  return str;
+}
+
+// Parse "D/MM" to Date object for a given school year
+function parseDate(str, year) {
+  if (!str || !str.trim()) return null;
+  str = str.trim();
+  // Handle ISO format
+  if (str.match(/^\d{4}-\d{2}-\d{2}$/)) return new Date(str);
+  // Handle "D/MM" or "D/MM/YYYY"
+  const parts = str.split('/');
+  if (parts.length >= 2) {
+    const day = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1;
+    const schoolYearStart = parseInt(year.split('-')[0]);
+    const yr = month >= 8 ? schoolYearStart : schoolYearStart + 1;
+    return new Date(yr, month, day);
+  }
+  return null;
+}
+
+function cycleOverlapsVacances(dates, year) {
+  if (!dates || !dates.includes('–')) return [];
+  const parts = dates.split('–').map(s => s.trim());
+  const d1 = parseDate(parts[0], year);
+  const d2 = parseDate(parts[1], year);
+  if (!d1 || !d2) return [];
+  const vacs = getVacances(year);
+  return vacs.filter(v => {
+    const vd = new Date(v.debut);
+    const vf = new Date(v.fin);
+    return d1 <= vf && d2 >= vd;
+  });
+}
+
+function calcWeeksFromDates(dates, year) {
+  if (!dates || !dates.includes('–')) return null;
+  const parts = dates.split('–').map(s => s.trim());
+  const d1 = parseDate(parts[0], year);
+  const d2 = parseDate(parts[1], year);
+  return calcSemainesEffectives(
+    d1 ? d1.toISOString().split('T')[0] : null,
+    d2 ? d2.toISOString().split('T')[0] : null,
+    year
+  );
+}
+
+// ── PRINT ORIENTATION ──
+let printOrientation = 'landscape';
+function toggleOrientation() {
+  printOrientation = printOrientation === 'landscape' ? 'portrait' : 'landscape';
+  const btn = document.getElementById('orientBtn');
+  btn.textContent = printOrientation === 'landscape' ? '🖨️ Paysage' : '🖨️ Portrait';
+  // Inject a print style override
+  let styleEl = document.getElementById('printOrientStyle');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'printOrientStyle';
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = `@media print { @page { size: A4 ${printOrientation}; } }`;
+  window.print();
 }
 
 // INIT
