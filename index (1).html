@@ -22,7 +22,7 @@
   --gym:#d62828;--gym-bg:rgba(214,40,40,0.1);
   --plein:#2d6a4f;--plein-bg:rgba(45,106,79,0.1);
   --combat:#6d4c41;--combat-bg:rgba(109,76,65,0.1);
-  --ca1:#e85d04;--ca2:#2d6a4f;--ca3:#7209b7;--ca4:#0e7c7b;
+  --ca1:#e85d04;--ca2:#2d6a4f;--ca3:#7209b7;--ca4:#0e7c7b;--ca5:#0077b6;--nat:#0077b6;--nat-bg:rgba(0,119,182,0.1);
   --warn:#a06800;--warn-bg:rgba(240,165,0,0.1);--warn-border:rgba(240,165,0,0.3);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -156,6 +156,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 .f-gym{background:var(--gym-bg);color:var(--gym)}
 .f-plein{background:var(--plein-bg);color:var(--plein)}
 .f-combat{background:var(--combat-bg);color:var(--combat)}
+.f-nat{background:rgba(0,119,182,0.1);color:#0077b6}
 
 /* ── HEURES ── */
 .heures-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
@@ -740,12 +741,8 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
       <span class="s-title" style="margin:0">Créneaux</span><span class="s-chev" id="chev-creneaux">▼</span>
     </button>
     <div class="s-body" id="sb-creneaux">
-      <div class="creneau-list">
-        <div class="creneau-item"><div class="creneau-classe">6e</div><div class="creneau-detail"><span class="ctag">Lundi</span>toutes semaines<br><span class="ctag">Jeudi</span>toutes semaines</div></div>
-        <div class="creneau-item"><div class="creneau-classe">5e</div><div class="creneau-detail"><span class="ctag">Mardi</span>1 sem/2<br><span class="ctag">Jeudi</span>toutes semaines</div></div>
-        <div class="creneau-item"><div class="creneau-classe">4e</div><div class="creneau-detail"><span class="ctag">Lundi</span>1 sem/2<br><span class="ctag gym">Mercredi 🏟️</span>toutes semaines</div></div>
-        <div class="creneau-item"><div class="creneau-classe">3e</div><div class="creneau-detail"><span class="ctag">Mardi</span>1 sem/2<br><span class="ctag gym">Mercredi 🏟️</span>toutes semaines</div></div>
-      </div>
+      <div class="creneau-list" id="creneauList"></div>
+      <button onclick="openCreneauxModal()" style="margin-top:6px;width:100%;background:var(--teal-g);border:1.5px solid var(--teal);color:var(--teal);border-radius:7px;padding:6px;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:'Syne',sans-serif;transition:all 0.15s" onmouseover="this.style.background='var(--teal)';this.style.color='#fff'" onmouseout="this.style.background='var(--teal-g)';this.style.color='var(--teal)'">✏️ Modifier les créneaux</button>
     </div>
   </div>
 
@@ -787,6 +784,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
         <div class="famille-item"><div class="f-dot" style="background:var(--gym)"></div>Gym / Renfo</div>
         <div class="famille-item"><div class="f-dot" style="background:var(--plein)"></div>Plein air</div>
         <div class="famille-item"><div class="f-dot" style="background:var(--combat)"></div>Combat</div>
+        <div class="famille-item"><div class="f-dot" style="background:var(--nat)"></div>Natation</div>
       </div>
     </div>
   </div>
@@ -802,6 +800,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
         <div class="ca-item"><span class="ca-badge" style="background:var(--ca2)">CA2</span>Environnement inhabituel</div>
         <div class="ca-item"><span class="ca-badge" style="background:var(--ca3)">CA3</span>Prestation corporelle</div>
         <div class="ca-item"><span class="ca-badge" style="background:var(--ca4)">CA4</span>Confrontation collective</div>
+        <div class="ca-item"><span class="ca-badge" style="background:var(--ca5)">CA5</span>Effort durable (dosage)</div>
       </div>
     </div>
   </div>
@@ -905,6 +904,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
       <button class="prog-filter-btn" onclick="filterProg('CA2',this)">CA2 — Environnement</button>
       <button class="prog-filter-btn" onclick="filterProg('CA3',this)">CA3 — Prestation</button>
       <button class="prog-filter-btn" onclick="filterProg('CA4',this)">CA4 — Confrontation</button>
+      <button class="prog-filter-btn" onclick="filterProg('CA5',this)">CA5 — Effort durable</button>
     </div>
     <div class="prog-grid" id="progGrid"></div>
   </div>
@@ -920,7 +920,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Classe</label>
-          <select class="form-select" id="addClasse"><option>6e</option><option>5e</option><option>4e</option><option>3e</option></select>
+          <select class="form-select" id="addClasse" onchange="updateSeancesInfo()"><option>6e</option><option>5e</option><option>4e</option><option>3e</option></select>
         </div>
         <div class="form-group">
           <label class="form-label">Cycle</label>
@@ -936,6 +936,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
           <option value="gym">Gym / Renfo</option>
           <option value="plein">Plein air</option>
           <option value="combat">Combat</option>
+          <option value="nat">Natation</option>
         </select>
       </div>
       <div class="form-group">
@@ -947,12 +948,13 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
       <div class="form-row3">
         <div class="form-group">
           <label class="form-label">Semaines</label>
-          <input class="form-input" type="number" id="addSemaines" value="6" min="2" max="14">
+          <input class="form-input" type="number" id="addSemaines" value="6" min="2" max="14" oninput="updateSeancesInfo()">
+          <div id="seancesInfo" style="font-size:0.68rem;color:var(--teal);margin-top:3px"></div>
         </div>
         <div class="form-group">
           <label class="form-label">Champ (CA)</label>
           <select class="form-select" id="addCA">
-            <option value="CA1">CA1</option><option value="CA2">CA2</option><option value="CA3">CA3</option><option value="CA4" selected>CA4</option>
+            <option value="CA1">CA1 — Performance</option><option value="CA2">CA2 — Environnement</option><option value="CA3">CA3 — Prestation</option><option value="CA4" selected>CA4 — Confrontation</option><option value="CA5">CA5 — Effort durable</option>
           </select>
         </div>
         <div class="form-group">
@@ -999,12 +1001,32 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 
 const classes = ['6e','5e','4e','3e'];
 
-const creneaux = {
+// Créneaux par défaut (modifiables par année)
+const creneauxDefaut = {
   '6e': { seances:2,   detail:'Lundi + Jeudi (×2/sem)' },
   '5e': { seances:1.5, detail:'Mardi (×1/2sem) + Jeudi (×1/sem)' },
   '4e': { seances:1.5, detail:'Lundi (×1/2sem) + Mercredi (×1/sem)' },
   '3e': { seances:1.5, detail:'Mardi (×1/2sem) + Mercredi (×1/sem)' },
 };
+// Stockage dynamique par année
+const creneauxData = {};
+
+function getCreneaux(year) {
+  if (creneauxData[year]) return creneauxData[year];
+  const stored = JSON.parse(localStorage.getItem('creneaux-' + year) || 'null');
+  if (stored) { creneauxData[year] = stored; return stored; }
+  creneauxData[year] = JSON.parse(JSON.stringify(creneauxDefaut));
+  return creneauxData[year];
+}
+
+function saveCreneaux(year) {
+  localStorage.setItem('creneaux-' + year, JSON.stringify(creneauxData[year]));
+}
+
+// Compat: creneaux proxy for currentYear
+const creneaux = new Proxy({}, {
+  get(_, cl) { return getCreneaux(currentYear)[cl]; }
+});
 
 // Toutes les APSA EPS possibles
 const allSports = {
@@ -1035,10 +1057,18 @@ const allSports = {
     {n:'Parkour',icon:'🏃'}, {n:'Yoga / Stretching',icon:'🧘'},
   ],
   plein: [
-    {n:"Course d'orientation",icon:'🗺️'}, {n:'VTT',icon:'🚵',unavail:true,why:'Vélos requis'},
-    {n:'Escalade',icon:'🧗',unavail:true,why:'Mur requis'}, {n:'Canoë-kayak',icon:'🛶',unavail:true,why:'Plan d\'eau requis'},
-    {n:'Randonnée pédestre',icon:'🥾'}, {n:'Tir à l\'arc',icon:'🏹',unavail:true,why:'Matériel requis'},
-    {n:'Natation',icon:'🏊',unavail:true,why:'Piscine requise'},
+    {n:"Course d'orientation",icon:"🗺️"},
+    {n:"VTT",icon:"🚵",unavail:true,why:"Vélos requis"},
+    {n:"Escalade",icon:"🧗",unavail:true,why:"Mur requis"},
+    {n:"Canoë-kayak",icon:"🛶",unavail:true,why:"Plan d'eau requis"},
+    {n:"Randonnée pédestre",icon:"🥾"},
+    {n:"Tir à l'arc",icon:"🏹",unavail:true,why:"Matériel requis"},
+    {n:"Ski / Snowboard",icon:"⛷️",unavail:true,why:"Station requise"},
+    {n:"Roller / Skateboard",icon:"🛹",unavail:true,why:"Espace adapté requis"},
+    {n:"Accrobranche",icon:"🌲",unavail:true,why:"Site requis"},
+    {n:"Golf initiation",icon:"⛳",unavail:true,why:"Matériel requis"},
+    {n:"Frisbee golf",icon:"🥏"},
+    {n:"Pétanque / Boules",icon:"🎳"},
   ],
   combat: [
     {n:'Lutte',icon:'🥋',gym:true}, {n:'Judo',icon:'🥋',gym:true},
@@ -1055,8 +1085,8 @@ const familleConfig = {
   combat: {label:'Combat',           icon:'🥋',cls:'f-combat',color:'var(--combat)'},
 };
 
-const caColors = {CA1:'var(--ca1)',CA2:'var(--ca2)',CA3:'var(--ca3)',CA4:'var(--ca4)'};
-const caDefaut = {col:'CA4',ath:'CA1',raq:'CA4',gym:'CA3',plein:'CA2',combat:'CA4'};
+const caColors = {CA1:'var(--ca1)',CA2:'var(--ca2)',CA3:'var(--ca3)',CA4:'var(--ca4)',CA5:'var(--ca5)'};
+const caDefaut = {col:'CA4',ath:'CA1',raq:'CA4',gym:'CA3',plein:'CA2',combat:'CA4',nat:'CA5'};
 
 const trimestres = {
   1:{label:'Trimestre 1',dates:'01/09 – 05/12'},
@@ -1065,7 +1095,7 @@ const trimestres = {
 };
 
 // Cycles par année (modifiables)
-const periodesData = {
+let periodesData = {
   '2025-26': [
     {id:'P1',name:'Cycle 1',dates:'1/09 – 17/10', semaines:7,trimestre:1},
     {id:'P2',name:'Cycle 2',dates:'3/11 – 5/12',  semaines:5,trimestre:1},
@@ -1082,7 +1112,7 @@ const periodesData = {
   ],
 };
 
-const plannings = {
+let plannings = {
   '2025-26': {
     P1:{'6e':[{apsa:'Relais',famille:'ath',semaines:7,ca:'CA1',note:'',objectif:'Endurance collective'}],'5e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Badminton',famille:'raq',semaines:7,ca:'CA4',note:'',objectif:''}]},
     P2:{'6e':[{apsa:'Acrosport',famille:'gym',semaines:5,ca:'CA3',note:'',objectif:''}],'5e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Renfo musculaire',famille:'gym',semaines:5,ca:'CA3',note:'',objectif:''}]},
@@ -1134,6 +1164,7 @@ function calcHeures(cl) {
 // ══════════════════════════════════════════════
 function renderAll() {
   renderYearButtons();
+  renderCreneauList();
   renderGrid();
   renderProg();
   renderHeures();
@@ -1675,6 +1706,7 @@ function openFiche(pid, cl, idx) {
         <option value="CA2" ${item.ca==='CA2'?'selected':''}>CA2 — Environnement inhabituel</option>
         <option value="CA3" ${item.ca==='CA3'?'selected':''}>CA3 — Prestation corporelle</option>
         <option value="CA4" ${item.ca==='CA4'?'selected':''}>CA4 — Confrontation collective</option>
+        <option value="CA5" ${item.ca==='CA5'?'selected':''}>CA5 — Effort durable (dosage)</option>
       </select>
     </div>
     <div class="fiche-section">
@@ -2157,6 +2189,7 @@ function calcWeeksFromDates(dates, year) {
 // API VACANCES — data.education.gouv.fr
 // ══════════════════════════════════════════════
 async function fetchVacancesAPI(year) {
+  if (location.protocol !== 'https:') return null;
   // year format: "2026-27" -> annee_scolaire = "2026-2027"
   const parts = year.split('-');
   const startY = parts[0];
@@ -2189,20 +2222,20 @@ async function fetchVacancesAPI(year) {
 
     return vacs.length > 0 ? vacs : null;
   } catch(e) {
-    console.warn('API vacances indisponible:', e);
+    // API unavailable silently
     return null;
   }
 }
 
 
 async function reloadVacancesAPI() {
-  showToast('⏳ Chargement depuis l\'API...');
+  showToast("⏳ Chargement depuis l'API...");
   // Clear stored vacances to force reload
   localStorage.removeItem('vacances-' + currentYear);
   const vacs = await fetchVacancesAPI(currentYear);
   if (vacs && vacs.length > 0) {
     saveVacances(currentYear, vacs);
-    showToast('✅ Vacances mises à jour depuis l\'API officielle !');
+    showToast("✅ Vacances mises à jour depuis l'API officielle !");
     renderCycles();
     renderGrid();
   } else {
@@ -2222,7 +2255,7 @@ async function loadVacancesForYear(year) {
   }
 
   // Fetch from API
-  showToast('⏳ Chargement des vacances depuis l'API...');
+  showToast("⏳ Chargement des vacances depuis l'API...");
   const vacs = await fetchVacancesAPI(year);
   if (vacs) {
     saveVacances(year, vacs);
@@ -2252,6 +2285,76 @@ function toggleOrientation() {
 }
 
 
+
+// ══════════════════════════════════════════════
+// CRÉNEAUX
+// ══════════════════════════════════════════════
+
+function updateSeancesInfo() {
+  const cl = document.getElementById('addClasse')?.value;
+  const sem = parseInt(document.getElementById('addSemaines')?.value) || 0;
+  if (!cl || !sem) return;
+  const cr = getCreneaux(currentYear);
+  const seancesTotal = Math.round(sem * (cr[cl]?.seances || 2));
+  const el = document.getElementById('seancesInfo');
+  if (el) el.textContent = `≈ ${seancesTotal} séances au total pour ${cl} (${cr[cl]?.seances || 2}/sem)`;
+}
+
+function renderCreneauList() {
+  const list = document.getElementById('creneauList');
+  if (!list) return;
+  const cr = getCreneaux(currentYear);
+  list.innerHTML = classes.map(cl => `
+    <div class="creneau-item">
+      <div class="creneau-classe">${cl}</div>
+      <div class="creneau-detail">
+        <span class="ctag">${cr[cl].detail}</span>
+        <span style="font-size:0.62rem;color:var(--muted)"> · ${cr[cl].seances} séance${cr[cl].seances > 1 ? 's' : ''}/sem</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openCreneauxModal() {
+  const cr = getCreneaux(currentYear);
+  document.getElementById('creneauxModalBody').innerHTML = `
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem">Créneaux pour l'année <strong>${currentYear}</strong></p>
+    ${classes.map(cl => `
+      <div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+        <div style="font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:var(--teal-d);margin-bottom:8px">${cl}</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Description des créneaux</label>
+            <input class="form-input" id="cr_detail_${cl}" value="${cr[cl]?.detail || ''}" placeholder="Ex: Lundi + Jeudi (×2/sem)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Séances par semaine (moy.)</label>
+            <input class="form-input" type="number" step="0.5" min="0.5" max="5" id="cr_seances_${cl}" value="${cr[cl]?.seances || 2}">
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+  document.getElementById('modalCreneaux').classList.add('open');
+  hideSidebarBtn();
+}
+
+function saveCreneauxModal() {
+  const cr = getCreneaux(currentYear);
+  classes.forEach(cl => {
+    const det = document.getElementById('cr_detail_' + cl)?.value;
+    const sea = parseFloat(document.getElementById('cr_seances_' + cl)?.value);
+    if (det) cr[cl].detail = det;
+    if (!isNaN(sea)) cr[cl].seances = sea;
+  });
+  saveCreneaux(currentYear);
+  saveAll();
+  closeModal('modalCreneaux');
+  renderCreneauList();
+  renderHeures();
+  showToast('✅ Créneaux sauvegardés !');
+}
+
 // ══════════════════════════════════════════════
 // PERSISTANCE — localStorage
 // ══════════════════════════════════════════════
@@ -2261,9 +2364,9 @@ function saveAll() {
   try {
     const data = {
       currentYear,
-      plannings,
-      periodesData,
-      contraintes,
+      plannings: JSON.parse(JSON.stringify(plannings)),
+      periodesData: JSON.parse(JSON.stringify(periodesData)),
+      contraintes: JSON.parse(JSON.stringify(contraintes)),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch(e) {
@@ -2276,8 +2379,9 @@ function loadSaved() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return false;
     const data = JSON.parse(raw);
-    if (data.plannings)    Object.assign(plannings, data.plannings);
-    if (data.periodesData) Object.assign(periodesData, data.periodesData);
+    // Remplacement COMPLET des données — pas de fusion
+    if (data.plannings)    plannings    = data.plannings;
+    if (data.periodesData) periodesData = data.periodesData;
     if (data.contraintes)  contraintes.splice(0, contraintes.length, ...data.contraintes);
     if (data.currentYear && periodesData[data.currentYear]) {
       currentYear = data.currentYear;
@@ -2351,5 +2455,21 @@ function installPWA() {
   }
 }
 </script>
+
+<!-- ══ MODALE CRÉNEAUX ══ -->
+<div class="modal-overlay" id="modalCreneaux">
+  <div class="modal modal-lg">
+    <div class="modal-hd">
+      <div class="modal-title">✏️ Modifier les créneaux</div>
+      <button class="icon-btn" onclick="closeModal('modalCreneaux')">✕</button>
+    </div>
+    <div class="modal-body" id="creneauxModalBody"></div>
+    <div class="modal-ft">
+      <button class="btn btn-outline" onclick="closeModal('modalCreneaux')">Annuler</button>
+      <button class="btn btn-teal" onclick="saveCreneauxModal()">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
