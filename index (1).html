@@ -716,6 +716,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
   <div class="h-actions">
     <button class="alert-btn" id="alertBtn" onclick="toggleAlertPanel()">⚠️ <span class="alert-count" id="alertCount">0</span></button>
     <button class="btn btn-ghost" onclick="toggleOrientation()" id="orientBtn" title="Orientation impression">🖨️ Paysage</button>
+    <span id="saveIndicator" style="font-size:0.7rem;color:rgba(255,255,255,0.6);display:none;align-items:center;gap:4px">💾</span>
     <button id="installBtn" onclick="installPWA()" class="btn btn-ghost" style="display:none;align-items:center;gap:5px">📲 Installer</button>
     <button class="btn btn-amber" onclick="openAddModal()">+ APSA</button>
   </div>
@@ -2368,9 +2369,17 @@ function saveAll() {
       periodesData: JSON.parse(JSON.stringify(periodesData)),
       contraintes: JSON.parse(JSON.stringify(contraintes)),
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const json = JSON.stringify(data);
+    localStorage.setItem(STORAGE_KEY, json);
+    // Verify it was saved
+    const verify = localStorage.getItem(STORAGE_KEY);
+    if (!verify) throw new Error('localStorage vide après écriture');
+    console.log('✅ Sauvegarde OK —', Math.round(json.length/1024) + 'kb');
+    const ind = document.getElementById('saveIndicator');
+    if (ind) { ind.style.display='flex'; ind.textContent='💾 Sauvegardé'; setTimeout(()=>{ ind.style.display='none'; }, 2000); }
   } catch(e) {
-    console.warn('Sauvegarde échouée:', e);
+    console.error('❌ Sauvegarde échouée:', e);
+    showToast('❌ Sauvegarde échouée : ' + e.message);
   }
 }
 
