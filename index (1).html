@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Programmation EPS — Collège</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#095958">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="EPS Collège">
-  <link rel="apple-touch-icon" href="icon.svg">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>EPS Collège — Programmation</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#095958">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EPS Collège">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+
 :root {
   --teal:#0e7c7b;--teal-l:#12a09e;--teal-d:#095958;--teal-g:rgba(14,124,123,0.08);
   --amber:#f0a500;--amber-l:#ffc642;
@@ -700,9 +699,11 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
   .fiche-saved-badge{font-size:0.72rem;color:var(--teal);font-weight:600;opacity:0;transition:opacity 0.3s}
   .fiche-saved-badge.show{opacity:1}
 
+
 </style>
 </head>
 <body>
+
 
 <header>
   <div class="logo">🏃 EPS Collège <span class="logo-badge">Pro</span></div>
@@ -995,41 +996,8 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 
 <div class="toast" id="toast"></div>
 
+
 <script>
-// ══════════════════════════════════════════════
-// BASE DATA
-// ══════════════════════════════════════════════
-
-const classes = ['6e','5e','4e','3e'];
-
-// Créneaux par défaut (modifiables par année)
-const creneauxDefaut = {
-  '6e': { seances:2,   detail:'Lundi + Jeudi (×2/sem)' },
-  '5e': { seances:1.5, detail:'Mardi (×1/2sem) + Jeudi (×1/sem)' },
-  '4e': { seances:1.5, detail:'Lundi (×1/2sem) + Mercredi (×1/sem)' },
-  '3e': { seances:1.5, detail:'Mardi (×1/2sem) + Mercredi (×1/sem)' },
-};
-// Stockage dynamique par année
-const creneauxData = {};
-
-function getCreneaux(year) {
-  if (creneauxData[year]) return creneauxData[year];
-  const stored = JSON.parse(localStorage.getItem('creneaux-' + year) || 'null');
-  if (stored) { creneauxData[year] = stored; return stored; }
-  creneauxData[year] = JSON.parse(JSON.stringify(creneauxDefaut));
-  return creneauxData[year];
-}
-
-function saveCreneaux(year) {
-  localStorage.setItem('creneaux-' + year, JSON.stringify(creneauxData[year]));
-}
-
-// Compat: creneaux proxy for currentYear
-const creneaux = new Proxy({}, {
-  get(_, cl) { return getCreneaux(currentYear)[cl]; }
-});
-
-// Toutes les APSA EPS possibles
 const allSports = {
   col: [
     {n:'Basket-ball',icon:'🏀'}, {n:'Football',icon:'⚽'}, {n:'Handball',icon:'🤾'},
@@ -1076,36 +1044,6 @@ const allSports = {
     {n:'Boxe française',icon:'🥊',gym:true}, {n:'Escrime',icon:'⚔️',unavail:true,why:'Matériel requis'},
   ],
 };
-
-const familleConfig = {
-  col:    {label:'Sports collectifs',icon:'⚽',cls:'f-col',color:'var(--col)'},
-  ath:    {label:'Athlétisme',       icon:'🏃',cls:'f-ath',color:'var(--ath)'},
-  raq:    {label:'Raquettes',        icon:'🏸',cls:'f-raq',color:'var(--raq)'},
-  gym:    {label:'Gym / Renfo',      icon:'🤸',cls:'f-gym',color:'var(--gym)'},
-  plein:  {label:'Plein air',        icon:'🌿',cls:'f-plein',color:'var(--plein)'},
-  combat: {label:'Combat',           icon:'🥋',cls:'f-combat',color:'var(--combat)'},
-};
-
-const caColors = {CA1:'var(--ca1)',CA2:'var(--ca2)',CA3:'var(--ca3)',CA4:'var(--ca4)',CA5:'var(--ca5)'};
-const caDefaut = {col:'CA4',ath:'CA1',raq:'CA4',gym:'CA3',plein:'CA2',combat:'CA4',nat:'CA5'};
-
-const trimestres = {
-  1:{label:'Trimestre 1',dates:'01/09 – 05/12'},
-  2:{label:'Trimestre 2',dates:'08/12 – 19/03'},
-  3:{label:'Trimestre 3',dates:'23/03 – 12/06'},
-};
-
-// Cycles par année (modifiables)
-let periodesData = {
-  '2025-26': [
-    {id:'P1',name:'Cycle 1',dates:'1/09 – 17/10', semaines:7,trimestre:1},
-    {id:'P2',name:'Cycle 2',dates:'3/11 – 5/12',  semaines:5,trimestre:1},
-    {id:'P3',name:'Cycle 3',dates:'8/12 – 5/02',  semaines:8,trimestre:2},
-    {id:'P4',name:'Cycle 4',dates:'9/02 – 19/03', semaines:5,trimestre:2},
-    {id:'P5',name:'Cycle 5',dates:'23/03 – 12/06',semaines:11,trimestre:3},
-  ],
-};
-
 let plannings = {
   '2025-26': {
     P1:{'6e':[{apsa:'Relais',famille:'ath',semaines:7,ca:'CA1',note:'',objectif:'Endurance collective'}],'5e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Badminton',famille:'raq',semaines:7,ca:'CA4',note:'',objectif:''}]},
@@ -1115,567 +1053,814 @@ let plannings = {
     P5:{'6e':[{apsa:'Badminton',famille:'raq',semaines:11,ca:'CA4',note:'',objectif:''}],'5e':[{apsa:'Demi-fond',famille:'ath',semaines:11,ca:'CA1',note:'',objectif:''}],'4e':[{apsa:"Course d'orientation",famille:'plein',semaines:11,ca:'CA2',note:'',objectif:''}],'3e':[{apsa:'Ultimate',famille:'col',semaines:11,ca:'CA4',note:'',objectif:''}]},
   },
 };
+const SPORTS_DATA = [
+  {id:"relais",nom:"Relais",emoji:"🏃",ca:"CA1",famille:"Athlétisme",seances:"10–12",fond:"Le relais est une épreuve collective d'athlétisme où la performance dépend de la maîtrise du passage de témoin.",pb:"Gérer la contradiction entre courir vite individuellement TOUT EN synchronisant son effort avec ses partenaires.",materiel:"Témoins de relais, plots, chrono",temporel:"10–12 séances",espace:"Piste ou terrain extérieur",effectif:"Groupes de 4 coureurs",afc1:"Courir vite sur sa fraction en gérant son élan.",afc2:"Réussir le passage de témoin dans la zone réglementaire.",afc3:"Analyser la performance collective.",ciblage:"OPTIMISER LE PASSAGE DE TÉMOIN ; LA PERFORMANCE COLLECTIVE DÉPASSE LA SOMME DES INDIVIDUELLES.",epreuve:"Course 4x50m. 3 tentatives. Meilleur temps retenu.",axes:["Technique de course","Passage en aveugle","Synchronisation","Stratégie d'ordre","Tournoi chronométré"],bareme:[{pts:"6 pts",label:"Temps",detail:"Performance chronométrée"},{pts:"6 pts",label:"Passages",detail:"Transmissions réussies"},{pts:"4 pts",label:"Observateur",detail:"Chronométrage"},{pts:"4 pts",label:"Régularité",detail:"3 tentatives"}]},
+  {id:"course-longue",nom:"Course longue",emoji:"🏃",ca:"CA1",famille:"Athlétisme",seances:"10–12",fond:"La course longue est une activité d'endurance où l'élève apprend à gérer son effort dans la durée.",pb:"Gérer la contradiction entre vouloir aller vite TOUT EN préservant ses ressources pour tenir la durée.",materiel:"Chrono, plots, piste balisée",temporel:"10–12 séances",espace:"Piste extérieure",effectif:"Classe entière",afc1:"Courir à allure régulière 10–20 minutes.",afc2:"Connaître sa VMA et établir un projet de course.",afc3:"Observer un camarade et lui proposer un retour.",ciblage:"APPRENDRE À SE CONNAÎTRE POUR TENIR UN PROJET DE COURSE RÉALISTE.",epreuve:"Course de 12 minutes. Évaluation sur écart projet/réalisé.",axes:["Test VMA","Intervalles","Projet individuel","Binôme observateur","Course bilan"],bareme:[{pts:"4 pts",label:"VMA",detail:"Résultat au test"},{pts:"8 pts",label:"Projet",detail:"Écart prévu/réalisé"},{pts:"5 pts",label:"Régularité",detail:"Constance"},{pts:"3 pts",label:"Fiche",detail:"Données relevées"}]},
+  {id:"demi-fond",nom:"Demi-fond",emoji:"🏃",ca:"CA1",famille:"Athlétisme",seances:"11",fond:"Le demi-fond sollicite la filière lactique et aérobie. Effort entre 3 et 9 minutes.",pb:"Gérer la contradiction être performant TOUT EN respectant son projet et son intégrité physique.",materiel:"Piste 250m, plots, chrono",temporel:"11 séances",espace:"Piste extérieure",effectif:"Groupes par niveau VMA",afc1:"Gérer son effort pour réaliser la meilleure performance.",afc2:"Planifier et réaliser son projet de course.",afc3:"Analyser sa course et celle de son camarade.",ciblage:"APPRENDRE À SE CONNAÎTRE POUR OPTIMISER SA COURSE ET SON PROJET.",epreuve:"Course 15 min à 3 allures progressives.",axes:["Test VMA","Intervalles par %VMA","Fiche individuelle","Binôme observateur","Course bilan"],bareme:[{pts:"4 pts",label:"VMA",detail:"Test initial"},{pts:"9 pts",label:"Projet",detail:"Écart + régulation"},{pts:"5 pts",label:"Performance",detail:"Moyenne 3 allures"},{pts:"2 pts",label:"Fiche",detail:"Complète"}]},
+  {id:"sprint",nom:"Sprint",emoji:"⚡",ca:"CA1",famille:"Athlétisme",seances:"10",fond:"Course de vitesse maximale sur courte distance.",pb:"Gérer la contradiction entre relâchement musculaire TOUT EN maintenant une puissance maximale.",materiel:"Chrono, plots, couloirs balisés",temporel:"10 séances",espace:"50–100m de ligne droite",effectif:"Vagues de 4–6",afc1:"Produire un effort maximal sur toute la distance.",afc2:"Connaître et reproduire sa meilleure performance.",afc3:"Chronométrer ses camarades.",ciblage:"AMÉLIORER SA TECHNIQUE DE DÉPART ET D'ACCÉLÉRATION.",epreuve:"3 courses de 50m. Meilleur temps retenu.",axes:["Technique de départ","Montée en vitesse","Coordination","Résistance","Tournoi"],bareme:[{pts:"8 pts",label:"Performance",detail:"Meilleur temps"},{pts:"5 pts",label:"Technique",detail:"Départ, montée"},{pts:"4 pts",label:"Régularité",detail:"Écart 3 tentatives"},{pts:"3 pts",label:"Chrono",detail:"Précision"}]},
+  {id:"basket",nom:"Basket-ball",emoji:"🏀",ca:"CA4",famille:"Sports collectifs",seances:"10–12",fond:"Sport collectif où deux équipes cherchent à marquer des paniers dans le camp adverse.",pb:"Gérer la contradiction entre avancer vers le panier adverse TOUT EN préservant la balle et organisant le jeu.",materiel:"Ballons de basket, panneaux, dossards",temporel:"10–12 séances",espace:"Gymnase",effectif:"Équipes de 4–5",afc1:"S'organiser collectivement pour créer des situations de tir favorables.",afc2:"Faire des choix tactiques lucides.",afc3:"Assumer les rôles joueur, arbitre, observateur.",ciblage:"APPRENDRE À JOUER COLLECTIVEMENT POUR CRÉER DES DÉSÉQUILIBRES ET MARQUER.",epreuve:"Tournoi 4v4. 3 matchs de 6 minutes.",axes:["Conservation","Contre-attaque","Attaque placée","Défense","Tournoi"],bareme:[{pts:"5 pts",label:"Performance",detail:"Résultat matchs"},{pts:"8 pts",label:"Jeu collectif",detail:"Passes, démarquages"},{pts:"4 pts",label:"Arbitrage",detail:"Règles"},{pts:"3 pts",label:"Observation",detail:"Grille"}]},
+  {id:"football",nom:"Football",emoji:"⚽",ca:"CA4",famille:"Sports collectifs",seances:"10–12",fond:"Le football oppose deux équipes cherchant à marquer dans le but adverse.",pb:"Gérer la contradiction entre progresser balle au pied TOUT EN conservant le ballon.",materiel:"Ballons, plots, dossards, buts",temporel:"10–12 séances",espace:"Terrain extérieur",effectif:"Équipes de 4–6",afc1:"Conduire, passer et tirer en situation favorable.",afc2:"Appliquer des principes de jeu collectif.",afc3:"Assumer les rôles d'arbitre et d'observateur.",ciblage:"COMPRENDRE ET UTILISER L'ESPACE DE JEU POUR CRÉER DES OCCASIONS.",epreuve:"Tournoi 5v5. 3 matchs de 7 minutes.",axes:["Conduite et passes","Possession","Jeu en profondeur","Défense","Tournoi"],bareme:[{pts:"5 pts",label:"Performance",detail:"Buts"},{pts:"8 pts",label:"Jeu collectif",detail:"Espaces, passes"},{pts:"4 pts",label:"Arbitrage",detail:"Règles"},{pts:"3 pts",label:"Observation",detail:"Grille"}]},
+  {id:"ultimate",nom:"Ultimate",emoji:"🥏",ca:"CA4",famille:"Sports collectifs",seances:"10",fond:"Sport collectif sans contact joué avec un disque. L'auto-arbitrage est fondamental.",pb:"Gérer la contradiction entre progresser vers la zone d'en-but TOUT EN ne pouvant pas courir avec le disque.",materiel:"Disques ultimate, plots, dossards",temporel:"10 séances",espace:"Terrain extérieur",effectif:"Équipes de 5–7",afc1:"Lancer et réceptionner le disque avec précision.",afc2:"Construire une attaque collective.",afc3:"Auto-arbitrage. Spirit of the game.",ciblage:"COMPRENDRE LES PRINCIPES DU JEU SANS CONTACT ET DE L'AUTO-ARBITRAGE.",epreuve:"Tournoi 5v5. 3 matchs de 8 minutes.",axes:["Technique de lancer","Réception","Démarquage","Tactique","Tournoi"],bareme:[{pts:"5 pts",label:"Performance",detail:"Points marqués"},{pts:"7 pts",label:"Jeu collectif",detail:"Passes, progression"},{pts:"5 pts",label:"Spirit",detail:"Auto-arbitrage"},{pts:"3 pts",label:"Observation",detail:"Grille"}]},
+  {id:"ballon-prisonnier",nom:"Ballon prisonnier",emoji:"🎯",ca:"CA4",famille:"Sports collectifs",seances:"8–10",fond:"Jeu collectif d'opposition où deux équipes cherchent à éliminer les adversaires avec le ballon.",pb:"Gérer la contradiction entre éliminer l'adversaire TOUT EN évitant d'être touché.",materiel:"Ballons mousse, plots, dossards",temporel:"8–10 séances",espace:"Gymnase ou extérieur",effectif:"Équipes de 6–10",afc1:"Lancer avec précision et esquiver.",afc2:"Organiser l'équipe.",afc3:"Respecter les règles. Arbitrer.",ciblage:"DÉVELOPPER LA RÉACTIVITÉ ET LA COOPÉRATION.",epreuve:"Tournoi 3 manches de 5 minutes.",axes:["Lancer","Esquive","Organisation","Libération","Tournoi"],bareme:[{pts:"5 pts",label:"Performance",detail:"Victoires"},{pts:"7 pts",label:"Stratégie",detail:"Organisation"},{pts:"4 pts",label:"Technique",detail:"Lancers, esquive"},{pts:"4 pts",label:"Rôles",detail:"Arbitrage"}]},
+  {id:"rugby",nom:"Rugby à 7",emoji:"🏉",ca:"CA4",famille:"Sports collectifs",seances:"10–12",fond:"Version courte du rugby où deux équipes s'affrontent sur un terrain complet.",pb:"Gérer la contradiction entre avancer collectivement TOUT EN conservant le ballon.",materiel:"Ballons ovales, plots, dossards",temporel:"10–12 séances",espace:"Terrain extérieur",effectif:"Équipes de 5–7",afc1:"Passer en arrière pour faire avancer l'équipe.",afc2:"Créer des surnombres en attaque.",afc3:"Respecter les règles. Arbitrer.",ciblage:"UTILISER LE SURNOMBRE POUR CRÉER DES ESPACES ET APLATIR.",epreuve:"Tournoi 5v5. Matchs 7 minutes. Toucher-plaquage.",axes:["Technique de passe","Soutien","Surnombres","Défense","Tournoi"],bareme:[{pts:"5 pts",label:"Performance",detail:"Essais"},{pts:"8 pts",label:"Jeu collectif",detail:"Passes, soutiens"},{pts:"4 pts",label:"Règles",detail:"Respect"},{pts:"3 pts",label:"Observation",detail:"Grille"}]},
+  {id:"badminton",nom:"Badminton",emoji:"🏸",ca:"CA4",famille:"Raquettes",seances:"10–12",fond:"Sport de raquette où deux joueurs s'affrontent en envoyant le volant dans le camp adverse.",pb:"Gérer la contradiction entre placer le volant loin TOUT EN maintenant sa propre position optimale.",materiel:"Raquettes, volants, filet",temporel:"10–12 séances",espace:"Gymnase avec filets",effectif:"Simple et double",afc1:"Réaliser des frappes variées. Se replacer au centre.",afc2:"Exploiter les espaces adverses.",afc3:"Arbitrer en autonomie.",ciblage:"EXPLOITER LES ESPACES ADVERSES PAR LA VARIÉTÉ DES FRAPPES.",epreuve:"Tournoi simple et double. 15 points.",axes:["Frappes de base","Replacement","Construction échange","Double","Tournoi"],bareme:[{pts:"6 pts",label:"Performance",detail:"Résultats matchs"},{pts:"7 pts",label:"Technique",detail:"Variété, précision"},{pts:"4 pts",label:"Replacement",detail:"Retour centre"},{pts:"3 pts",label:"Arbitrage",detail:"Règles"}]},
+  {id:"tennis-table",nom:"Tennis de table",emoji:"🏓",ca:"CA4",famille:"Raquettes",seances:"10",fond:"Sport de raquette rapide sur table séparée par un filet.",pb:"Gérer la contradiction entre frapper fort TOUT EN contrôlant la balle.",materiel:"Tables, raquettes, balles",temporel:"10 séances",espace:"Salle avec tables",effectif:"Duels",afc1:"Frappes coup droit et revers avec contrôle.",afc2:"Construire des échanges en variant effets.",afc3:"Arbitrer et gérer le score en autonomie.",ciblage:"CONSTRUIRE L'ÉCHANGE PAR LA RÉGULARITÉ ET LA VARIATION.",epreuve:"Tournoi simple 11 points, format suédois.",axes:["Coup droit et revers","Régularité","Effets","Construction","Tournoi"],bareme:[{pts:"6 pts",label:"Performance",detail:"Résultats"},{pts:"6 pts",label:"Régularité",detail:"Échanges construits"},{pts:"5 pts",label:"Variété",detail:"Effets"},{pts:"3 pts",label:"Arbitrage",detail:"Score"}]},
+  {id:"acrosport",nom:"Acrosport",emoji:"🤸",ca:"CA3",famille:"Gym / Renfo",seances:"10–12",fond:"Activité gymnique collective où des groupes créent des figures acrobatiques et chorégraphiques.",pb:"Gérer la contradiction entre prise de risque dans les figures TOUT EN garantissant la sécurité.",materiel:"Tapis de sol, tapis de réception, musique",temporel:"10–12 séances",espace:"Gymnase avec tapis",effectif:"Groupes de 3–4",afc1:"Réaliser des figures à 3 ou 4.",afc2:"Composer et mémoriser un enchaînement.",afc3:"Respecter les règles de sécurité.",ciblage:"CRÉER UNE PRESTATION ACROBATIQUE COLLECTIVE MAÎTRISÉE ET ESTHÉTIQUE.",epreuve:"Présentation devant la classe (2–3 minutes).",axes:["Sécurité et rôles","Figures de base","Construction enchaînement","Liaisons","Présentation"],bareme:[{pts:"6 pts",label:"Difficulté",detail:"Niveau figures"},{pts:"6 pts",label:"Exécution",detail:"Tenue 3s"},{pts:"5 pts",label:"Composition",detail:"Liaisons, artistique"},{pts:"3 pts",label:"Sécurité",detail:"Parades"}]},
+  {id:"renfo",nom:"Renfo musculaire",emoji:"💪",ca:"CA1",famille:"Gym / Renfo",seances:"10",fond:"Le renforcement musculaire développe la conscience corporelle et les bases de l'entretien physique.",pb:"Gérer la contradiction entre se pousser TOUT EN respectant son intégrité physique.",materiel:"Tapis de sol, élastiques, fiches",temporel:"10 séances",espace:"Gymnase (poids de corps)",effectif:"Individuel ou binôme",afc1:"Réaliser les exercices avec la bonne technique.",afc2:"Construire et suivre un programme personnalisé.",afc3:"Observer et corriger son camarade.",ciblage:"S'ENTRAÎNER EN SÉCURITÉ ; CONSTRUIRE UN PROGRAMME ET MESURER SES PROGRÈS.",epreuve:"Circuit 6 exercices évalués. Fiche de progression.",axes:["Échauffement","Apprentissage","Programme","Circuit","Bilan"],bareme:[{pts:"5 pts",label:"Technique",detail:"Qualité exécution"},{pts:"5 pts",label:"Programme",detail:"Fiche complète"},{pts:"5 pts",label:"Progrès",detail:"Amélioration"},{pts:"5 pts",label:"Échauffement",detail:"Autonome"}]},
+  {id:"course-orientation",nom:"Course d'orientation",emoji:"🗺️",ca:"CA2",famille:"Plein air",seances:"8–10",fond:"La course d'orientation place l'élève dans un environnement inhabituel où il doit utiliser une carte.",pb:"Gérer la contradiction entre aller vite TOUT EN lisant correctement la carte.",materiel:"Cartes, balises, poinçonneurs, boussoles",temporel:"8–10 séances",espace:"Cour, parc ou espace vert",effectif:"Binômes puis individuel",afc1:"Se repérer sur la carte et dans l'espace réel.",afc2:"Planifier son parcours.",afc3:"Gérer sa sécurité.",ciblage:"LIRE UNE CARTE ET SE REPÉRER DANS L'ESPACE RÉEL ; DÉCISIONS AUTONOMES.",epreuve:"Parcours en score : maximum de balises en 15–20 minutes.",axes:["Lecture de carte","Carte/terrain","Itinéraires","Boussole","Parcours score"],bareme:[{pts:"7 pts",label:"Balises",detail:"Nombre et valeur"},{pts:"5 pts",label:"Stratégie",detail:"Itinéraire"},{pts:"5 pts",label:"Autonomie",detail:"Sans aide"},{pts:"3 pts",label:"Bilan",detail:"Tracé et analyse"}]},
+  {id:"lutte",nom:"Lutte",emoji:"🥋",ca:"CA4",famille:"Combat",seances:"10",fond:"Activité de combat codifiée où deux élèves s'affrontent pour mettre l'adversaire à terre.",pb:"Gérer la contradiction entre s'engager avec force TOUT EN contrôlant son geste pour garantir la sécurité.",materiel:"Tapis de lutte épais",temporel:"10 séances",espace:"Gymnase avec tapis",effectif:"Duels par gabarit",afc1:"Déséquilibrer et amener l'adversaire au sol.",afc2:"Choisir le bon moment et la bonne technique.",afc3:"Respecter les règles de sécurité. Arbitrer.",ciblage:"S'ENGAGER EN SÉCURITÉ DANS UN CORPS À CORPS CODIFIÉ ; CONTRÔLE DE SOI.",epreuve:"Tournoi 2×2 minutes. Classement aux points.",axes:["Sécurité","Saisies","Déséquilibre","Contrôle au sol","Tournoi"],bareme:[{pts:"6 pts",label:"Performance",detail:"Points en combat"},{pts:"6 pts",label:"Technique",detail:"Qualité offensive"},{pts:"5 pts",label:"Sécurité",detail:"Respect règles"},{pts:"3 pts",label:"Arbitrage",detail:"Justesse"}]},
+];
+// ═══ DATA ═══
+const classes=['6e','5e','4e','3e'];
+const familleConfig={
+  col:{label:'Sports collectifs',icon:'⚽',cls:'f-col',color:'var(--col)'},
+  ath:{label:'Athlétisme',icon:'🏃',cls:'f-ath',color:'var(--ath)'},
+  raq:{label:'Raquettes',icon:'🏸',cls:'f-raq',color:'var(--raq)'},
+  gym:{label:'Gym/Renfo',icon:'🤸',cls:'f-gym',color:'var(--gym)'},
+  plein:{label:'Plein air',icon:'🌿',cls:'f-plein',color:'var(--plein)'},
+  combat:{label:'Combat',icon:'🥋',cls:'f-combat',color:'var(--combat)'},
+  nat:{label:'Natation',icon:'🏊',cls:'f-nat',color:'var(--nat)'},
+};
+const caColors={CA1:'var(--ca1)',CA2:'var(--ca2)',CA3:'var(--ca3)',CA4:'var(--ca4)',CA5:'var(--ca5)'};
+const caDefaut={col:'CA4',ath:'CA1',raq:'CA4',gym:'CA3',plein:'CA2',combat:'CA4',nat:'CA5'};
+const trimestres={1:{label:'Trimestre 1',dates:'01/09 – 05/12'},2:{label:'Trimestre 2',dates:'08/12 – 19/03'},3:{label:'Trimestre 3',dates:'23/03 – 12/06'}};
 
-const CA_COLORS = {"CA1":"#e85d04","CA2":"#2d6a4f","CA3":"#7209b7","CA4":"#0e7c7b"};
+let periodesData={
+  '2025-26':[
+    {id:'P1',name:'Cycle 1',dates:'1/09 – 17/10',semaines:7,trimestre:1},
+    {id:'P2',name:'Cycle 2',dates:'3/11 – 5/12',semaines:5,trimestre:1},
+    {id:'P3',name:'Cycle 3',dates:'8/12 – 5/02',semaines:8,trimestre:2},
+    {id:'P4',name:'Cycle 4',dates:'9/02 – 19/03',semaines:5,trimestre:2},
+    {id:'P5',name:'Cycle 5',dates:'23/03 – 12/06',semaines:11,trimestre:3},
+  ]
+};
 
-function renderProg() {
-  const grid = document.getElementById('progGrid');
-  if (!grid) return;
-  grid.innerHTML = SPORTS_DATA.map(s => `
-    <div class="prog-card" onclick="openFicheModal('${s.id}')" data-ca="${s.ca}">
-      <div class="prog-card-top">
-        <div class="prog-card-emoji">${s.emoji}</div>
-        <div class="prog-card-nom">${s.nom}</div>
-        <div class="prog-card-famille">${s.famille}</div>
-      </div>
-      <div class="prog-card-bottom">
-        <span class="prog-ca-badge" style="background:${CA_COLORS[s.ca]}">${s.ca}</span>
-        <span class="prog-seances">${s.seances} séances</span>
-      </div>
-    </div>
-  `).join('');
+const creneauxDefaut={
+  '6e':{seances:2,detail:'Lundi + Jeudi (×2/sem)'},
+  '5e':{seances:1.5,detail:'Mardi (×1/2sem) + Jeudi (×1/sem)'},
+  '4e':{seances:1.5,detail:'Lundi (×1/2sem) + Mercredi (×1/sem)'},
+  '3e':{seances:1.5,detail:'Mardi (×1/2sem) + Mercredi (×1/sem)'},
+};
+const creneauxData={};
+function getCreneaux(y){
+  if(creneauxData[y]) return creneauxData[y];
+  const stored=JSON.parse(localStorage.getItem('creneaux-'+y)||'null');
+  creneauxData[y]=stored||JSON.parse(JSON.stringify(creneauxDefaut));
+  return creneauxData[y];
+}
+function saveCreneaux(y){localStorage.setItem('creneaux-'+y,JSON.stringify(creneauxData[y]));}
+const creneaux=new Proxy({},{get(_,cl){return getCreneaux(currentYear)[cl];}});
+
+const VACANCES_ZONE_A={
+  '2026-27':[
+    {nom:'Toussaint',debut:'2026-10-17',fin:'2026-11-02'},
+    {nom:'Noël',debut:'2026-12-19',fin:'2027-01-04'},
+    {nom:'Hiver',debut:'2027-02-20',fin:'2027-03-08'},
+    {nom:'Printemps',debut:'2027-04-24',fin:'2027-05-10'},
+  ],
+};
+const ANNEE_PARAMS={
+  '2025-26':{finNotes:'2026-06-12',finAnnee:'2026-07-04'},
+  '2026-27':{finNotes:'2027-06-11',finAnnee:'2027-07-03'},
+};
+function getVacances(y){return JSON.parse(localStorage.getItem('vacances-'+y)||'null')||VACANCES_ZONE_A[y]||[];}
+function getParams(y){return JSON.parse(localStorage.getItem('params-'+y)||'null')||ANNEE_PARAMS[y]||{finNotes:'',finAnnee:''};}
+function saveParams(y,p){localStorage.setItem('params-'+y,JSON.stringify(p));}
+function saveVacances(y,v){localStorage.setItem('vacances-'+y,JSON.stringify(v));}
+
+let currentYear='2025-26';
+let deleteTarget=null;
+let ficheTarget=null;
+let currentFicheId=null;
+let selectedSport=null;
+let printOrientation='landscape';
+let contraintes=[
+  {icon:'🏟️',text:'Gymnase uniquement le mercredi (4e & 3e)'},
+  {icon:'⚽',text:'Ballons disponibles'},
+  {icon:'🥏',text:'Disques Ultimate disponibles'},
+  {icon:'❌',text:'Pas de filet volley'},
+  {icon:'❌',text:'Pas de zone de saut'},
+];
+
+const planning=()=>plannings[currentYear];
+const periodes=()=>periodesData[currentYear];
+
+// ═══ PERSISTANCE ═══
+const STORAGE_KEY='eps-v2';
+function saveAll(){
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({
+      currentYear,
+      plannings:JSON.parse(JSON.stringify(plannings)),
+      periodesData:JSON.parse(JSON.stringify(periodesData)),
+      contraintes:JSON.parse(JSON.stringify(contraintes)),
+    }));
+  }catch(e){console.error('Save failed:',e);}
+}
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw)return false;
+    const d=JSON.parse(raw);
+    if(d.plannings) plannings=d.plannings;
+    if(d.periodesData) periodesData=d.periodesData;
+    if(d.contraintes) contraintes.splice(0,99,...d.contraintes);
+    if(d.currentYear&&periodesData[d.currentYear]) currentYear=d.currentYear;
+    return true;
+  }catch(e){return false;}
 }
 
-function filterProg(ca, btn) {
-  document.querySelectorAll('.prog-filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.prog-card').forEach(card => {
-    card.style.display = (ca === 'tous' || card.dataset.ca === ca) ? '' : 'none';
+// ═══ RENDER ALL ═══
+function renderAll(){
+  renderYearButtons();
+  renderCreneauList();
+  renderGrid();
+  renderHeures();
+  renderBilan();
+  renderComparaison();
+  renderAlerts();
+  renderStats();
+  renderProg();
+}
+
+// ═══ GRID ═══
+function renderGrid(){
+  const body=document.getElementById('gridBody');
+  if(!body)return;
+  body.innerHTML='';
+  let lastT=null;
+  (periodes()||[]).forEach(p=>{
+    if(p.trimestre!==lastT){
+      lastT=p.trimestre;
+      const t=trimestres[p.trimestre]||{};
+      const band=document.createElement('div');
+      band.className='trimestre-row';
+      band.innerHTML=`<span class="t-label">${t.label||''}</span><span class="t-dates">${t.dates||''}</span>`;
+      body.appendChild(band);
+    }
+    const row=document.createElement('div');
+    row.className='periode-row';
+    let html=`<div class="p-label"><div class="p-name">${p.name}</div><div class="p-dates">${p.dates}</div><div class="p-sem">${p.semaines} sem.</div></div>`;
+    classes.forEach(cl=>{
+      const items=(planning()[p.id]||{})[cl]||[];
+      html+=`<div class="cl-cell">`;
+      items.forEach((item,idx)=>{
+        const f=familleConfig[item.famille]||{icon:'❓',cls:'',color:'#999'};
+        const h=Math.round(item.semaines*(creneaux[cl]?.seances||2));
+        html+=`<div class="apsa-tag ${f.cls}" onclick="openFiche('${p.id}','${cl}',${idx})">
+          <span class="a-icon">${f.icon}</span>
+          <div class="a-info">
+            <div class="a-label">${item.apsa}</div>
+            <div class="a-meta">
+              <span class="a-sem">${item.semaines}s</span>
+              <span class="a-ca" style="background:${caColors[item.ca]||'#999'}">${item.ca}</span>
+              <span class="a-h">~${h}h</span>
+              ${item.note?'<span title="Note">📝</span>':''}
+            </div>
+          </div>
+          <button class="a-del" onclick="askDelete(event,'${p.id}','${cl}',${idx},'${item.apsa.replace(/'/g,"\\'")}')">✕</button>
+        </div>`;
+      });
+      html+=`<button class="add-btn" onclick="openAddModal('${p.id}','${cl}')">+ Ajouter</button></div>`;
+    });
+    row.innerHTML=html;
+    body.appendChild(row);
   });
 }
 
-let currentFicheId = null;
+// ═══ HEURES ═══
+function renderHeures(){
+  const el=document.getElementById('heuresGrid');
+  if(!el)return;
+  el.innerHTML=classes.map(cl=>{
+    let h=0;
+    (periodes()||[]).forEach(p=>{((planning()[p.id]||{})[cl]||[]).forEach(a=>{h+=Math.round(a.semaines*(creneaux[cl]?.seances||2));});});
+    return `<div class="h-card"><div class="h-classe">${cl}</div><div class="h-val">${h}</div><div class="h-lbl">heures est.</div><div class="h-det">${creneaux[cl]?.detail||''}</div></div>`;
+  }).join('');
+}
 
-function openFicheModal(id) {
-  currentFicheId = id;
-  const s = SPORTS_DATA.find(x => x.id === id);
-  if (!s) return;
-  document.getElementById('ficheModalTitre').textContent = s.emoji + ' ' + s.nom;
-  const saved = JSON.parse(localStorage.getItem('fiche-prog-' + id) || '{}');
-  const g = (f, def) => saved[f] !== undefined && saved[f] !== '' ? saved[f] : def;
-  const axesHtml = s.axes.map((a,i) => `<div class="fiche-axe-item"><div class="fiche-axe-num">${i+1}</div><div>${a}</div></div>`).join('');
-  const baremeHtml = s.bareme.map((b,i) => `
-    <div class="fiche-bareme-card">
-      <input class="fiche-edit-input" style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--teal);text-align:center;border:none;background:transparent;width:100%" id="fb${i}pts" value="${g('b'+i+'pts',b.pts)}">
-      <input class="fiche-edit-input" style="font-weight:600;text-align:center" id="fb${i}label" value="${g('b'+i+'label',b.label)}">
-      <input class="fiche-edit-input" style="font-size:0.68rem;color:var(--muted);text-align:center" id="fb${i}detail" value="${g('b'+i+'detail',b.detail)}">
+// ═══ BILAN ═══
+function renderBilan(){
+  const sub=document.getElementById('bilanSub');
+  if(sub) sub.textContent=`Année ${currentYear}`;
+  let totalC=0,totalH=0;
+  const famC={};
+  classes.forEach(cl=>{
+    totalH+=calcHeures(cl);
+    (periodes()||[]).forEach(p=>{((planning()[p.id]||{})[cl]||[]).forEach(a=>{totalC++;famC[a.famille]=(famC[a.famille]||0)+1;});});
+  });
+  const bs=document.getElementById('bilanStats');
+  if(bs) bs.innerHTML=`<div class="bs-card"><div class="bs-val">${totalC}</div><div class="bs-lbl">Cycles planifiés</div></div><div class="bs-card"><div class="bs-val">${totalH}</div><div class="bs-lbl">Heures estimées</div></div><div class="bs-card"><div class="bs-val">${Object.values(famC).filter(v=>v>0).length}</div><div class="bs-lbl">Familles couvertes</div></div>`;
+  const bg=document.getElementById('bilanGrid');
+  if(bg) bg.innerHTML=classes.map(cl=>{
+    const cas=new Set();
+    (periodes()||[]).forEach(p=>{((planning()[p.id]||{})[cl]||[]).forEach(a=>cas.add(a.ca));});
+    return `<div class="bilan-card"><div class="bilan-title">${cl} — Champs d'apprentissage</div>${['CA1','CA2','CA3','CA4','CA5'].map(ca=>`<div class="bilan-row"><span>${ca}</span><span class="${cas.has(ca)?'bilan-ok':'bilan-ko'}">${cas.has(ca)?'✅ Couvert':'❌ Absent'}</span></div>`).join('')}</div>`;
+  }).join('');
+  const pb=document.getElementById('progressBars');
+  if(pb){
+    const total=Object.values(famC).reduce((a,b)=>a+b,0)||1;
+    pb.innerHTML=Object.entries(famC).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([f,v])=>{
+      const fc=familleConfig[f]||{icon:'?',label:f,color:'#999'};
+      const pct=Math.round(v/total*100);
+      return `<div class="prog-row"><div class="prog-label">${fc.icon} ${fc.label}</div><div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${fc.color}"></div></div><div class="prog-pct">${pct}%</div></div>`;
+    }).join('');
+  }
+}
+
+function calcHeures(cl){
+  let h=0;
+  (periodes()||[]).forEach(p=>{((planning()[p.id]||{})[cl]||[]).forEach(a=>{h+=Math.round(a.semaines*(creneaux[cl]?.seances||2));});});
+  return h;
+}
+
+// ═══ ALERTS ═══
+function renderAlerts(){
+  const alerts=[];
+  classes.forEach(cl=>{
+    const cas=new Set();
+    (periodes()||[]).forEach(p=>{((planning()[p.id]||{})[cl]||[]).forEach(a=>cas.add(a.ca));});
+    ['CA1','CA2','CA3','CA4'].forEach(ca=>{if(!cas.has(ca))alerts.push(`<strong>${cl}</strong> — ${ca} absent`);});
+  });
+  const btn=document.getElementById('alertBtn');
+  const count=document.getElementById('alertCount');
+  if(count) count.textContent=alerts.length;
+  if(btn) btn.classList.toggle('has-warn',alerts.length>0);
+  const body=document.getElementById('alertPanelBody');
+  if(body) body.innerHTML=alerts.length===0?'<div class="a-item a-ok">✅ Tous les champs couverts</div>':alerts.map(m=>`<div class="a-item a-warn">⚠️ ${m}</div>`).join('');
+}
+
+function toggleAlertPanel(){
+  const p=document.getElementById('alertPanel');
+  if(p) p.style.display=p.style.display==='none'?'block':'none';
+}
+
+// ═══ STATS ═══
+function renderStats(){
+  let cycles=0,heures=0;const fams=new Set();
+  classes.forEach(cl=>{
+    heures+=calcHeures(cl);
+    (periodes()||[]).forEach(p=>{((planning()[p.id]||{})[cl]||[]).forEach(a=>{cycles++;fams.add(a.famille);});});
+  });
+  const sc=document.getElementById('stCycles');const sh=document.getElementById('stHeures');const sf=document.getElementById('stFamilles');
+  if(sc)sc.textContent=cycles;if(sh)sh.textContent=heures;if(sf)sf.textContent=fams.size;
+}
+
+// ═══ COMPARAISON ═══
+function renderComparaison(){
+  const yA=document.getElementById('compA')?.value||currentYear;
+  const yB=document.getElementById('compB')?.value||currentYear;
+  const cl=document.getElementById('compClasse')?.value||'6e';
+  const pA=periodesData[yA]||[];const pB=periodesData[yB]||[];
+  const plA=plannings[yA]||{};const plB=plannings[yB]||{};
+  function col(year,pers,pl){
+    const rows=pers.map(p=>{
+      const items=(pl[p.id]||{})[cl]||[];
+      const apsa=items.map(a=>{const f=familleConfig[a.famille]||{icon:'❓',cls:''};return `<span class="apsa-tag ${f.cls}" style="display:inline-flex;margin:2px;font-size:0.7rem;padding:3px 6px">${f.icon} ${a.apsa} <span class="a-ca" style="background:${caColors[a.ca]||'#999'};margin-left:3px">${a.ca}</span></span>`;}).join('')||'<span style="color:var(--muted);font-size:0.72rem">—</span>';
+      return `<div class="comp-row"><span style="font-size:0.72rem;color:var(--muted);flex-shrink:0;margin-right:8px">${p.name}</span><div style="flex:1">${apsa}</div></div>`;
+    }).join('');
+    return `<div class="comp-col"><div class="comp-hd">${year} — ${cl}</div><div class="comp-body">${rows}</div></div>`;
+  }
+  const diffs=[];
+  pA.forEach((p,i)=>{
+    const a=(plA[p.id]||{})[cl]||[];
+    const b=(plB[pB[i]?.id]||{})[cl]||[];
+    if(a.map(x=>x.apsa).sort().join()!==b.map(x=>x.apsa).sort().join()) diffs.push(p.name);
+  });
+  const diffHtml=diffs.length>0?`<div class="comp-diff">⚡ Différences sur : ${diffs.join(', ')}</div>`:yA!==yB?`<div class="a-item a-ok">✅ Aucune différence pour ${cl}</div>`:'';
+  const grid=document.getElementById('compGrid');
+  if(grid) grid.innerHTML=`<div style="grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap">${diffHtml}</div>${col(yA,pA,plA)}${col(yB,pB,plB)}`;
+}
+
+// ═══ DELETE APSA ═══
+function askDelete(e,pid,cl,idx,name){
+  e.stopPropagation();
+  deleteTarget={pid,cl,idx};
+  const el=document.getElementById('confirmName');
+  if(el) el.textContent=name;
+  document.getElementById('modalConfirm').classList.add('open');
+  hideSidebarBtn();
+}
+function doDelete(){
+  if(!deleteTarget)return;
+  const{pid,cl,idx}=deleteTarget;
+  if(planning()[pid]&&planning()[pid][cl]){
+    planning()[pid][cl].splice(idx,1);
+  }
+  closeModal('modalConfirm');
+  deleteTarget=null;
+  renderAll();
+  saveAll();
+  showToast('🗑️ Supprimé');
+}
+
+// ═══ ADD APSA MODAL ═══
+let _addPid=null,_addCl=null;
+function openAddModal(pid,cl){
+  _addPid=pid||null;_addCl=cl||null;
+  const cs=document.getElementById('addCycle');
+  if(cs) cs.innerHTML=(periodes()||[]).map(p=>`<option value="${p.id}" ${p.id===_addPid?'selected':''}>${p.name} (${p.dates})</option>`).join('');
+  if(cl){const el=document.getElementById('addClasse');if(el)el.value=cl;}
+  selectedSport=null;
+  document.getElementById('sportSearch').value='';
+  document.getElementById('addNote').value='';
+  document.getElementById('addObjectif').value='';
+  document.getElementById('addSemaines').value=6;
+  filterSports();
+  document.getElementById('modalAdd').classList.add('open');
+  hideSidebarBtn();
+}
+function filterSports(){
+  const fam=document.getElementById('addFamille')?.value||'col';
+  const q=document.getElementById('sportSearch')?.value?.toLowerCase()||'';
+  const cl=document.getElementById('addClasse')?.value||'6e';
+  const sports=q?Object.values(allSports).flat().filter(s=>s.n.toLowerCase().includes(q)):allSports[fam]||[];
+  const caEl=document.getElementById('addCA');
+  if(caEl&&!q) caEl.value=caDefaut[fam]||'CA4';
+  const gymClasses=['4e','3e'];
+  const grid=document.getElementById('sportGrid');
+  if(!grid)return;
+  grid.innerHTML=sports.map(s=>{
+    const unavail=s.unavail||(s.gym&&!gymClasses.includes(cl));
+    const selCls=selectedSport===s.n?'sel':'';
+    const unCls=unavail?'unavail':'';
+    return `<button class="sport-btn ${selCls} ${unCls}" onclick="selectSport('${s.n.replace(/'/g,"\\'")}','${fam}',${unavail})" title="${unavail?(s.why||'Gymnase requis'):s.n}">${s.icon||''} ${s.n}${unavail?' ⚠️':''}</button>`;
+  }).join('');
+}
+function selectSport(name,fam,unavail){
+  if(unavail){showToast('⚠️ Contrainte matérielle');return;}
+  selectedSport=name;
+  const famEl=document.getElementById('addFamille');
+  if(famEl&&fam) famEl.value=fam;
+  filterSports();
+}
+function confirmAdd(){
+  if(!selectedSport){showToast('⚠️ Sélectionne un sport');return;}
+  const pid=document.getElementById('addCycle').value;
+  const cl=document.getElementById('addClasse').value;
+  const fam=document.getElementById('addFamille').value;
+  const sem=parseInt(document.getElementById('addSemaines').value)||6;
+  const ca=document.getElementById('addCA').value;
+  const note=document.getElementById('addNote').value;
+  const obj=document.getElementById('addObjectif').value;
+  if(!planning()[pid]) planning()[pid]={};
+  if(!planning()[pid][cl]) planning()[pid][cl]=[];
+  planning()[pid][cl].push({apsa:selectedSport,famille:fam,semaines:sem,ca,note,objectif:obj});
+  closeModal('modalAdd');
+  renderAll();
+  saveAll();
+  showToast('✅ APSA ajoutée !');
+}
+
+// ═══ FICHE APSA ═══
+function openFiche(pid,cl,idx){
+  ficheTarget={pid,cl,idx};
+  const item=planning()[pid][cl][idx];
+  const f=familleConfig[item.famille]||{icon:'❓',label:'?'};
+  const h=Math.round(item.semaines*(creneaux[cl]?.seances||2));
+  const p=(periodes()||[]).find(x=>x.id===pid)||{};
+  document.getElementById('ficheTitre').textContent=`${f.icon} ${item.apsa}`;
+  document.getElementById('ficheBody').innerHTML=`
+    <div class="fiche-section">
+      <div class="fiche-section-hd"><span class="fiche-section-icon">📋</span><span class="fiche-section-title">Informations</span></div>
+      <div class="fiche-info-grid">
+        <div class="fiche-info-item"><div class="fiche-info-label">Classe</div><div class="fiche-info-value">${cl}</div></div>
+        <div class="fiche-info-item"><div class="fiche-info-label">Cycle</div><div class="fiche-info-value">${p.name||''} (${p.dates||''})</div></div>
+        <div class="fiche-info-item"><div class="fiche-info-label">Durée</div><div class="fiche-info-value">${item.semaines} semaines (~${h}h)</div></div>
+        <div class="fiche-info-item"><div class="fiche-info-label">Famille</div><div class="fiche-info-value">${f.label}</div></div>
+      </div>
+    </div>
+    <div class="fiche-section">
+      <div class="fiche-section-hd"><span class="fiche-section-icon">🎯</span><span class="fiche-section-title">Objectif pédagogique</span></div>
+      <input class="form-input" id="ficheObj" value="${item.objectif||''}" placeholder="Ex : coopération, endurance…">
+    </div>
+    <div class="fiche-section">
+      <div class="fiche-section-hd"><span class="fiche-section-icon">🎓</span><span class="fiche-section-title">Champ d'apprentissage</span></div>
+      <select class="form-select" id="ficheCA">
+        ${['CA1','CA2','CA3','CA4','CA5'].map(ca=>`<option value="${ca}" ${item.ca===ca?'selected':''}>${ca}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fiche-section">
+      <div class="fiche-section-hd"><span class="fiche-section-icon">📝</span><span class="fiche-section-title">Notes pédagogiques</span></div>
+      <textarea class="note-area" id="ficheNote" placeholder="Progressions, points d'attention…">${item.note||''}</textarea>
+    </div>`;
+  document.getElementById('ficheDeleteBtn').onclick=()=>{closeModal('modalFiche');askDeleteFiche(pid,cl,idx,item.apsa);};
+  document.getElementById('modalFiche').classList.add('open');
+  hideSidebarBtn();
+}
+function askDeleteFiche(pid,cl,idx,name){
+  deleteTarget={pid,cl,idx};
+  const el=document.getElementById('confirmName');
+  if(el) el.textContent=name;
+  document.getElementById('modalConfirm').classList.add('open');
+}
+function saveFiche(){
+  if(!ficheTarget)return;
+  const{pid,cl,idx}=ficheTarget;
+  const item=planning()[pid][cl][idx];
+  item.note=document.getElementById('ficheNote')?.value||'';
+  item.objectif=document.getElementById('ficheObj')?.value||'';
+  item.ca=document.getElementById('ficheCA')?.value||item.ca;
+  closeModal('modalFiche');
+  renderAll();
+  saveAll();
+  showToast('💾 Fiche sauvegardée');
+}
+
+// ═══ CYCLES ═══
+function renderCycles(){
+  const el=document.getElementById('cyclesYear');
+  if(el) el.textContent=currentYear;
+  renderParamsSection();
+  const ps=periodes()||[];
+  const list=document.getElementById('cyclesList');
+  if(!list)return;
+  list.innerHTML=`<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff">${
+    ps.map((p,i)=>`<div class="cycle-row" style="border-bottom:1px solid #e2e8f0;background:#fff;">
+      <div style="display:flex;align-items:center;">
+        <div style="font-family:'Syne',sans-serif;font-size:0.76rem;font-weight:700;color:#6b7a8d;width:80px;flex-shrink:0;padding:0 12px;border-right:1px solid #e2e8f0;align-self:stretch;display:flex;align-items:center;background:#f5f7fa;">Cycle ${i+1}</div>
+        <input style="flex:1;border:none;border-right:1px solid #e2e8f0;padding:13px 12px;font-family:'DM Sans',sans-serif;font-size:0.84rem;color:#1a2332;background:transparent;outline:none;min-width:0;" placeholder="1/09 – 17/10" value="${p.dates}" id="cdate-${p.id}" oninput="autoCalcWeeks('${p.id}')">
+        <input style="width:56px;border:none;border-right:1px solid #e2e8f0;padding:13px 8px;font-family:'DM Sans',sans-serif;font-size:0.84rem;color:#1a2332;background:transparent;outline:none;text-align:center;flex-shrink:0;" type="number" value="${p.semaines}" min="1" max="20" id="csem-${p.id}">
+        <select style="width:100px;border:none;padding:13px 8px;font-family:'DM Sans',sans-serif;font-size:0.78rem;color:#1a2332;background:transparent;outline:none;cursor:pointer;align-self:stretch;flex-shrink:0;" id="ctrim-${p.id}">
+          <option value="1" ${p.trimestre===1?'selected':''}>Trim. 1</option>
+          <option value="2" ${p.trimestre===2?'selected':''}>Trim. 2</option>
+          <option value="3" ${p.trimestre===3?'selected':''}>Trim. 3</option>
+        </select>
+      </div>
+      <div class="cycle-row-actions" style="display:flex;gap:8px;padding:8px 12px;background:#f9fafb;border-top:1px solid #e2e8f0;">
+        <button onclick="saveCycle('${p.id}')" style="flex:1;background:#0e7c7b;color:#fff;border:none;border-radius:8px;padding:9px 0;font-family:'Syne',sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer;">✓ Sauvegarder</button>
+        <button onclick="deleteCycle('${p.id}')" style="flex:1;background:#fff;color:#d62828;border:1.5px solid #fecaca;border-radius:8px;padding:9px 0;font-family:'Syne',sans-serif;font-weight:700;font-size:0.76rem;cursor:pointer;">🗑 Supprimer</button>
+      </div>
+    </div>`).join('')
+  }</div>
+  <div class="cycle-add-row" style="margin-top:12px;">
+    <button class="cycle-add-btn" onclick="addCycle()">＋ Ajouter un cycle</button>
+    <span class="cycle-count">${ps.length} cycle${ps.length>1?'s':''} au total</span>
+  </div>`;
+}
+function saveCycle(pid){
+  const p=(periodes()||[]).find(x=>x.id===pid);
+  if(!p)return;
+  p.dates=document.getElementById(`cdate-${pid}`)?.value||p.dates;
+  p.semaines=parseInt(document.getElementById(`csem-${pid}`)?.value)||p.semaines;
+  p.trimestre=parseInt(document.getElementById(`ctrim-${pid}`)?.value)||p.trimestre;
+  renderAll();saveAll();showToast('✅ Cycle mis à jour');
+}
+function autoCalcWeeks(pid){}
+function addCycle(){
+  const ps=periodes()||[];
+  const newId='P'+(ps.length+1);
+  ps.push({id:newId,name:'Cycle '+(ps.length+1),dates:'—',semaines:6,trimestre:3});
+  if(!plannings[currentYear][newId]) plannings[currentYear][newId]={};
+  classes.forEach(cl=>{if(!plannings[currentYear][newId][cl]) plannings[currentYear][newId][cl]=[];});
+  renderAll();saveAll();showToast('✅ Cycle ajouté');
+}
+function deleteCycle(pid){
+  const ps=periodes()||[];
+  const idx=ps.findIndex(x=>x.id===pid);
+  if(idx<0)return;
+  if(ps.length<=1){showToast('⚠️ Minimum 1 cycle');return;}
+  const hasAPSA=classes.some(cl=>((plannings[currentYear][pid]||{})[cl]||[]).length>0);
+  if(hasAPSA&&!confirm('Ce cycle contient des APSA. Confirmer ?'))return;
+  ps.splice(idx,1);
+  delete plannings[currentYear][pid];
+  renderAll();saveAll();showToast('🗑️ Cycle supprimé');
+}
+
+// ═══ ANNEES ═══
+function renderYearButtons(){
+  const list=document.getElementById('yearBtnList');
+  if(!list)return;
+  const years=Object.keys(periodesData).sort();
+  if(years.length<=2){
+    list.innerHTML=years.map(y=>`<div style="display:flex;gap:4px;align-items:center">
+      <button onclick="setYear('${y}')" style="flex:1;font-size:0.72rem;padding:6px 8px;border-radius:7px;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;background:${y===currentYear?'var(--teal)':'var(--bg)'};color:${y===currentYear?'#fff':'var(--muted)'};border:1.5px solid ${y===currentYear?'var(--teal)':'var(--border)'};">${y}</button>
+      ${years.length>1?`<button onclick="deleteYear('${y}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:4px 6px;" onmouseover="this.style.color='#d62828'" onmouseout="this.style.color='var(--muted)'">✕</button>`:''}
     </div>`).join('');
-  document.getElementById('ficheModalBody').innerHTML = `
+  }else{
+    list.innerHTML=`<div style="display:flex;gap:4px;align-items:center">
+      <select onchange="setYear(this.value)" style="flex:1;padding:6px 8px;border-radius:7px;border:1.5px solid var(--teal);font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;color:var(--teal-d);background:var(--teal-g);cursor:pointer;outline:none;">
+        ${years.map(y=>`<option value="${y}" ${y===currentYear?'selected':''}>${y}</option>`).join('')}
+      </select>
+      <button onclick="deleteYear(currentYear)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;padding:4px 6px;" onmouseover="this.style.color='#d62828'" onmouseout="this.style.color='var(--muted)'">✕</button>
+    </div>`;
+  }
+  ['compA','compB'].forEach((id,i)=>{
+    const sel=document.getElementById(id);
+    if(!sel)return;
+    const prev=sel.value;
+    sel.innerHTML=years.map(y=>`<option value="${y}" ${y===prev?'selected':''}>${y}</option>`).join('');
+    if(!years.includes(prev)) sel.value=years[i===0?0:years.length-1];
+  });
+}
+function setYear(y){
+  currentYear=y;
+  const el=document.getElementById('mainTitle');
+  if(el) el.textContent=`Planning ${y}`;
+  renderYearButtons();renderAll();saveAll();
+}
+function addYear(){
+  const years=Object.keys(periodesData).sort();
+  const last=years[years.length-1];
+  const m=last.match(/(\d{4})-(\d{2})/);
+  let newYear;
+  if(m){const s=parseInt(m[1])+1;newYear=`${s}-${(s+1).toString().slice(-2)}`;}
+  else newYear=`${parseInt(last)+1}`;
+  if(periodesData[newYear]){showToast('⚠️ Cette année existe déjà');return;}
+  periodesData[newYear]=periodesData[last].map(p=>({...p}));
+  plannings[newYear]={};
+  periodesData[newYear].forEach(p=>{
+    plannings[newYear][p.id]={};
+    classes.forEach(cl=>{plannings[newYear][p.id][cl]=[];});
+  });
+  setYear(newYear);
+  saveAll();
+  showToast(`✅ Année ${newYear} créée`);
+}
+function deleteYear(y){
+  const years=Object.keys(periodesData);
+  if(years.length<=1){showToast('⚠️ Minimum 1 année');return;}
+  const hasAPSA=Object.values(plannings[y]||{}).some(p=>Object.values(p).some(cl=>cl.length>0));
+  if(hasAPSA&&!confirm(`Supprimer l'année ${y} et toutes ses APSA ?`))return;
+  delete periodesData[y];delete plannings[y];
+  const remaining=Object.keys(periodesData).sort();
+  if(currentYear===y) currentYear=remaining[remaining.length-1];
+  renderYearButtons();renderAll();saveAll();
+  showToast(`🗑️ Année ${y} supprimée`);
+}
+
+// ═══ PROGRAMMATIONS ═══
+const CA_COLORS={CA1:'#e85d04',CA2:'#2d6a4f',CA3:'#7209b7',CA4:'#0e7c7b',CA5:'#0077b6'};
+function renderProg(){
+  const grid=document.getElementById('progGrid');
+  if(!grid||!window.SPORTS_DATA)return;
+  grid.innerHTML=SPORTS_DATA.map(s=>`
+    <div class="prog-card" onclick="openFicheModal('${s.id}')" data-ca="${s.ca}">
+      <div class="prog-card-top"><div class="prog-card-emoji">${s.emoji}</div><div class="prog-card-nom">${s.nom}</div><div class="prog-card-famille">${s.famille}</div></div>
+      <div class="prog-card-bottom"><span class="prog-ca-badge" style="background:${CA_COLORS[s.ca]}">${s.ca}</span><span class="prog-seances">${s.seances} séances</span></div>
+    </div>`).join('');
+}
+function filterProg(ca,btn){
+  document.querySelectorAll('.prog-filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.prog-card').forEach(card=>{card.style.display=(ca==='tous'||card.dataset.ca===ca)?'':'none';});
+}
+function openFicheModal(id){
+  currentFicheId=id;
+  const s=(window.SPORTS_DATA||[]).find(x=>x.id===id);
+  if(!s)return;
+  document.getElementById('ficheModalTitre').textContent=s.emoji+' '+s.nom;
+  const saved=JSON.parse(localStorage.getItem('fiche-prog-'+id)||'{}');
+  const g=(f,def)=>saved[f]!==undefined&&saved[f]!==''?saved[f]:def;
+  const axesHtml=(s.axes||[]).map((a,i)=>`<div class="fiche-axe-item"><div class="fiche-axe-num">${i+1}</div><div>${a}</div></div>`).join('');
+  const baremeHtml=(s.bareme||[]).map((b,i)=>`<div class="fiche-bareme-card">
+    <input class="fiche-edit-input" style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--teal);text-align:center;border:none;background:transparent;width:100%" id="fb${i}pts" value="${g('b'+i+'pts',b.pts)}">
+    <input class="fiche-edit-input" style="font-weight:600;text-align:center" id="fb${i}label" value="${g('b'+i+'label',b.label)}">
+    <input class="fiche-edit-input" style="font-size:0.68rem;color:var(--muted);text-align:center" id="fb${i}detail" value="${g('b'+i+'detail',b.detail)}">
+  </div>`).join('');
+  document.getElementById('ficheModalBody').innerHTML=`
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🎭</span><span class="fiche-section-title">Fond culturel</span></div>
-      <div class="fiche-fond-text">${s.fond}</div><div class="fiche-pb">Problème fondamental : ${s.pb}</div>
+      <div class="fiche-fond-text">${s.fond||''}</div><div class="fiche-pb">Problème fondamental : ${s.pb||''}</div>
       <span class="fiche-field-label">Modifier</span><textarea class="fiche-edit-ta" id="ffond">${g('fond','')}</textarea></div>
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">📋</span><span class="fiche-section-title">Conditions d'enseignement</span></div>
       <div class="fiche-cond-grid">
-        <div class="fiche-cond-item"><div class="fiche-cond-label">Matériels</div><input class="fiche-edit-input" id="fmateriel" value="${g('materiel',s.materiel)}"></div>
-        <div class="fiche-cond-item"><div class="fiche-cond-label">Temporelles</div><input class="fiche-edit-input" id="ftemporel" value="${g('temporel',s.temporel)}"></div>
-        <div class="fiche-cond-item"><div class="fiche-cond-label">Espace</div><input class="fiche-edit-input" id="fespace" value="${g('espace',s.espace)}"></div>
-        <div class="fiche-cond-item"><div class="fiche-cond-label">Effectif</div><input class="fiche-edit-input" id="feffectif" value="${g('effectif',s.effectif)}"></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Matériels</div><input class="fiche-edit-input" id="fmateriel" value="${g('materiel',s.materiel||'')}"></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Temporelles</div><input class="fiche-edit-input" id="ftemporel" value="${g('temporel',s.temporel||'')}"></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Espace</div><input class="fiche-edit-input" id="fespace" value="${g('espace',s.espace||'')}"></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Effectif</div><input class="fiche-edit-input" id="feffectif" value="${g('effectif',s.effectif||'')}"></div>
       </div></div>
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🎯</span><span class="fiche-section-title">Attendus de fin de cycle</span></div>
       <div class="fiche-afc-grid">
-        <div class="fiche-afc-card"><div class="fiche-afc-hd">AFC 1 — Moteur</div><div class="fiche-afc-body"><textarea class="fiche-edit-ta" id="fafc1">${g('afc1',s.afc1)}</textarea></div></div>
-        <div class="fiche-afc-card"><div class="fiche-afc-hd">AFC 2 — Stratégie</div><div class="fiche-afc-body"><textarea class="fiche-edit-ta" id="fafc2">${g('afc2',s.afc2)}</textarea></div></div>
-        <div class="fiche-afc-card"><div class="fiche-afc-hd">AFC 3 — Social</div><div class="fiche-afc-body"><textarea class="fiche-edit-ta" id="fafc3">${g('afc3',s.afc3)}</textarea></div></div>
+        <div class="fiche-afc-card"><div class="fiche-afc-hd">AFC 1</div><div class="fiche-afc-body"><textarea class="fiche-edit-ta" id="fafc1">${g('afc1',s.afc1||'')}</textarea></div></div>
+        <div class="fiche-afc-card"><div class="fiche-afc-hd">AFC 2</div><div class="fiche-afc-body"><textarea class="fiche-edit-ta" id="fafc2">${g('afc2',s.afc2||'')}</textarea></div></div>
+        <div class="fiche-afc-card"><div class="fiche-afc-hd">AFC 3</div><div class="fiche-afc-body"><textarea class="fiche-edit-ta" id="fafc3">${g('afc3',s.afc3||'')}</textarea></div></div>
       </div></div>
-    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🔎</span><span class="fiche-section-title">Ciblage</span><span class="fiche-section-badge">Ce que je veux transformer</span></div>
-      <div class="fiche-ciblage-box"><div class="fiche-ciblage-label">Le pas en avant</div><div class="fiche-ciblage-text">${s.ciblage}</div></div>
-      <span class="fiche-field-label">Adapter à votre classe</span><textarea class="fiche-edit-ta" id="fciblage">${g('ciblage','')}</textarea></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🔎</span><span class="fiche-section-title">Ciblage</span></div>
+      <div class="fiche-ciblage-box"><div class="fiche-ciblage-label">Le pas en avant</div><div class="fiche-ciblage-text">${s.ciblage||''}</div></div>
+      <span class="fiche-field-label">Adapter</span><textarea class="fiche-edit-ta" id="fciblage">${g('ciblage','')}</textarea></div>
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">⚙️</span><span class="fiche-section-title">Axes de travail</span></div>
       <div class="fiche-axes-list">${axesHtml}</div>
-      <span class="fiche-field-label">Vos axes spécifiques</span><textarea class="fiche-edit-ta" id="faxes">${g('axes','')}</textarea></div>
+      <span class="fiche-field-label">Vos axes</span><textarea class="fiche-edit-ta" id="faxes">${g('axes','')}</textarea></div>
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🏆</span><span class="fiche-section-title">Épreuve d'évaluation</span></div>
-      <div class="fiche-epreuve-box">${s.epreuve}</div>
+      <div class="fiche-epreuve-box">${s.epreuve||''}</div>
       <span class="fiche-field-label">Adapter</span><textarea class="fiche-edit-ta" id="fepreuve">${g('epreuve','')}</textarea></div>
-    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">📊</span><span class="fiche-section-title">Grille d'évaluation — 4 niveaux de maîtrise</span></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">📊</span><span class="fiche-section-title">Grille d'évaluation</span></div>
       <table class="fiche-eval-table"><thead><tr>
-        <th style="width:130px">Domaine / AFC</th>
-        <th><span class="niveau-badge n1">Insuffisant</span></th>
-        <th><span class="niveau-badge n2">Fragile</span></th>
-        <th><span class="niveau-badge n3">Satisfaisant</span></th>
-        <th><span class="niveau-badge n4">Très bonne maîtrise</span></th>
+        <th style="width:130px">Domaine</th><th><span class="niveau-badge n1">Insuffisant</span></th><th><span class="niveau-badge n2">Fragile</span></th><th><span class="niveau-badge n3">Satisfaisant</span></th><th><span class="niveau-badge n4">Très bonne maîtrise</span></th>
       </tr></thead><tbody>
-        <tr><td class="fiche-domain-cell">D1 — Moteur<br><small style="font-weight:400;color:var(--muted)">AFC 1</small></td>
-          <td><textarea class="fiche-edit-ta" id="fg1n1" style="min-height:40px">${g('g1n1','Niveau insuffisant sur les habiletés motrices de base.')}</textarea></td>
-          <td><textarea class="fiche-edit-ta" id="fg1n2" style="min-height:40px">${g('g1n2','Maîtrise partielle. Progrès visibles mais irréguliers.')}</textarea></td>
-          <td><textarea class="fiche-edit-ta" id="fg1n3" style="min-height:40px">${g('g1n3','Bonne maîtrise. Efficace dans les situations habituelles.')}</textarea></td>
-          <td><textarea class="fiche-edit-ta" id="fg1n4" style="min-height:40px">${g('g1n4','Très bonne maîtrise. Efficace même en situation complexe.')}</textarea></td></tr>
-        <tr><td class="fiche-domain-cell">D2 — Méthodes<br><small style="font-weight:400;color:var(--muted)">AFC 2</small></td>
-          <td><textarea class="fiche-edit-ta" id="fg2n1" style="min-height:40px">${g('g2n1',"Ne comprend pas ou n'applique pas les principes.")}</textarea></td>
-          <td><textarea class="fiche-edit-ta" id="fg2n2" style="min-height:40px">${g('g2n2','Application partielle. Choix parfois pertinents mais tardifs.')}</textarea></td>
-          <td><textarea class="fiche-edit-ta" id="fg2n3" style="min-height:40px">${g('g2n3','Bons choix dans les situations simples. Commence à anticiper.')}</textarea></td>
-          <td><textarea class="fiche-edit-ta" id="fg2n4" style="min-height:40px">${g('g2n4','Analyse fine. Décisions toujours pertinentes.')}</textarea></td></tr>
-        <tr><td class="fiche-domain-cell">D3 — Citoyen<br><small style="font-weight:400;color:var(--muted)">AFC 3</small></td>
-          <td><textarea class="fiche-edit-ta" id="fg3n1" style="min-height:40px">${g('g3n1','Ne respecte pas les règles. Rôles non tenus.')}</textarea></td>
-          <td><textarea class="fiche-edit-ta" id="fg3n2" style="min-height:40px">${g('g3n2','Respecte les règles principales. Rôles partiellement tenus.')}</textarea></td>
-          <td><textarea class="fiche-edit-ta" id="fg3n3" style="min-height:40px">${g('g3n3','Respecte toutes les règles. Rôles tenus correctement.')}</textarea></td>
-          <td><textarea class="fiche-edit-ta" id="fg3n4" style="min-height:40px">${g('g3n4','Exemplaire. Rôles tenus avec rigueur et initiative.')}</textarea></td></tr>
+        <tr><td class="fiche-domain-cell">D1 — Moteur</td><td><textarea class="fiche-edit-ta" id="fg1n1" style="min-height:40px">${g('g1n1','Niveau insuffisant sur les habiletés motrices.')}</textarea></td><td><textarea class="fiche-edit-ta" id="fg1n2" style="min-height:40px">${g('g1n2','Maîtrise partielle.')}</textarea></td><td><textarea class="fiche-edit-ta" id="fg1n3" style="min-height:40px">${g('g1n3','Bonne maîtrise.')}</textarea></td><td><textarea class="fiche-edit-ta" id="fg1n4" style="min-height:40px">${g('g1n4','Très bonne maîtrise.')}</textarea></td></tr>
+        <tr><td class="fiche-domain-cell">D2 — Méthodes</td><td><textarea class="fiche-edit-ta" id="fg2n1" style="min-height:40px">${g('g2n1','Ne comprend pas les principes.')}</textarea></td><td><textarea class="fiche-edit-ta" id="fg2n2" style="min-height:40px">${g('g2n2','Application partielle.')}</textarea></td><td><textarea class="fiche-edit-ta" id="fg2n3" style="min-height:40px">${g('g2n3','Bons choix dans les situations simples.')}</textarea></td><td><textarea class="fiche-edit-ta" id="fg2n4" style="min-height:40px">${g('g2n4','Analyse fine, décisions toujours pertinentes.')}</textarea></td></tr>
+        <tr><td class="fiche-domain-cell">D3 — Citoyen</td><td><textarea class="fiche-edit-ta" id="fg3n1" style="min-height:40px">${g('g3n1','Ne respecte pas les règles.')}</textarea></td><td><textarea class="fiche-edit-ta" id="fg3n2" style="min-height:40px">${g('g3n2','Respecte les règles principales.')}</textarea></td><td><textarea class="fiche-edit-ta" id="fg3n3" style="min-height:40px">${g('g3n3','Respecte toutes les règles.')}</textarea></td><td><textarea class="fiche-edit-ta" id="fg3n4" style="min-height:40px">${g('g3n4','Exemplaire.')}</textarea></td></tr>
       </tbody></table></div>
-    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🔢</span><span class="fiche-section-title">Barème chiffré</span></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🔢</span><span class="fiche-section-title">Barème</span></div>
       <div class="fiche-bareme-grid">${baremeHtml}</div></div>`;
   document.getElementById('ficheModalOverlay').classList.add('open');
   hideSidebarBtn();
 }
-
-function closeFicheModal() {
+function closeFicheModal(){
   document.getElementById('ficheModalOverlay').classList.remove('open');
-  currentFicheId = null;
-  showSidebarBtn();
+  currentFicheId=null;showSidebarBtn();
 }
-
-function saveFicheModal() {
-  if (!currentFicheId) return;
-  const s = SPORTS_DATA.find(x => x.id === currentFicheId);
-  const fields = ['fond','materiel','temporel','espace','effectif','afc1','afc2','afc3','ciblage','axes','epreuve','g1n1','g1n2','g1n3','g1n4','g2n1','g2n2','g2n3','g2n4','g3n1','g3n2','g3n3','g3n4'];
-  const data = {};
-  fields.forEach(f => { const el = document.getElementById('f'+f); if(el) data[f] = el.value; });
-  s.bareme.forEach((_,i) => {
-    ['pts','label','detail'].forEach(k => { const el = document.getElementById('fb'+i+k); if(el) data['b'+i+k] = el.value; });
-  });
-  localStorage.setItem('fiche-prog-' + currentFicheId, JSON.stringify(data));
-  saveAll();
-  const badge = document.getElementById('ficheSavedBadge');
-  if(badge) { badge.classList.add('show'); setTimeout(() => badge.classList.remove('show'), 2000); }
+function saveFicheModal(){
+  if(!currentFicheId)return;
+  const s=(window.SPORTS_DATA||[]).find(x=>x.id===currentFicheId);
+  const fields=['fond','materiel','temporel','espace','effectif','afc1','afc2','afc3','ciblage','axes','epreuve','g1n1','g1n2','g1n3','g1n4','g2n1','g2n2','g2n3','g2n4','g3n1','g3n2','g3n3','g3n4'];
+  const data={};
+  fields.forEach(f=>{const el=document.getElementById('f'+f);if(el)data[f]=el.value;});
+  (s?.bareme||[]).forEach((_,i)=>{['pts','label','detail'].forEach(k=>{const el=document.getElementById('fb'+i+k);if(el)data['b'+i+k]=el.value;});});
+  localStorage.setItem('fiche-prog-'+currentFicheId,JSON.stringify(data));
+  const badge=document.getElementById('ficheSavedBadge');
+  if(badge){badge.classList.add('show');setTimeout(()=>badge.classList.remove('show'),2000);}
   showToast('💾 Fiche sauvegardée !');
 }
 
-document.addEventListener('click', e => {
-  const overlay = document.getElementById('ficheModalOverlay');
-  if (overlay && overlay.classList.contains('open') && e.target === overlay) closeFicheModal();
-});
-
-
-
-function toggleMobileSidebar() {
-  const sidebar = document.querySelector('.sidebar');
-  const backdrop = document.getElementById('sidebarBackdrop');
-  const btn = document.getElementById('sidebarToggle');
-  const isOpen = sidebar.classList.toggle('mobile-open');
-  backdrop.classList.toggle('open', isOpen);
-  btn.textContent = isOpen ? '✕' : '☰';
-  btn.style.background = isOpen ? '#d62828' : '';
+// ═══ CONTRAINTES ═══
+let currentEmoji='🏟️';
+function renderContraintes(){
+  const list=document.getElementById('contrainteList');
+  if(!list)return;
+  list.innerHTML=contraintes.map((c,i)=>`<div class="contrainte-item"><span>${c.icon}</span><span class="contrainte-text">${c.text}</span><button class="c-del" onclick="delContrainte(${i})">✕</button></div>`).join('');
 }
-
-function hideSidebarBtn() {
-  document.body.classList.add('modal-open');
+function pickEmoji(btn,e){
+  currentEmoji=e;
+  const el=document.getElementById('selEmoji');if(el)el.textContent=e;
+  document.querySelectorAll('.e-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
 }
-function showSidebarBtn() {
-  document.body.classList.remove('modal-open');
+function addContrainte(){
+  const inp=document.getElementById('cInput');
+  if(!inp?.value.trim())return;
+  contraintes.push({icon:currentEmoji,text:inp.value.trim()});
+  inp.value='';renderContraintes();saveAll();
 }
+function delContrainte(i){contraintes.splice(i,1);renderContraintes();saveAll();}
 
-
-
-// ══════════════════════════════════════════════
-// VACANCES SCOLAIRES ZONE A — ACADÉMIE DE LYON
-// ══════════════════════════════════════════════
-const VACANCES_ZONE_A = {
-  '2026-27': [
-    { nom: 'Toussaint',  debut: '2026-10-17', fin: '2026-11-02' },
-    { nom: 'Noël',       debut: '2026-12-19', fin: '2027-01-04' },
-    { nom: 'Hiver',      debut: '2027-02-20', fin: '2027-03-08' },
-    { nom: 'Printemps',  debut: '2027-04-24', fin: '2027-05-10' },
-  ],
-  '2027-28': [
-    { nom: 'Toussaint',  debut: '2027-10-23', fin: '2027-11-08' },
-    { nom: 'Noël',       debut: '2027-12-18', fin: '2028-01-03' },
-    { nom: 'Hiver',      debut: '2028-02-19', fin: '2028-03-06' },
-    { nom: 'Printemps',  debut: '2028-04-22', fin: '2028-05-08' },
-  ],
-};
-
-// Paramètres par année (fin des notes, fin d'année)
-const ANNEE_PARAMS = {
-  '2025-26': { finNotes: '2026-06-12', finAnnee: '2026-07-04' },
-  '2026-27': { finNotes: '2027-06-11', finAnnee: '2027-07-03' },
-  '2027-28': { finNotes: '2028-06-09', finAnnee: '2028-07-01' },
-};
-
-function getVacances(year) {
-  // Merge stored custom vacances with defaults
-  const stored = JSON.parse(localStorage.getItem('vacances-' + year) || 'null');
-  return stored || VACANCES_ZONE_A[year] || [];
+// ═══ CRÉNEAUX ═══
+function renderCreneauList(){
+  const list=document.getElementById('creneauList');
+  if(!list)return;
+  const cr=getCreneaux(currentYear);
+  list.innerHTML=classes.map(cl=>`<div class="creneau-item"><div class="creneau-classe">${cl}</div><div class="creneau-detail"><span class="ctag">${cr[cl]?.detail||''}</span> · ${cr[cl]?.seances||2} séance(s)/sem</div></div>`).join('');
 }
-
-function getParams(year) {
-  const stored = JSON.parse(localStorage.getItem('params-' + year) || 'null');
-  return stored || ANNEE_PARAMS[year] || { finNotes: '', finAnnee: '' };
+function openCreneauxModal(){
+  const cr=getCreneaux(currentYear);
+  document.getElementById('creneauxModalBody').innerHTML=`<p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem">Créneaux pour l'année <strong>${currentYear}</strong></p>${
+    classes.map(cl=>`<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+      <div style="font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:var(--teal-d);margin-bottom:8px">${cl}</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="cr_detail_${cl}" value="${cr[cl]?.detail||''}"></div>
+        <div class="form-group"><label class="form-label">Séances/semaine</label><input class="form-input" type="number" step="0.5" min="0.5" max="5" id="cr_seances_${cl}" value="${cr[cl]?.seances||2}"></div>
+      </div></div>`).join('')}`;
+  document.getElementById('modalCreneaux').classList.add('open');hideSidebarBtn();
 }
-
-function saveParams(year, params) {
-  localStorage.setItem('params-' + year, JSON.stringify(params));
-}
-
-function saveVacances(year, vacs) {
-  localStorage.setItem('vacances-' + year, JSON.stringify(vacs));
-}
-
-// Calcule les semaines effectives entre deux dates (hors vacances + weekends)
-function calcSemainesEffectives(dateDebut, dateFin, year) {
-  if (!dateDebut || !dateFin) return null;
-  const d1 = new Date(dateDebut);
-  const d2 = new Date(dateFin);
-  if (isNaN(d1) || isNaN(d2) || d2 <= d1) return null;
-  const vacs = getVacances(year);
-
-  // Count weeks excluding vacation weeks
-  let totalDays = 0;
-  let cur = new Date(d1);
-  while (cur <= d2) {
-    const inVac = vacs.some(v => {
-      const vd = new Date(v.debut);
-      const vf = new Date(v.fin);
-      return cur >= vd && cur <= vf;
-    });
-    if (!inVac && cur.getDay() !== 0 && cur.getDay() !== 6) {
-      totalDays++;
-    }
-    cur.setDate(cur.getDate() + 1);
-  }
-  return Math.round(totalDays / 5); // 5 jours ouvrés par semaine
-}
-
-function dateToInput(str) {
-  // Convert "1/09" or "1/09 – 17/10" to ISO date for current year
-  return str;
-}
-
-// Parse "D/MM" to Date object for a given school year
-function parseDate(str, year) {
-  if (!str || !str.trim()) return null;
-  str = str.trim();
-  // Handle ISO format
-  if (str.match(/^\d{4}-\d{2}-\d{2}$/)) return new Date(str);
-  // Handle "D/MM" or "D/MM/YYYY"
-  const parts = str.split('/');
-  if (parts.length >= 2) {
-    const day = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
-    const schoolYearStart = parseInt(year.split('-')[0]);
-    const yr = month >= 8 ? schoolYearStart : schoolYearStart + 1;
-    return new Date(yr, month, day);
-  }
-  return null;
-}
-
-function cycleOverlapsVacances(dates, year) {
-  if (!dates || !dates.includes('–')) return [];
-  const parts = dates.split('–').map(s => s.trim());
-  const d1 = parseDate(parts[0], year);
-  const d2 = parseDate(parts[1], year);
-  if (!d1 || !d2) return [];
-  const vacs = getVacances(year);
-  return vacs.filter(v => {
-    const vd = new Date(v.debut);
-    const vf = new Date(v.fin);
-    return d1 <= vf && d2 >= vd;
+function saveCreneauxModal(){
+  const cr=getCreneaux(currentYear);
+  classes.forEach(cl=>{
+    const det=document.getElementById('cr_detail_'+cl)?.value;
+    const sea=parseFloat(document.getElementById('cr_seances_'+cl)?.value);
+    if(det)cr[cl].detail=det;if(!isNaN(sea))cr[cl].seances=sea;
   });
-}
-
-function calcWeeksFromDates(dates, year) {
-  if (!dates || !dates.includes('–')) return null;
-  const parts = dates.split('–').map(s => s.trim());
-  const d1 = parseDate(parts[0], year);
-  const d2 = parseDate(parts[1], year);
-  return calcSemainesEffectives(
-    d1 ? d1.toISOString().split('T')[0] : null,
-    d2 ? d2.toISOString().split('T')[0] : null,
-    year
-  );
-}
-
-
-// ══════════════════════════════════════════════
-// API VACANCES — data.education.gouv.fr
-// ══════════════════════════════════════════════
-async function fetchVacancesAPI(year) {
-  if (location.protocol !== 'https:') return null;
-  // year format: "2026-27" -> annee_scolaire = "2026-2027"
-  const parts = year.split('-');
-  const startY = parts[0];
-  const endY = startY.slice(0,2) + parts[1];
-  const anneeScolaire = `${startY}-${endY}`;
-
-  const url = `https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-calendrier-scolaire/records?limit=50&lang=fr&timezone=Europe%2FParis&refine=zones%3A%22Zone%20A%22&refine=annee_scolaire%3A%22${anneeScolaire}%22`;
-
-  try {
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
-    if (!data.results || data.results.length === 0) return null;
-
-    // Parse results into our vacances format
-    const vacs = data.results
-      .filter(r => r.population === 'Élèves' || r.population === '-' || !r.population)
-      .map(r => ({
-        nom:   r.description || 'Vacances',
-        debut: r.start_date ? r.start_date.split('T')[0] : '',
-        fin:   r.end_date   ? r.end_date.split('T')[0]   : '',
-      }))
-      .filter(v => v.debut && v.fin)
-      // Exclude été (July/August - not relevant for planning)
-      .filter(v => {
-        const m = new Date(v.debut).getMonth();
-        return m < 6 || m > 7; // Exclude July(6) August(7)
-      })
-      .sort((a,b) => a.debut.localeCompare(b.debut));
-
-    return vacs.length > 0 ? vacs : null;
-  } catch(e) {
-    // API unavailable silently
-    return null;
-  }
-}
-
-
-async function reloadVacancesAPI() {
-  showToast("⏳ Chargement depuis l'API...");
-  // Clear stored vacances to force reload
-  localStorage.removeItem('vacances-' + currentYear);
-  const vacs = await fetchVacancesAPI(currentYear);
-  if (vacs && vacs.length > 0) {
-    saveVacances(currentYear, vacs);
-    showToast("✅ Vacances mises à jour depuis l'API officielle !");
-    renderCycles();
-    renderGrid();
-  } else {
-    showToast('⚠️ API indisponible ou aucune donnée pour cette année');
-  }
-}
-
-async function loadVacancesForYear(year) {
-  // Check if already stored
-  const stored = localStorage.getItem('vacances-' + year);
-  if (stored) return JSON.parse(stored);
-
-  // Check built-in data
-  if (VACANCES_ZONE_A[year]) {
-    saveVacances(year, VACANCES_ZONE_A[year]);
-    return VACANCES_ZONE_A[year];
-  }
-
-  // Fetch from API
-  showToast("⏳ Chargement des vacances depuis l'API...");
-  const vacs = await fetchVacancesAPI(year);
-  if (vacs) {
-    saveVacances(year, vacs);
-    showToast('✅ Vacances Zone A chargées automatiquement !');
-    return vacs;
-  }
-
-  showToast('⚠️ API indisponible — vacances à saisir manuellement');
-  return [];
-}
-
-// ── PRINT ORIENTATION ──
-let printOrientation = 'landscape';
-function toggleOrientation() {
-  printOrientation = printOrientation === 'landscape' ? 'portrait' : 'landscape';
-  const btn = document.getElementById('orientBtn');
-  btn.textContent = printOrientation === 'landscape' ? '🖨️ Paysage' : '🖨️ Portrait';
-  // Inject a print style override
-  let styleEl = document.getElementById('printOrientStyle');
-  if (!styleEl) {
-    styleEl = document.createElement('style');
-    styleEl.id = 'printOrientStyle';
-    document.head.appendChild(styleEl);
-  }
-  styleEl.textContent = `@media print { @page { size: A4 ${printOrientation}; } }`;
-  window.print();
-}
-
-
-
-// ══════════════════════════════════════════════
-// CRÉNEAUX
-// ══════════════════════════════════════════════
-
-function updateSeancesInfo() {
-  const cl = document.getElementById('addClasse')?.value;
-  const sem = parseInt(document.getElementById('addSemaines')?.value) || 0;
-  if (!cl || !sem) return;
-  const cr = getCreneaux(currentYear);
-  const seancesTotal = Math.round(sem * (cr[cl]?.seances || 2));
-  const el = document.getElementById('seancesInfo');
-  if (el) el.textContent = `≈ ${seancesTotal} séances au total pour ${cl} (${cr[cl]?.seances || 2}/sem)`;
-}
-
-function renderCreneauList() {
-  const list = document.getElementById('creneauList');
-  if (!list) return;
-  const cr = getCreneaux(currentYear);
-  list.innerHTML = classes.map(cl => `
-    <div class="creneau-item">
-      <div class="creneau-classe">${cl}</div>
-      <div class="creneau-detail">
-        <span class="ctag">${cr[cl].detail}</span>
-        <span style="font-size:0.62rem;color:var(--muted)"> · ${cr[cl].seances} séance${cr[cl].seances > 1 ? 's' : ''}/sem</span>
-      </div>
-    </div>
-  `).join('');
-}
-
-function openCreneauxModal() {
-  const cr = getCreneaux(currentYear);
-  document.getElementById('creneauxModalBody').innerHTML = `
-    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem">Créneaux pour l'année <strong>${currentYear}</strong></p>
-    ${classes.map(cl => `
-      <div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:8px">
-        <div style="font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:var(--teal-d);margin-bottom:8px">${cl}</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Description des créneaux</label>
-            <input class="form-input" id="cr_detail_${cl}" value="${cr[cl]?.detail || ''}" placeholder="Ex: Lundi + Jeudi (×2/sem)">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Séances par semaine (moy.)</label>
-            <input class="form-input" type="number" step="0.5" min="0.5" max="5" id="cr_seances_${cl}" value="${cr[cl]?.seances || 2}">
-          </div>
-        </div>
-      </div>
-    `).join('')}
-  `;
-  document.getElementById('modalCreneaux').classList.add('open');
-  hideSidebarBtn();
-}
-
-function saveCreneauxModal() {
-  const cr = getCreneaux(currentYear);
-  classes.forEach(cl => {
-    const det = document.getElementById('cr_detail_' + cl)?.value;
-    const sea = parseFloat(document.getElementById('cr_seances_' + cl)?.value);
-    if (det) cr[cl].detail = det;
-    if (!isNaN(sea)) cr[cl].seances = sea;
-  });
-  saveCreneaux(currentYear);
-  saveAll();
-  closeModal('modalCreneaux');
-  renderCreneauList();
-  renderHeures();
+  saveCreneaux(currentYear);saveAll();
+  closeModal('modalCreneaux');renderCreneauList();renderHeures();
   showToast('✅ Créneaux sauvegardés !');
 }
 
-// ══════════════════════════════════════════════
-// PERSISTANCE — localStorage
-// ══════════════════════════════════════════════
-const STORAGE_KEY = 'eps-programmation-v1';
-
-function saveAll() {
-  try {
-    const data = {
-      currentYear,
-      plannings: JSON.parse(JSON.stringify(plannings)),
-      periodesData: JSON.parse(JSON.stringify(periodesData)),
-      contraintes: JSON.parse(JSON.stringify(contraintes)),
-    };
-    const json = JSON.stringify(data);
-    localStorage.setItem(STORAGE_KEY, json);
-    // Verify it was saved
-    const verify = localStorage.getItem(STORAGE_KEY);
-    if (!verify) throw new Error('localStorage vide après écriture');
-    console.log('✅ Sauvegarde OK —', Math.round(json.length/1024) + 'kb');
-    const ind = document.getElementById('saveIndicator');
-    if (ind) { ind.style.display='flex'; ind.textContent='💾 Sauvegardé'; setTimeout(()=>{ ind.style.display='none'; }, 2000); }
-  } catch(e) {
-    console.error('❌ Sauvegarde échouée:', e);
-    showToast('❌ Sauvegarde échouée : ' + e.message);
-  }
+// ═══ PARAMETRES CYCLES ═══
+function renderParamsSection(){
+  const container=document.getElementById('paramsSection');
+  if(!container)return;
+  const params=getParams(currentYear);
+  const vacs=getVacances(currentYear);
+  container.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem">
+    <div style="font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;margin-bottom:0.875rem;">📅 Paramètres ${currentYear}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
+      <div style="background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:4px">📝 Fin des notes</div><input type="date" id="finNotes" value="${params.finNotes}" style="width:100%;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82rem;outline:none" onchange="saveParamsNow()"></div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px"><div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:4px">🏖️ Fin d'année</div><input type="date" id="finAnnee" value="${params.finAnnee}" style="width:100%;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82rem;outline:none" onchange="saveParamsNow()"></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem">
+      <div style="font-family:'Syne',sans-serif;font-size:0.76rem;font-weight:700;">🌴 Vacances Zone A</div>
+      <button onclick="reloadVacancesAPI()" style="background:var(--teal-g);border:1px solid var(--teal);color:var(--teal);border-radius:6px;padding:3px 9px;font-size:0.68rem;font-weight:600;cursor:pointer;">🔄 Actualiser</button>
+    </div>
+    <div id="vacsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+      ${vacs.map((v,i)=>`<div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:8px;padding:7px 10px;font-size:0.76rem">
+        <input value="${v.nom}" id="vnom${i}" style="width:100px;border:1.5px solid var(--border);border-radius:6px;padding:4px 7px;font-size:0.76rem;outline:none" onchange="saveVacancesNow()">
+        <input type="date" value="${v.debut}" id="vdeb${i}" style="flex:1;border:1.5px solid var(--border);border-radius:6px;padding:4px 7px;font-size:0.74rem;outline:none" onchange="saveVacancesNow()">
+        <span style="color:var(--muted)">→</span>
+        <input type="date" value="${v.fin}" id="vfin${i}" style="flex:1;border:1.5px solid var(--border);border-radius:6px;padding:4px 7px;font-size:0.74rem;outline:none" onchange="saveVacancesNow()">
+        <button onclick="deleteVac(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;">✕</button>
+      </div>`).join('')}
+    </div>
+    <button onclick="addVac()" style="width:100%;background:transparent;border:1.5px dashed var(--border);color:var(--muted);border-radius:8px;padding:7px;font-size:0.74rem;cursor:pointer;">＋ Ajouter des vacances</button>
+  </div>`;
+}
+function saveParamsNow(){
+  saveParams(currentYear,{finNotes:document.getElementById('finNotes')?.value||'',finAnnee:document.getElementById('finAnnee')?.value||''});
+  showToast('✅ Paramètres sauvegardés');
+}
+function saveVacancesNow(){
+  const vacs=getVacances(currentYear);
+  saveVacances(currentYear,vacs.map((_,i)=>({nom:document.getElementById('vnom'+i)?.value||'',debut:document.getElementById('vdeb'+i)?.value||'',fin:document.getElementById('vfin'+i)?.value||''})));
+  renderGrid();showToast('✅ Vacances sauvegardées');
+}
+function addVac(){const v=getVacances(currentYear);v.push({nom:'Vacances',debut:'',fin:''});saveVacances(currentYear,v);renderCycles();}
+function deleteVac(i){const v=getVacances(currentYear);v.splice(i,1);saveVacances(currentYear,v);renderCycles();renderGrid();}
+async function reloadVacancesAPI(){
+  if(location.protocol!=='https:'){showToast('⚠️ API disponible uniquement sur HTTPS');return;}
+  const parts=currentYear.split('-');
+  const url=`https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-calendrier-scolaire/records?limit=50&refine=zones%3A%22Zone%20A%22&refine=annee_scolaire%3A%22${parts[0]}-20${parts[1]}%22`;
+  try{
+    const r=await fetch(url);const d=await r.json();
+    if(!d.results?.length){showToast('⚠️ Aucune donnée trouvée');return;}
+    const vacs=d.results.filter(r=>!r.population||r.population==='-'||r.population==='Élèves').map(r=>({nom:r.description||'Vacances',debut:r.start_date?.split('T')[0]||'',fin:r.end_date?.split('T')[0]||''})).filter(v=>v.debut&&v.fin&&new Date(v.debut).getMonth()<6).sort((a,b)=>a.debut.localeCompare(b.debut));
+    saveVacances(currentYear,vacs);renderCycles();renderGrid();showToast('✅ Vacances mises à jour !');
+  }catch(e){showToast('⚠️ API indisponible');}
 }
 
-function loadSaved() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return false;
-    const data = JSON.parse(raw);
-    // Remplacement COMPLET des données — pas de fusion
-    if (data.plannings)    plannings    = data.plannings;
-    if (data.periodesData) periodesData = data.periodesData;
-    if (data.contraintes)  contraintes.splice(0, contraintes.length, ...data.contraintes);
-    if (data.currentYear && periodesData[data.currentYear]) {
-      currentYear = data.currentYear;
-    }
-    return true;
-  } catch(e) {
-    console.warn('Chargement échoué:', e);
-    return false;
-  }
+// ═══ NAVIGATION ═══
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id)?.classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(id==='bilan')renderBilan();
+  if(id==='comparaison')renderComparaison();
+  if(id==='cycles')renderCycles();
 }
 
-// INIT
-// ══════════════════════════════════════════════
+// ═══ SIDEBAR ═══
+function toggleSidebar(id){
+  const body=document.getElementById('sb-'+id);
+  const chev=document.getElementById('chev-'+id);
+  body?.classList.toggle('open');chev?.classList.toggle('open');
+}
+function toggleMobileSidebar(){
+  const sidebar=document.querySelector('.sidebar');
+  const backdrop=document.getElementById('sidebarBackdrop');
+  const btn=document.getElementById('sidebarToggle');
+  const isOpen=sidebar.classList.toggle('mobile-open');
+  backdrop?.classList.toggle('open',isOpen);
+  if(btn){btn.textContent=isOpen?'✕':'☰';btn.style.background=isOpen?'#d62828':'';}
+}
+
+// ═══ MODAUX ═══
+function closeModal(id){
+  document.getElementById(id)?.classList.remove('open');
+  if(id==='modalFiche')ficheTarget=null;
+  if(id==='modalConfirm')deleteTarget=null;
+  const anyOpen=['modalAdd','modalFiche','modalConfirm','modalCreneaux'].some(mid=>document.getElementById(mid)?.classList.contains('open'));
+  if(!anyOpen)showSidebarBtn();
+}
+function hideSidebarBtn(){document.body.classList.add('modal-open');}
+function showSidebarBtn(){document.body.classList.remove('modal-open');}
+
+// ═══ IMPRESSION ═══
+function toggleOrientation(){
+  printOrientation=printOrientation==='landscape'?'portrait':'landscape';
+  const btn=document.getElementById('orientBtn');
+  if(btn)btn.textContent=printOrientation==='landscape'?'🖨️ Paysage':'🖨️ Portrait';
+  let styleEl=document.getElementById('printOrientStyle');
+  if(!styleEl){styleEl=document.createElement('style');styleEl.id='printOrientStyle';document.head.appendChild(styleEl);}
+  styleEl.textContent=`@media print{@page{size:A4 ${printOrientation};}}`;
+  window.print();
+}
+
+// ═══ TOAST ═══
+function showToast(msg){
+  const t=document.getElementById('toast');
+  if(!t)return;
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ═══ ALERT PANEL ═══
+function toggleAlertPanel(){
+  const p=document.getElementById('alertPanel');
+  if(p)p.style.display=p.style.display==='none'?'block':'none';
+}
+
+// ═══ INIT ═══
 loadSaved();
 renderContraintes();
 filterSports();
 renderAll();
-</script>
 
-<!-- ══ FICHE MODALE ══ -->
-<div class="fiche-modal-overlay" id="ficheModalOverlay">
-  <div class="fiche-modal">
-    <div class="fiche-modal-hd" id="ficheModalHd">
-      <div class="fiche-modal-titre" id="ficheModalTitre">Fiche APSA</div>
-      <button class="fiche-modal-close" onclick="closeFicheModal()">✕</button>
-    </div>
-    <div class="fiche-modal-body" id="ficheModalBody"></div>
-    <div class="fiche-modal-ft">
-      <span class="fiche-saved-badge" id="ficheSavedBadge">✅ Sauvegardé</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" style="background:var(--bg);color:var(--text);border:1.5px solid var(--border)" onclick="printFiche()">🖨️ Imprimer</button>
-        <button class="btn btn-teal" onclick="saveFicheModal()">💾 Sauvegarder</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<button class="sidebar-toggle-btn" id="sidebarToggle" onclick="toggleMobileSidebar()" title="Menu">☰</button>
-<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
-
-
-<script>
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW registered'))
-      .catch(() => {});
+// Close modals on outside click
+document.addEventListener('click',e=>{
+  ['modalAdd','modalFiche','modalConfirm','modalCreneaux'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el?.classList.contains('open')&&e.target===el)closeModal(id);
   });
-}
-
-// PWA install prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const installBtn = document.getElementById('installBtn');
-  if (installBtn) installBtn.style.display = 'flex';
+  const panel=document.getElementById('alertPanel');
+  const btn=document.getElementById('alertBtn');
+  if(panel?.style.display!=='none'&&!panel?.contains(e.target)&&!btn?.contains(e.target))
+    if(panel)panel.style.display='none';
+  const overlay=document.getElementById('ficheModalOverlay');
+  if(overlay?.classList.contains('open')&&e.target===overlay)closeFicheModal();
 });
 
-window.addEventListener('appinstalled', () => {
-  const installBtn = document.getElementById('installBtn');
-  if (installBtn) installBtn.style.display = 'none';
-  deferredPrompt = null;
-});
-
-function installPWA() {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-  }
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
 </script>
-
-<!-- ══ MODALE CRÉNEAUX ══ -->
-<div class="modal-overlay" id="modalCreneaux">
-  <div class="modal modal-lg">
-    <div class="modal-hd">
-      <div class="modal-title">✏️ Modifier les créneaux</div>
-      <button class="icon-btn" onclick="closeModal('modalCreneaux')">✕</button>
-    </div>
-    <div class="modal-body" id="creneauxModalBody"></div>
-    <div class="modal-ft">
-      <button class="btn btn-outline" onclick="closeModal('modalCreneaux')">Annuler</button>
-      <button class="btn btn-teal" onclick="saveCreneauxModal()">💾 Sauvegarder</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
