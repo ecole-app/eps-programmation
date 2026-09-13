@@ -1149,25 +1149,42 @@ const periodes=()=>periodesData[currentYear];
 const STORAGE_KEY='eps-v2';
 function saveAll(){
   try{
-    localStorage.setItem(STORAGE_KEY,JSON.stringify({
+    const data = {
       currentYear,
       plannings:JSON.parse(JSON.stringify(plannings)),
       periodesData:JSON.parse(JSON.stringify(periodesData)),
       contraintes:JSON.parse(JSON.stringify(contraintes)),
-    }));
-  }catch(e){console.error('Save failed:',e);}
+    };
+    const json = JSON.stringify(data);
+    localStorage.setItem(STORAGE_KEY, json);
+    // Verify
+    const check = localStorage.getItem(STORAGE_KEY);
+    if(!check) throw new Error('Nothing saved');
+    const parsed = JSON.parse(check);
+    const count = Object.values(parsed.plannings[parsed.currentYear]||{}).reduce((a,p)=>a+Object.values(p).reduce((b,cl)=>b+cl.length,0),0);
+    console.log('✅ SAVED year='+parsed.currentYear+' apsa='+count+' size='+Math.round(json.length/1024)+'kb');
+  }catch(e){
+    console.error('❌ Save failed:',e);
+    showToast('❌ Erreur sauvegarde: '+e.message);
+  }
 }
 function loadSaved(){
   try{
-    const raw=localStorage.getItem(STORAGE_KEY);
-    if(!raw)return false;
+    // Try current key first, then old key for migration
+    const raw = localStorage.getItem(STORAGE_KEY) || 
+                localStorage.getItem('eps-programmation-v1') ||
+                localStorage.getItem('eps-programmation');
+    if(!raw){console.log('No saved data');return false;}
     const d=JSON.parse(raw);
     if(d.plannings) plannings=d.plannings;
     if(d.periodesData) periodesData=d.periodesData;
     if(d.contraintes) contraintes.splice(0,99,...d.contraintes);
     if(d.currentYear&&periodesData[d.currentYear]) currentYear=d.currentYear;
+    // Migrate to new key
+    localStorage.setItem(STORAGE_KEY, raw);
+    console.log('✅ LOADED year='+currentYear);
     return true;
-  }catch(e){return false;}
+  }catch(e){console.error('Load failed:',e);return false;}
 }
 
 // ═══ RENDER ALL ═══
