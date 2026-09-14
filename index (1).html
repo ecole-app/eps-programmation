@@ -720,6 +720,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     <span id="saveIndicator" style="font-size:0.7rem;color:rgba(255,255,255,0.6);display:none;align-items:center;gap:4px">💾</span>
     <button id="installBtn" onclick="installPWA()" class="btn btn-ghost" style="display:none;align-items:center;gap:5px">📲 Installer</button>
     <button class="btn btn-amber" onclick="openAddModal()">+ APSA</button>
+    <button onclick="manualSave()" style="background:#fff;color:var(--teal-d);border:none;border-radius:8px;padding:6px 14px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.15s" onmouseover="this.style.background='var(--amber-l)'" onmouseout="this.style.background='#fff'">💾 Enregistrer</button>
   </div>
 </header>
 <div class="alert-panel" id="alertPanel" style="display:none">
@@ -1148,43 +1149,32 @@ const periodes=()=>periodesData[currentYear];
 // ═══ PERSISTANCE ═══
 const STORAGE_KEY='eps-v2';
 function saveAll(){
-  try{
-    const data = {
-      currentYear,
-      plannings:JSON.parse(JSON.stringify(plannings)),
-      periodesData:JSON.parse(JSON.stringify(periodesData)),
-      contraintes:JSON.parse(JSON.stringify(contraintes)),
-    };
-    const json = JSON.stringify(data);
-    localStorage.setItem(STORAGE_KEY, json);
-    // Verify
-    const check = localStorage.getItem(STORAGE_KEY);
-    if(!check) throw new Error('Nothing saved');
-    const parsed = JSON.parse(check);
-    const count = Object.values(parsed.plannings[parsed.currentYear]||{}).reduce((a,p)=>a+Object.values(p).reduce((b,cl)=>b+cl.length,0),0);
-    console.log('✅ SAVED year='+parsed.currentYear+' apsa='+count+' size='+Math.round(json.length/1024)+'kb');
-  }catch(e){
-    console.error('❌ Save failed:',e);
-    showToast('❌ Erreur sauvegarde: '+e.message);
-  }
+  const data = {
+    v: 3,
+    currentYear,
+    plannings: JSON.parse(JSON.stringify(plannings)),
+    periodesData: JSON.parse(JSON.stringify(periodesData)),
+    contraintes: JSON.parse(JSON.stringify(contraintes)),
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 function loadSaved(){
-  try{
-    // Try current key first, then old key for migration
-    const raw = localStorage.getItem(STORAGE_KEY) || 
-                localStorage.getItem('eps-programmation-v1') ||
-                localStorage.getItem('eps-programmation');
-    if(!raw){console.log('No saved data');return false;}
-    const d=JSON.parse(raw);
-    if(d.plannings) plannings=d.plannings;
-    if(d.periodesData) periodesData=d.periodesData;
-    if(d.contraintes) contraintes.splice(0,99,...d.contraintes);
-    if(d.currentYear&&periodesData[d.currentYear]) currentYear=d.currentYear;
-    // Migrate to new key
-    localStorage.setItem(STORAGE_KEY, raw);
-    console.log('✅ LOADED year='+currentYear);
-    return true;
-  }catch(e){console.error('Load failed:',e);return false;}
+  // Try all known keys
+  const keys = [STORAGE_KEY, 'eps-programmation-v1', 'eps-programmation'];
+  for(const key of keys){
+    try{
+      const raw = localStorage.getItem(key);
+      if(!raw) continue;
+      const d = JSON.parse(raw);
+      if(d.plannings) plannings = d.plannings;
+      if(d.periodesData) periodesData = d.periodesData;
+      if(d.contraintes) contraintes.splice(0, 99, ...d.contraintes);
+      if(d.currentYear && periodesData[d.currentYear]) currentYear = d.currentYear;
+      if(key !== STORAGE_KEY) saveAll(); // migrate
+      return true;
+    }catch(e){}
+  }
+  return false;
 }
 
 // ═══ RENDER ALL ═══
@@ -1853,6 +1843,19 @@ function showToast(msg){
 function toggleAlertPanel(){
   const p=document.getElementById('alertPanel');
   if(p)p.style.display=p.style.display==='none'?'block':'none';
+}
+
+
+function manualSave(){
+  saveAll();
+  const btn = document.querySelector('[onclick="manualSave()"]');
+  if(btn){
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✅ Enregistré !';
+    btn.style.background = '#d1fae5';
+    btn.style.color = '#065f46';
+    setTimeout(()=>{ btn.innerHTML = orig; btn.style.background = '#fff'; btn.style.color = 'var(--teal-d)'; }, 2000);
+  }
 }
 
 // ═══ INIT ═══
