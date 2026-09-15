@@ -1956,7 +1956,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
     <div class="fiche-modal-ft">
       <span class="fiche-saved-badge" id="ficheSavedBadge">✅ Sauvegardé</span>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" onclick="printFiche()">🖨️ PDF</button>
+        <button onclick="printFiche()" style="background:var(--surface);color:var(--text);border:1.5px solid var(--border);border-radius:8px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;">🖨️ Imprimer</button>
         <button class="btn btn-teal" onclick="saveFicheModal()">💾 Sauvegarder</button>
       </div>
     </div>
