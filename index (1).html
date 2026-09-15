@@ -522,6 +522,33 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 }
 
 
+
+@media print {
+  body.printing-fiche * { visibility: hidden; }
+  body.printing-fiche .fiche-modal-overlay,
+  body.printing-fiche .fiche-modal-overlay * { visibility: visible; }
+  body.printing-fiche .fiche-modal-overlay {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    width: 100% !important; height: auto !important;
+    background: white !important;
+    display: block !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  body.printing-fiche .fiche-modal {
+    max-height: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  body.printing-fiche .fiche-modal-ft,
+  body.printing-fiche .fiche-modal-close { display: none !important; }
+  body.printing-fiche .fiche-modal-body { overflow: visible !important; }
+  @page { size: A4 portrait; margin: 10mm; }
+}
+
 @media print {
   /* Cache tout sauf la grille */
   header, .sidebar, .modal-overlay, .toast,
@@ -1857,6 +1884,11 @@ function manualSave(){
   }
 }
 
+function printFiche(){
+  document.body.classList.add('printing-fiche');
+  window.print();
+  setTimeout(()=>{ document.body.classList.remove('printing-fiche'); }, 1000);
+}
 // ═══ INIT ═══
 loadSaved();
 renderContraintes();
@@ -1881,5 +1913,24 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
 </script>
+
+<!-- ══ FICHE PROGRAMMATIONS MODALE ══ -->
+<div class="fiche-modal-overlay" id="ficheModalOverlay">
+  <div class="fiche-modal">
+    <div class="fiche-modal-hd" id="ficheModalHd">
+      <div class="fiche-modal-titre" id="ficheModalTitre">Fiche APSA</div>
+      <button class="fiche-modal-close" onclick="closeFicheModal()">✕</button>
+    </div>
+    <div class="fiche-modal-body" id="ficheModalBody"></div>
+    <div class="fiche-modal-ft">
+      <span class="fiche-saved-badge" id="ficheSavedBadge">✅ Sauvegardé</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="printFiche()">🖨️ PDF</button>
+        <button class="btn btn-teal" onclick="saveFicheModal()">💾 Sauvegarder</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
