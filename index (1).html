@@ -719,8 +719,8 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     <button class="btn btn-ghost" onclick="toggleOrientation()" id="orientBtn" title="Orientation impression">🖨️ Paysage</button>
     <span id="saveIndicator" style="font-size:0.7rem;color:rgba(255,255,255,0.6);display:none;align-items:center;gap:4px">💾</span>
     <button id="installBtn" onclick="installPWA()" class="btn btn-ghost" style="display:none;align-items:center;gap:5px">📲 Installer</button>
+    <button id="saveBtn" onclick="manualSave()" class="btn btn-ghost">💾 Enregistrer</button>
     <button class="btn btn-amber" onclick="openAddModal()">+ APSA</button>
-    <button onclick="manualSave()" style="background:#fff;color:var(--teal-d);border:none;border-radius:8px;padding:6px 14px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.15s" onmouseover="this.style.background='var(--amber-l)'" onmouseout="this.style.background='#fff'">💾 Enregistrer</button>
   </div>
 </header>
 <div class="alert-panel" id="alertPanel" style="display:none">
@@ -1848,13 +1848,12 @@ function toggleAlertPanel(){
 
 function manualSave(){
   saveAll();
-  const btn = document.querySelector('[onclick="manualSave()"]');
+  const btn = document.getElementById('saveBtn');
   if(btn){
-    const orig = btn.innerHTML;
-    btn.innerHTML = '✅ Enregistré !';
+    btn.textContent = '✅ Enregistré !';
     btn.style.background = '#d1fae5';
     btn.style.color = '#065f46';
-    setTimeout(()=>{ btn.innerHTML = orig; btn.style.background = '#fff'; btn.style.color = 'var(--teal-d)'; }, 2000);
+    setTimeout(()=>{ btn.textContent = '💾 Enregistrer'; btn.style.background = ''; btn.style.color = ''; }, 2000);
   }
 }
 
