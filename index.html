@@ -1522,9 +1522,9 @@ function renderCycles(){
     ps.map((p,i)=>`<div class="cycle-row" style="border-bottom:1px solid #e2e8f0;background:#fff;">
       <div style="display:flex;align-items:center;">
         <div style="font-family:'Syne',sans-serif;font-size:0.76rem;font-weight:700;color:#6b7a8d;width:80px;flex-shrink:0;padding:0 12px;border-right:1px solid #e2e8f0;align-self:stretch;display:flex;align-items:center;background:#f5f7fa;">Cycle ${i+1}</div>
-        <input style="flex:1;border:none;border-right:1px solid #e2e8f0;padding:13px 12px;font-family:'DM Sans',sans-serif;font-size:0.84rem;color:#1a2332;background:transparent;outline:none;min-width:0;" placeholder="1/09 – 17/10" value="${p.dates}" id="cdate-${p.id}" oninput="autoCalcWeeks('${p.id}')" onchange="saveCycle('${p.id}')">
-        <input style="width:56px;border:none;border-right:1px solid #e2e8f0;padding:13px 8px;font-family:'DM Sans',sans-serif;font-size:0.84rem;color:#1a2332;background:transparent;outline:none;text-align:center;flex-shrink:0;" type="number" value="${p.semaines}" min="1" max="20" id="csem-${p.id}" onchange="saveCycle('${p.id}')">
-        <select style="width:100px;border:none;padding:13px 8px;font-family:'DM Sans',sans-serif;font-size:0.78rem;color:#1a2332;background:transparent;outline:none;cursor:pointer;align-self:stretch;flex-shrink:0;" id="ctrim-${p.id}" onchange="saveCycle('${p.id}')">
+        <input style="flex:1;border:none;border-right:1px solid #e2e8f0;padding:13px 12px;font-family:'DM Sans',sans-serif;font-size:0.84rem;color:#1a2332;background:transparent;outline:none;min-width:0;" placeholder="1/09 – 17/10" value="${p.dates}" id="cdate-${p.id}" oninput="autoCalcWeeks('${p.id}')">
+        <input style="width:56px;border:none;border-right:1px solid #e2e8f0;padding:13px 8px;font-family:'DM Sans',sans-serif;font-size:0.84rem;color:#1a2332;background:transparent;outline:none;text-align:center;flex-shrink:0;" type="number" value="${p.semaines}" min="1" max="20" id="csem-${p.id}">
+        <select style="width:100px;border:none;padding:13px 8px;font-family:'DM Sans',sans-serif;font-size:0.78rem;color:#1a2332;background:transparent;outline:none;cursor:pointer;align-self:stretch;flex-shrink:0;" id="ctrim-${p.id}">
           <option value="1" ${p.trimestre===1?'selected':''}>Trim. 1</option>
           <option value="2" ${p.trimestre===2?'selected':''}>Trim. 2</option>
           <option value="3" ${p.trimestre===3?'selected':''}>Trim. 3</option>
@@ -1549,7 +1549,36 @@ function saveCycle(pid){
   p.trimestre=parseInt(document.getElementById(`ctrim-${pid}`)?.value)||p.trimestre;
   renderAll();saveAll();showToast('✅ Cycle mis à jour');
 }
-function autoCalcWeeks(pid){}
+function autoCalcWeeks(pid){
+  const datesEl = document.getElementById('cdate-'+pid);
+  const semEl = document.getElementById('csem-'+pid);
+  if(!datesEl||!semEl) return;
+  const val = datesEl.value;
+  if(!val.includes('–') && !val.includes('-')) return;
+  const sep = val.includes('–') ? '–' : '-';
+  const parts = val.split(sep).map(s=>s.trim());
+  if(parts.length !== 2) return;
+  function parseD(s){
+    const p = s.split('/');
+    if(p.length < 2) return null;
+    const day = parseInt(p[0]);
+    const month = parseInt(p[1])-1;
+    // school year: months 8-11 = year start, 0-7 = year end
+    const yearStr = currentYear.split('-')[0];
+    const y = month >= 8 ? parseInt(yearStr) : parseInt(yearStr)+1;
+    return new Date(y, month, day);
+  }
+  const d1 = parseD(parts[0]);
+  const d2 = parseD(parts[1]);
+  if(!d1||!d2||d2<=d1) return;
+  const diffMs = d2 - d1;
+  const weeks = Math.round(diffMs / (7*24*60*60*1000));
+  if(weeks > 0 && weeks <= 20){
+    semEl.value = weeks;
+    semEl.style.color = 'var(--teal)';
+    setTimeout(()=>{ semEl.style.color = ''; }, 1500);
+  }
+}
 function addCycle(){
   const ps=periodes()||[];
   const newId='P'+(ps.length+1);
