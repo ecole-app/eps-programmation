@@ -1156,7 +1156,18 @@ const ANNEE_PARAMS={
   '2025-26':{finNotes:'2026-06-12',finAnnee:'2026-07-04'},
   '2026-27':{finNotes:'2027-06-11',finAnnee:'2027-07-03'},
 };
-function getVacances(y){return JSON.parse(localStorage.getItem('vacances-'+y)||'null')||VACANCES_ZONE_A[y]||[];}
+function getVacances(y){
+  const stored = JSON.parse(localStorage.getItem('vacances-'+y)||'null');
+  // If stored has old fin dates (ending on Monday), clear and use new defaults
+  if(stored && VACANCES_ZONE_A[y]){
+    const hasMonday = stored.some(v => {
+      if(!v.fin) return false;
+      return new Date(v.fin).getDay() === 1; // Monday = day 1
+    });
+    if(hasMonday){ localStorage.removeItem('vacances-'+y); return VACANCES_ZONE_A[y]; }
+  }
+  return stored || VACANCES_ZONE_A[y] || [];
+}
 function getParams(y){return JSON.parse(localStorage.getItem('params-'+y)||'null')||ANNEE_PARAMS[y]||{finNotes:'',finAnnee:''};}
 function saveParams(y,p){localStorage.setItem('params-'+y,JSON.stringify(p));}
 function saveVacances(y,v){localStorage.setItem('vacances-'+y,JSON.stringify(v));}
