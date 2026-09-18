@@ -1884,7 +1884,7 @@ function manualSave(){
   }
 }
 
-function printFiche(){
+window.printFiche = function printFiche(){
   // Inject print style that only shows fiche modal
   let styleEl = document.getElementById('printFicheStyle');
   if(!styleEl){
@@ -1919,7 +1919,7 @@ function printFiche(){
   `;
   window.print();
   setTimeout(()=>{ styleEl.textContent = ''; }, 1000);
-}
+};
 // ═══ INIT ═══
 loadSaved();
 renderContraintes();
