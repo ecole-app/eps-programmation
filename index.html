@@ -1590,11 +1590,8 @@ function autoCalcWeeks(pid){
       if(!v.debut || !v.fin) return false;
       const vd = new Date(v.debut);
       const vf = new Date(v.fin);
-      // Week is in vacation if it overlaps majority (>=3 days) with vacation
-      const overlapStart = cur > vd ? cur : vd;
-      const overlapEnd = weekEnd < vf ? weekEnd : vf;
-      const overlapDays = (overlapEnd - overlapStart) / (24*60*60*1000) + 1;
-      return overlapDays >= 3;
+      // Week is vacation only if Monday (cur) falls within vacation period
+      return cur >= vd && cur <= vf;
     });
     if(!inVac) effectiveWeeks++;
     cur.setDate(cur.getDate() + 7);
