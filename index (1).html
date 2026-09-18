@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EPS Collège — Programmation</title>
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#095958">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="EPS Collège">
@@ -1940,9 +1939,8 @@ document.addEventListener('click',e=>{
   if(overlay?.classList.contains('open')&&e.target===overlay)closeFicheModal();
 });
 
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  navigator.serviceWorker.register('./sw.js').catch(()=>{});
-}
+// Service worker désactivé - sw.js non présent sur ce dépôt
+
 </script>
 
 <!-- ══ FICHE PROGRAMMATIONS MODALE ══ -->
