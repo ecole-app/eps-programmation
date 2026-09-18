@@ -1536,9 +1536,9 @@ function renderCycles(){
       </div>
     </div>`).join('')
   }</div>
-  <div class="cycle-add-row" style="margin-top:12px;">
-    <button class="cycle-add-btn" onclick="addCycle()">＋ Ajouter un cycle</button>
-    <span class="cycle-count">${ps.length} cycle${ps.length>1?'s':''} au total</span>
+  <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+    <button onclick="addCycle()" style="flex:1;background:transparent;border:1.5px dashed var(--border);color:var(--muted);border-radius:10px;padding:10px;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">＋ Ajouter un cycle</button>
+    <span style="font-size:0.72rem;color:var(--muted);white-space:nowrap">${ps.length} cycle${ps.length>1?'s':''} au total</span>
   </div>`;
 }
 function saveCycle(pid){
