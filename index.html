@@ -1072,6 +1072,13 @@ const allSports = {
   ],
 };
 let plannings = {
+  '2026-27': {
+    P1:{'6e':[{apsa:'Relais',famille:'ath',semaines:7,ca:'CA1',note:'',objectif:''}],'5e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Badminton',famille:'raq',semaines:7,ca:'CA4',note:'',objectif:''}]},
+    P2:{'6e':[],'5e':[{apsa:'Ultimate',famille:'col',semaines:5,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Renfo musculaire',famille:'gym',semaines:5,ca:'CA1',note:'',objectif:''}]},
+    P3:{'6e':[{apsa:'Course longue durée',famille:'ath',semaines:8,ca:'CA1',note:'',objectif:''}],'5e':[{apsa:'Relais',famille:'ath',semaines:8,ca:'CA1',note:'',objectif:''}],'4e':[{apsa:'Relais',famille:'ath',semaines:8,ca:'CA1',note:'',objectif:''}],'3e':[{apsa:'Course relais',famille:'ath',semaines:8,ca:'CA1',note:'',objectif:''}]},
+    P4:{'6e':[{apsa:'Ultimate',famille:'col',semaines:5,ca:'CA4',note:'',objectif:''}],'5e':[{apsa:'Ballon prisonnier',famille:'col',semaines:5,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Lutte',famille:'combat',semaines:5,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Basket-ball',famille:'col',semaines:5,ca:'CA4',note:'',objectif:''}]},
+    P5:{'6e':[{apsa:'Rugby à 7',famille:'col',semaines:11,ca:'CA4',note:'',objectif:''}],'5e':[{apsa:'Demi-fond',famille:'ath',semaines:11,ca:'CA1',note:'',objectif:''}],'4e':[{apsa:"Course d'orientation",famille:'plein',semaines:11,ca:'CA2',note:'',objectif:''}],'3e':[{apsa:'Ultimate',famille:'col',semaines:11,ca:'CA4',note:'',objectif:''}]},
+  },
   '2025-26': {
     P1:{'6e':[{apsa:'Relais',famille:'ath',semaines:7,ca:'CA1',note:'',objectif:'Endurance collective'}],'5e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Badminton',famille:'raq',semaines:7,ca:'CA4',note:'',objectif:''}]},
     P2:{'6e':[{apsa:'Acrosport',famille:'gym',semaines:5,ca:'CA3',note:'',objectif:''}],'5e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Renfo musculaire',famille:'gym',semaines:5,ca:'CA3',note:'',objectif:''}]},
@@ -1186,18 +1193,22 @@ function saveAll(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 function loadSaved(){
-  // Try all known keys
   const keys = [STORAGE_KEY, 'eps-programmation-v1', 'eps-programmation'];
   for(const key of keys){
     try{
       const raw = localStorage.getItem(key);
       if(!raw) continue;
       const d = JSON.parse(raw);
+      // Only load if there's actual APSA data saved
+      const hasData = d.plannings && Object.values(d.plannings).some(yr =>
+        Object.values(yr).some(p => Object.values(p).some(cl => cl.length > 0))
+      );
+      if(!hasData) continue;
       if(d.plannings) plannings = d.plannings;
       if(d.periodesData) periodesData = d.periodesData;
       if(d.contraintes) contraintes.splice(0, 99, ...d.contraintes);
       if(d.currentYear && periodesData[d.currentYear]) currentYear = d.currentYear;
-      if(key !== STORAGE_KEY) saveAll(); // migrate
+      if(key !== STORAGE_KEY) saveAll();
       return true;
     }catch(e){}
   }
