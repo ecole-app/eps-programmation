@@ -1863,6 +1863,8 @@ function saveVacancesNow(){
 function addVac(){const v=getVacances(currentYear);v.push({nom:'Vacances',debut:'',fin:''});saveVacances(currentYear,v);renderCycles();}
 function deleteVac(i){const v=getVacances(currentYear);v.splice(i,1);saveVacances(currentYear,v);renderCycles();renderGrid();}
 async function reloadVacancesAPI(){
+  // Clear any in-memory cache first
+  localStorage.removeItem('vacances-'+currentYear);
   if(location.protocol!=='https:'){showToast('⚠️ API disponible uniquement sur HTTPS');return;}
   const parts=currentYear.split('-');
   const url=`https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-calendrier-scolaire/records?limit=50&refine=zones%3A%22Zone%20A%22&refine=annee_scolaire%3A%22${parts[0]}-20${parts[1]}%22`;
@@ -1870,6 +1872,8 @@ async function reloadVacancesAPI(){
     const r=await fetch(url);const d=await r.json();
     if(!d.results?.length){showToast('⚠️ Aucune donnée trouvée');return;}
     const vacs=d.results.filter(r=>!r.population||r.population==='-'||r.population==='Élèves').map(r=>({nom:r.description||'Vacances',debut:r.start_date?.split('T')[0]||'',fin:r.end_date?.split('T')[0]||''})).filter(v=>v.debut&&v.fin&&new Date(v.debut).getMonth()<6).sort((a,b)=>a.debut.localeCompare(b.debut));
+    // Replace completely - clear old ones first
+    localStorage.removeItem('vacances-'+currentYear);
     saveVacances(currentYear,vacs);renderCycles();renderGrid();showToast('✅ Vacances mises à jour !');
   }catch(e){showToast('⚠️ API indisponible');}
 }
