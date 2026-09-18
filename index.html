@@ -1554,8 +1554,8 @@ function autoCalcWeeks(pid){
   const semEl = document.getElementById('csem-'+pid);
   if(!datesEl||!semEl) return;
   const val = datesEl.value;
-  if(!val.includes('–') && !val.includes('-')) return;
-  const sep = val.includes('–') ? '–' : '-';
+  const sep = val.includes('–') ? '–' : (val.includes(' - ') ? ' - ' : null);
+  if(!sep) return;
   const parts = val.split(sep).map(s=>s.trim());
   if(parts.length !== 2) return;
   function parseD(s){
@@ -1563,7 +1563,6 @@ function autoCalcWeeks(pid){
     if(p.length < 2) return null;
     const day = parseInt(p[0]);
     const month = parseInt(p[1])-1;
-    // school year: months 8-11 = year start, 0-7 = year end
     const yearStr = currentYear.split('-')[0];
     const y = month >= 8 ? parseInt(yearStr) : parseInt(yearStr)+1;
     return new Date(y, month, day);
@@ -1571,12 +1570,27 @@ function autoCalcWeeks(pid){
   const d1 = parseD(parts[0]);
   const d2 = parseD(parts[1]);
   if(!d1||!d2||d2<=d1) return;
-  const diffMs = d2 - d1;
-  const weeks = Math.round(diffMs / (7*24*60*60*1000));
-  if(weeks > 0 && weeks <= 20){
-    semEl.value = weeks;
+
+  // Count weeks excluding vacation weeks
+  const vacs = getVacances(currentYear);
+  let effectiveWeeks = 0;
+  let cur = new Date(d1);
+  while(cur <= d2){
+    // Check if this Monday is in vacances
+    const inVac = vacs.some(v => {
+      const vd = new Date(v.debut);
+      const vf = new Date(v.fin);
+      return cur >= vd && cur <= vf;
+    });
+    if(!inVac) effectiveWeeks++;
+    cur.setDate(cur.getDate() + 7);
+  }
+
+  if(effectiveWeeks > 0 && effectiveWeeks <= 25){
+    semEl.value = effectiveWeeks;
     semEl.style.color = 'var(--teal)';
-    setTimeout(()=>{ semEl.style.color = ''; }, 1500);
+    semEl.title = effectiveWeeks + ' semaines effectives (vacances déduites)';
+    setTimeout(()=>{ semEl.style.color = ''; }, 2000);
   }
 }
 function addCycle(){
