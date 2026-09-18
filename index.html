@@ -745,7 +745,6 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     <button class="btn btn-ghost" onclick="toggleOrientation()" id="orientBtn" title="Orientation impression">🖨️ Paysage</button>
     <span id="saveIndicator" style="font-size:0.7rem;color:rgba(255,255,255,0.6);display:none;align-items:center;gap:4px">💾</span>
     <button id="installBtn" onclick="installPWA()" class="btn btn-ghost" style="display:none;align-items:center;gap:5px">📲 Installer</button>
-    <button id="saveBtn" onclick="manualSave()" class="btn btn-ghost">💾 Enregistrer</button>
     <button class="btn btn-amber" onclick="openAddModal()">+ APSA</button>
   </div>
 </header>
@@ -1881,18 +1880,6 @@ function showToast(msg){
 function toggleAlertPanel(){
   const p=document.getElementById('alertPanel');
   if(p)p.style.display=p.style.display==='none'?'block':'none';
-}
-
-
-function manualSave(){
-  saveAll();
-  const btn = document.getElementById('saveBtn');
-  if(btn){
-    btn.textContent = '✅ Enregistré !';
-    btn.style.background = '#d1fae5';
-    btn.style.color = '#065f46';
-    setTimeout(()=>{ btn.textContent = '💾 Enregistrer'; btn.style.background = ''; btn.style.color = ''; }, 2000);
-  }
 }
 
 window.printFiche = function printFiche(){
