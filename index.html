@@ -1637,8 +1637,9 @@ function deleteYear(y){
 const CA_COLORS={CA1:'#e85d04',CA2:'#2d6a4f',CA3:'#7209b7',CA4:'#0e7c7b',CA5:'#0077b6'};
 function renderProg(){
   const grid=document.getElementById('progGrid');
+  const SD=typeof SPORTS_DATA!=="undefined"?SPORTS_DATA:(window.SPORTS_DATA||[]);
   if(!grid)return;
-  grid.innerHTML=SPORTS_DATA.map(s=>`
+  grid.innerHTML=SD.map(s=>`
     <div class="prog-card" onclick="openFicheModal('${s.id}')" data-ca="${s.ca}">
       <div class="prog-card-top"><div class="prog-card-emoji">${s.emoji}</div><div class="prog-card-nom">${s.nom}</div><div class="prog-card-famille">${s.famille}</div></div>
       <div class="prog-card-bottom"><span class="prog-ca-badge" style="background:${CA_COLORS[s.ca]}">${s.ca}</span><span class="prog-seances">${s.seances} séances</span></div>
@@ -1651,7 +1652,7 @@ function filterProg(ca,btn){
 }
 function openFicheModal(id){
   currentFicheId=id;
-  const s=(window.SPORTS_DATA||[]).find(x=>x.id===id);
+  const s=(typeof SPORTS_DATA!=="undefined"?SPORTS_DATA:window.SPORTS_DATA||[]).find(x=>x.id===id);
   if(!s)return;
   document.getElementById('ficheModalTitre').textContent=s.emoji+' '+s.nom;
   const saved=JSON.parse(localStorage.getItem('fiche-prog-'+id)||'{}');
