@@ -1572,15 +1572,29 @@ function autoCalcWeeks(pid){
   if(!d1||!d2||d2<=d1) return;
 
   // Count weeks excluding vacation weeks
+  // Align to Monday of d1's week
   const vacs = getVacances(currentYear);
   let effectiveWeeks = 0;
   let cur = new Date(d1);
-  while(cur <= d2){
-    // Check if this Monday is in vacances
+  // Go back to Monday of the start week
+  const dayOfWeek = cur.getDay();
+  cur.setDate(cur.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  const endMonday = new Date(d2);
+  const endDay = endMonday.getDay();
+  endMonday.setDate(endMonday.getDate() - (endDay === 0 ? 6 : endDay - 1));
+
+  while(cur <= endMonday){
+    const weekEnd = new Date(cur);
+    weekEnd.setDate(weekEnd.getDate() + 6);
     const inVac = vacs.some(v => {
+      if(!v.debut || !v.fin) return false;
       const vd = new Date(v.debut);
       const vf = new Date(v.fin);
-      return cur >= vd && cur <= vf;
+      // Week is in vacation if it overlaps majority (>=3 days) with vacation
+      const overlapStart = cur > vd ? cur : vd;
+      const overlapEnd = weekEnd < vf ? weekEnd : vf;
+      const overlapDays = (overlapEnd - overlapStart) / (24*60*60*1000) + 1;
+      return overlapDays >= 3;
     });
     if(!inVac) effectiveWeeks++;
     cur.setDate(cur.getDate() + 7);
