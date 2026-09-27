@@ -1140,6 +1140,13 @@ let periodesData={
     {id:'P3',name:'Cycle 3',dates:'8/12 – 5/02',semaines:8,trimestre:2},
     {id:'P4',name:'Cycle 4',dates:'9/02 – 19/03',semaines:5,trimestre:2},
     {id:'P5',name:'Cycle 5',dates:'23/03 – 12/06',semaines:11,trimestre:3},
+  ],
+  '2026-27':[
+    {id:'P1',name:'Cycle 1',dates:'1/09 – 16/10',semaines:7,trimestre:1},
+    {id:'P2',name:'Cycle 2',dates:'2/11 – 4/12',semaines:5,trimestre:1},
+    {id:'P3',name:'Cycle 3',dates:'7/12 – 4/02',semaines:8,trimestre:2},
+    {id:'P4',name:'Cycle 4',dates:'8/02 – 15/03',semaines:5,trimestre:2},
+    {id:'P5',name:'Cycle 5',dates:'16/03 – 11/06',semaines:11,trimestre:3},
   ]
 };
 
@@ -1228,8 +1235,14 @@ function loadSaved(){
         Object.values(yr).some(p => Object.values(p).some(cl => cl.length > 0))
       );
       if(!hasData) continue;
-      if(d.plannings) plannings = d.plannings;
-      if(d.periodesData) periodesData = d.periodesData;
+      if(d.plannings){
+        for(const y of Object.keys(plannings)){ if(!(y in d.plannings)) d.plannings[y]=plannings[y]; }
+        plannings = d.plannings;
+      }
+      if(d.periodesData){
+        for(const y of Object.keys(periodesData)){ if(!(y in d.periodesData)) d.periodesData[y]=periodesData[y]; }
+        periodesData = d.periodesData;
+      }
       if(d.contraintes) contraintes.splice(0, 99, ...d.contraintes);
       if(d.currentYear && periodesData[d.currentYear]) currentYear = d.currentYear;
       if(key !== STORAGE_KEY) saveAll();
