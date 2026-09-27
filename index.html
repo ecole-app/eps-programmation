@@ -739,6 +739,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     <button class="nav-tab" onclick="showPage('bilan',this)">📊 Bilan</button>
     <button class="nav-tab" onclick="showPage('comparaison',this)">🔀 Comparaison</button>
     <button class="nav-tab" onclick="showPage('programmations',this)">📚 Programmations</button>
+    <button class="nav-tab" onclick="showPage('seances',this)">🗓️ Séances</button>
   </div>
   <div class="h-actions">
     <button class="alert-btn" id="alertBtn" onclick="toggleAlertPanel()">⚠️ <span class="alert-count" id="alertCount">0</span></button>
@@ -937,6 +938,20 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     <div class="prog-grid" id="progGrid"></div>
   </div>
 
+
+  <div class="page" id="page-seances">
+    <div class="page-header">
+      <div>
+        <div class="page-title">🗓️ Séances</div>
+        <div class="page-sub" id="seancesSub">Déroulé séance par séance, adapté à tes créneaux</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select class="comp-select" id="seancesClasse" onchange="renderSeances()"></select>
+        <select class="comp-select" id="seancesCycle" onchange="renderSeances()"></select>
+      </div>
+    </div>
+    <div id="seancesContent"></div>
+  </div>
 </main>
 </div>
 
@@ -1130,7 +1145,7 @@ let periodesData={
 
 const creneauxDefaut={
   '6e':{seances:1,detail:'Mardi 15h25–17h15 (×1/sem)'},
-  '5e':{seances:2,detail:'Lundi 13h–14h50 (×1/2sem) + Mardi 13h–15h15 (×1/sem)'},
+  '5e':{seances:1.5,detail:'Lundi 13h–14h50 (×1/2sem) + Mardi 13h–14h50 (×1/sem)'},
   '4e':{seances:1.5,detail:'Lundi 13h–14h50 (×1/2sem) + Mercredi 10h55–12h55 (×1/sem)'},
   '3e':{seances:1.5,detail:'Mercredi 8h50–10h55 + Jeudi 13h–14h50 (×1/sem)'},
 };
@@ -1235,6 +1250,7 @@ function renderAll(){
   renderAlerts();
   renderStats();
   renderProg();
+  renderSeances();
 }
 
 // ═══ GRID ═══
@@ -1905,6 +1921,7 @@ function showPage(id,btn){
   if(id==='bilan')renderBilan();
   if(id==='comparaison')renderComparaison();
   if(id==='cycles')renderCycles();
+  if(id==='seances')renderSeances();
 }
 
 // ═══ SIDEBAR ═══
@@ -1994,6 +2011,137 @@ window.printFiche = function printFiche(){
   window.print();
   setTimeout(()=>{ styleEl.textContent = ''; }, 1000);
 };
+
+function updateSeancesInfo(){
+  const cl=document.getElementById('addClasse')?.value;
+  const sem=parseInt(document.getElementById('addSemaines')?.value)||0;
+  const el=document.getElementById('seancesInfo');
+  if(!cl||!sem||!el)return;
+  const cr=getCreneaux(currentYear);
+  const total=Math.round(sem*(cr[cl]?.seances||2));
+  el.textContent='≈ '+total+' séances au total ('+(cr[cl]?.seances||2)+'/sem)';
+}
+
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  const b=document.getElementById('installBtn'); if(b)b.style.display='flex';
+});
+function installPWA(){
+  if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});}
+}
+
+
+// ═══ SÉANCES ═══
+function slugSport(nom){
+  return (nom||'').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+function findSportData(apsa){
+  const SD = typeof SPORTS_DATA!=="undefined"?SPORTS_DATA:(window.SPORTS_DATA||[]);
+  const s = slugSport(apsa);
+  return SD.find(x=>x.id===s) || SD.find(x=>slugSport(x.nom)===s)
+      || SD.find(x=>s.includes(x.id)||x.id.includes(s)) || null;
+}
+
+function buildSeances(apsa, nbSeances){
+  const sd = findSportData(apsa);
+  const axes = (sd && sd.axes && sd.axes.length) ? sd.axes : ['Découverte','Apprentissage','Application','Complexification','Évaluation'];
+  const n = Math.max(1, nbSeances);
+  const out = [];
+  for(let i=0;i<n;i++){
+    let titre, type, contenu;
+    if(i===0){
+      titre='Évaluation diagnostique'; type='diag';
+      contenu='Situation de référence, observation du niveau de départ. Mise en place des règles de sécurité et des rôles.';
+    } else if(i===n-1){
+      titre='Évaluation sommative'; type='eval';
+      contenu = (sd && sd.epreuve) ? sd.epreuve : 'Épreuve terminale et bilan du cycle.';
+    } else if(i===n-2 && n>=4){
+      titre='Répétition générale'; type='revision';
+      contenu='Passage à blanc dans les conditions de l\'évaluation. Derniers réglages individuels.';
+    } else {
+      const idx = (i-1) % axes.length;
+      titre = axes[idx]; type='appr';
+      contenu='Échauffement spécifique → situation d\'apprentissage sur « '+axes[idx]+' » → situation globale → retour au calme et bilan.';
+    }
+    out.push({num:i+1, titre, type, contenu});
+  }
+  return out;
+}
+
+function renderSeancesSelectors(){
+  const selC = document.getElementById('seancesClasse');
+  const selCy = document.getElementById('seancesCycle');
+  if(!selC||!selCy) return;
+  const prevC = selC.value, prevCy = selCy.value;
+  selC.innerHTML = classes.map(cl=>`<option value="${cl}" ${cl===prevC?'selected':''}>${cl}</option>`).join('');
+  const ps = periodes()||[];
+  selCy.innerHTML = '<option value="all">Tous les cycles</option>' +
+    ps.map(p=>`<option value="${p.id}" ${p.id===prevCy?'selected':''}>${p.name} (${p.dates})</option>`).join('');
+  if(prevCy) selCy.value = prevCy;
+}
+
+function renderSeances(){
+  renderSeancesSelectors();
+  const box = document.getElementById('seancesContent');
+  if(!box) return;
+  const cl = document.getElementById('seancesClasse')?.value || classes[0];
+  const cyFilter = document.getElementById('seancesCycle')?.value || 'all';
+  const cr = getCreneaux(currentYear);
+  const parSem = cr[cl]?.seances || 2;
+
+  const sub = document.getElementById('seancesSub');
+  if(sub) sub.textContent = `${cl} — ${cr[cl]?.detail || ''} · ${parSem} séance(s)/semaine`;
+
+  const ps = (periodes()||[]).filter(p=>cyFilter==='all'||p.id===cyFilter);
+  let html = '';
+  let vide = true;
+
+  ps.forEach(p=>{
+    const items = (planning()[p.id]||{})[cl]||[];
+    if(!items.length) return;
+    vide = false;
+    items.forEach(item=>{
+      const f = familleConfig[item.famille]||{icon:'🏃',label:''};
+      const nb = Math.round(item.semaines * parSem);
+      const list = buildSeances(item.apsa, nb);
+      const sd = findSportData(item.apsa);
+      html += `
+      <div class="section-card" style="margin-bottom:1rem">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:0.875rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border)">
+          <span style="font-size:1.3rem">${f.icon}</span>
+          <div style="flex:1;min-width:140px">
+            <div style="font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:800">${item.apsa}</div>
+            <div style="font-size:0.7rem;color:var(--muted)">${p.name} · ${p.dates} · ${item.semaines} sem.</div>
+          </div>
+          <span class="a-ca" style="background:${caColors[item.ca]||'#999'};padding:3px 9px;font-size:0.65rem">${item.ca}</span>
+          <span style="background:var(--teal-g);color:var(--teal-d);border-radius:99px;padding:4px 11px;font-size:0.72rem;font-weight:700;font-family:'Syne',sans-serif">${nb} séances</span>
+        </div>
+        ${sd&&sd.pb?`<div style="background:var(--teal-g);border-left:3px solid var(--teal);border-radius:0 7px 7px 0;padding:8px 11px;margin-bottom:0.875rem;font-size:0.76rem;font-style:italic;color:var(--teal-d)">${sd.pb}</div>`:''}
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${list.map(s=>{
+            const col = s.type==='diag'?'#0077b6':s.type==='eval'?'#d62828':s.type==='revision'?'#f0a500':'var(--teal)';
+            const bg  = s.type==='diag'?'rgba(0,119,182,.07)':s.type==='eval'?'rgba(214,40,40,.07)':s.type==='revision'?'rgba(240,165,0,.09)':'var(--bg)';
+            return `<div style="display:flex;gap:10px;align-items:flex-start;background:${bg};border-radius:8px;padding:9px 11px;border-left:3px solid ${col}">
+              <div style="background:${col};color:#fff;font-family:'Syne',sans-serif;font-size:0.68rem;font-weight:800;min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${s.num}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:${col};margin-bottom:2px">${s.titre}</div>
+                <div style="font-size:0.74rem;line-height:1.5;color:var(--text)">${s.contenu}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+  });
+
+  box.innerHTML = vide
+    ? `<div class="section-card" style="text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:0.85rem">Aucune APSA planifiée pour ${cl}${cyFilter!=='all'?' sur ce cycle':''}.<br><span style="font-size:0.76rem">Ajoute des APSA dans l'onglet Planning.</span></div>`
+    : html;
+}
+
 // ═══ INIT ═══
 loadSaved();
 renderContraintes();
@@ -2035,6 +2183,26 @@ document.addEventListener('click',e=>{
     </div>
   </div>
 </div>
+
+
+<!-- MODALE CRENEAUX -->
+<div class="modal-overlay" id="modalCreneaux">
+  <div class="modal modal-lg">
+    <div class="modal-hd">
+      <div class="modal-title">Modifier les créneaux</div>
+      <button class="icon-btn" onclick="closeModal('modalCreneaux')">✕</button>
+    </div>
+    <div class="modal-body" id="creneauxModalBody"></div>
+    <div class="modal-ft">
+      <button class="btn btn-outline" onclick="closeModal('modalCreneaux')">Annuler</button>
+      <button class="btn btn-teal" onclick="saveCreneauxModal()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR MOBILE -->
+<button class="sidebar-toggle-btn" id="sidebarToggle" onclick="toggleMobileSidebar()">☰</button>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
 
 </body>
 </html>
