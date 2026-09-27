@@ -1151,7 +1151,7 @@ let periodesData={
 };
 
 const creneauxDefaut={
-  '6e':{seances:1,detail:'Mardi 15h25–17h15 (×1/sem)'},
+  '6e':{seances:2,detail:'Lundi 15h25–17h15 (×2 séances/sem)'},
   '5e':{seances:1.5,detail:'Lundi 13h–14h50 (×1/2sem) + Mardi 13h–14h50 (×1/sem)'},
   '4e':{seances:1.5,detail:'Lundi 13h–14h50 (×1/2sem) + Mercredi 10h55–12h55 (×1/sem)'},
   '3e':{seances:1.5,detail:'Mercredi 8h50–10h55 + Jeudi 13h–14h50 (×1/sem)'},
@@ -2076,14 +2076,36 @@ function buildWeekPlan(semaines, parSem){
   return weeks;
 }
 
-function buildSeances(apsa, weekPlan){
+// Clé unique et stable pour un slot semaine/partie (indépendante des décalages)
+function slotKey(semaine, partie){ return semaine+'-'+(partie||1); }
+
+// Génère les slots (semaine, partie) en continuant le motif hebdo au-delà du
+// cycle nominal, pour pouvoir décaler une séance annulée sur les semaines
+// suivantes sans perdre de séance.
+function buildSeances(apsa, semaines, parSem, cancelledSet){
   const sd = findSportData(apsa);
   const axes = (sd && sd.axes && sd.axes.length) ? sd.axes : ['Découverte','Apprentissage','Application','Complexification','Évaluation'];
-  const slots = [];
-  weekPlan.forEach((count,wi)=>{
-    for(let k=0;k<count;k++) slots.push({semaine:wi+1, partie: count===2?(k+1):null, totalPart:count});
-  });
-  const n = Math.max(1, slots.length);
+  const nominalTotal = buildWeekPlan(semaines, parSem).reduce((a,b)=>a+b,0);
+  const cancelled = cancelledSet || new Set();
+  const base = Math.max(1, Math.floor(parSem) || 1);
+  const frac = Math.max(0, parSem - base);
+  const activeSlots = [];
+  const cancelledInfo = [];
+  let week = 0, prevCum = 0;
+  while(activeSlots.length < nominalTotal && week < 300){
+    week++;
+    const cum = frac>0 ? Math.round(week*frac) : 0;
+    const c = base + (cum>prevCum ? 1 : 0);
+    prevCum = cum;
+    for(let k=0;k<c;k++){
+      const partie = c===2 ? (k+1) : null;
+      const key = slotKey(week, partie);
+      if(cancelled.has(key)){ cancelledInfo.push({semaine:week, partie, totalPart:c, key}); continue; }
+      activeSlots.push({semaine:week, partie, totalPart:c, key});
+      if(activeSlots.length >= nominalTotal) break;
+    }
+  }
+  const n = Math.max(1, activeSlots.length);
   const out = [];
   for(let i=0;i<n;i++){
     let titre, type, contenu;
@@ -2101,9 +2123,23 @@ function buildSeances(apsa, weekPlan){
       titre = axes[idx]; type='appr';
       contenu='Échauffement spécifique → situation d\'apprentissage sur « '+axes[idx]+' » → situation globale → retour au calme et bilan.';
     }
-    out.push({num:i+1, titre, type, contenu, semaine:slots[i].semaine, partie:slots[i].partie, totalPart:slots[i].totalPart});
+    out.push({num:i+1, titre, type, contenu, semaine:activeSlots[i].semaine, partie:activeSlots[i].partie, totalPart:activeSlots[i].totalPart, key:activeSlots[i].key});
   }
-  return out;
+  return {list:out, cancelledInfo};
+}
+
+function getCancelledSlots(itemKey){
+  try{ return new Set(JSON.parse(localStorage.getItem('seances-cancel-'+itemKey)||'[]')); }
+  catch(e){ return new Set(); }
+}
+function saveCancelledSlots(itemKey, set){
+  localStorage.setItem('seances-cancel-'+itemKey, JSON.stringify([...set]));
+}
+function toggleCancelSlot(itemKey, key){
+  const set = getCancelledSlots(itemKey);
+  if(set.has(key)) set.delete(key); else set.add(key);
+  saveCancelledSlots(itemKey, set);
+  renderSeances();
 }
 
 function renderSeancesSelectors(){
@@ -2143,8 +2179,9 @@ function renderSeances(){
     vide = false;
     items.forEach((item,itemIdx)=>{
       const f = familleConfig[item.famille]||{icon:'🏃',label:''};
-      const weekPlan = buildWeekPlan(item.semaines, parSem);
-      const list = buildSeances(item.apsa, weekPlan);
+      const itemKey = `${currentYear}_${p.id}_${cl}_${itemIdx}_${slugSport(item.apsa)}`;
+      const cancelledSet = getCancelledSlots(itemKey);
+      const {list, cancelledInfo} = buildSeances(item.apsa, item.semaines, parSem, cancelledSet);
       const nb = list.length;
       const sd = findSportData(item.apsa);
       html += `
@@ -2159,6 +2196,10 @@ function renderSeances(){
           <span style="background:var(--teal-g);color:var(--teal-d);border-radius:99px;padding:4px 11px;font-size:0.72rem;font-weight:700;font-family:'Syne',sans-serif">${nb} séances</span>
         </div>
         ${sd&&sd.pb?`<div style="background:var(--teal-g);border-left:3px solid var(--teal);border-radius:0 7px 7px 0;padding:8px 11px;margin-bottom:0.875rem;font-size:0.76rem;font-style:italic;color:var(--teal-d)">${sd.pb}</div>`:''}
+        ${cancelledInfo.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.875rem">${cancelledInfo.map(ci=>{
+          const l=ci.partie?`S${ci.semaine} · ${ci.partie}/${ci.totalPart}`:`S${ci.semaine}`;
+          return `<span style="background:#fee2e2;color:#b91c1c;border-radius:99px;padding:3px 6px 3px 10px;font-size:0.68rem;font-weight:700;display:inline-flex;align-items:center;gap:5px">🚫 ${l} décalée <button onclick="toggleCancelSlot('${itemKey}','${ci.key}')" title="Annuler le décalage" style="background:none;border:none;color:#b91c1c;cursor:pointer;font-weight:900;font-size:0.8rem;padding:0 2px;line-height:1">✕</button></span>`;
+        }).join('')}</div>`:''}
         <div style="display:flex;flex-direction:column;gap:6px">
           ${list.map(s=>{
             const col = s.type==='diag'?'#0077b6':s.type==='eval'?'#d62828':s.type==='revision'?'#f0a500':'var(--teal)';
@@ -2176,6 +2217,7 @@ function renderSeances(){
                 <div style="font-size:0.74rem;line-height:1.5;color:var(--text)">${s.contenu}</div>
               </div>
               <button onclick="openSeanceFiche('${key}')" title="Fiche de préparation" style="flex-shrink:0;background:#fff;border:1.5px solid ${col};color:${col};border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center">📄</button>
+              <button onclick="toggleCancelSlot('${itemKey}','${s.key}')" title="Absence / événement : décaler cette séance à la suivante" style="flex-shrink:0;background:#fff;border:1.5px solid #f0a500;color:#f0a500;border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center">⏭️</button>
             </div>`;
           }).join('')}
         </div>
