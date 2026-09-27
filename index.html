@@ -2058,10 +2058,32 @@ function findSportData(apsa){
       || SD.find(x=>s.includes(x.id)||x.id.includes(s)) || null;
 }
 
-function buildSeances(apsa, nbSeances){
+// Répartit les séances sur les semaines du cycle en tenant compte des
+// semaines à 1 séance ET des semaines à 2 séances (ex: 1.5 séance/semaine
+// = une semaine sur deux avec 2 séances). Retourne un tableau de longueur
+// `semaines`, chaque valeur = nb de séances cette semaine-là (1 ou 2).
+function buildWeekPlan(semaines, parSem){
+  const sem = Math.max(1, Math.round(semaines) || 1);
+  const base = Math.max(1, Math.floor(parSem) || 1);
+  const frac = Math.max(0, parSem - base);
+  const weeks = [];
+  let prevCum = 0;
+  for(let i=0;i<sem;i++){
+    const cum = frac>0 ? Math.round((i+1)*frac) : 0;
+    weeks.push(base + (cum>prevCum ? 1 : 0));
+    prevCum = cum;
+  }
+  return weeks;
+}
+
+function buildSeances(apsa, weekPlan){
   const sd = findSportData(apsa);
   const axes = (sd && sd.axes && sd.axes.length) ? sd.axes : ['Découverte','Apprentissage','Application','Complexification','Évaluation'];
-  const n = Math.max(1, nbSeances);
+  const slots = [];
+  weekPlan.forEach((count,wi)=>{
+    for(let k=0;k<count;k++) slots.push({semaine:wi+1, partie: count===2?(k+1):null, totalPart:count});
+  });
+  const n = Math.max(1, slots.length);
   const out = [];
   for(let i=0;i<n;i++){
     let titre, type, contenu;
@@ -2079,7 +2101,7 @@ function buildSeances(apsa, nbSeances){
       titre = axes[idx]; type='appr';
       contenu='Échauffement spécifique → situation d\'apprentissage sur « '+axes[idx]+' » → situation globale → retour au calme et bilan.';
     }
-    out.push({num:i+1, titre, type, contenu});
+    out.push({num:i+1, titre, type, contenu, semaine:slots[i].semaine, partie:slots[i].partie, totalPart:slots[i].totalPart});
   }
   return out;
 }
@@ -2096,6 +2118,8 @@ function renderSeancesSelectors(){
   if(prevCy) selCy.value = prevCy;
 }
 
+let seanceDataMap = {};
+
 function renderSeances(){
   renderSeancesSelectors();
   const box = document.getElementById('seancesContent');
@@ -2111,15 +2135,17 @@ function renderSeances(){
   const ps = (periodes()||[]).filter(p=>cyFilter==='all'||p.id===cyFilter);
   let html = '';
   let vide = true;
+  seanceDataMap = {};
 
   ps.forEach(p=>{
     const items = (planning()[p.id]||{})[cl]||[];
     if(!items.length) return;
     vide = false;
-    items.forEach(item=>{
+    items.forEach((item,itemIdx)=>{
       const f = familleConfig[item.famille]||{icon:'🏃',label:''};
-      const nb = Math.round(item.semaines * parSem);
-      const list = buildSeances(item.apsa, nb);
+      const weekPlan = buildWeekPlan(item.semaines, parSem);
+      const list = buildSeances(item.apsa, weekPlan);
+      const nb = list.length;
       const sd = findSportData(item.apsa);
       html += `
       <div class="section-card" style="margin-bottom:1rem">
@@ -2137,12 +2163,19 @@ function renderSeances(){
           ${list.map(s=>{
             const col = s.type==='diag'?'#0077b6':s.type==='eval'?'#d62828':s.type==='revision'?'#f0a500':'var(--teal)';
             const bg  = s.type==='diag'?'rgba(0,119,182,.07)':s.type==='eval'?'rgba(214,40,40,.07)':s.type==='revision'?'rgba(240,165,0,.09)':'var(--bg)';
+            const semLabel = s.partie ? `S${s.semaine} · ${s.partie}/${s.totalPart}` : `S${s.semaine}`;
+            const key = `${p.id}_${cl}_${itemIdx}_${s.num}`;
+            seanceDataMap[key] = {item, p, cl, s, sd, total:nb};
             return `<div style="display:flex;gap:10px;align-items:flex-start;background:${bg};border-radius:8px;padding:9px 11px;border-left:3px solid ${col}">
               <div style="background:${col};color:#fff;font-family:'Syne',sans-serif;font-size:0.68rem;font-weight:800;min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${s.num}</div>
               <div style="flex:1;min-width:0">
-                <div style="font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:${col};margin-bottom:2px">${s.titre}</div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px">
+                  <div style="font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:${col}">${s.titre}</div>
+                  <span style="font-size:0.65rem;font-weight:700;color:var(--muted);background:rgba(0,0,0,.05);border-radius:99px;padding:1px 8px">${semLabel}</span>
+                </div>
                 <div style="font-size:0.74rem;line-height:1.5;color:var(--text)">${s.contenu}</div>
               </div>
+              <button onclick="openSeanceFiche('${key}')" title="Fiche de préparation" style="flex-shrink:0;background:#fff;border:1.5px solid ${col};color:${col};border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center">📄</button>
             </div>`;
           }).join('')}
         </div>
@@ -2153,6 +2186,80 @@ function renderSeances(){
   box.innerHTML = vide
     ? `<div class="section-card" style="text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:0.85rem">Aucune APSA planifiée pour ${cl}${cyFilter!=='all'?' sur ce cycle':''}.<br><span style="font-size:0.76rem">Ajoute des APSA dans l'onglet Planning.</span></div>`
     : html;
+}
+
+// ═══ FICHE DE PRÉPARATION DE SÉANCE (modale téléchargeable) ═══
+let currentSeanceKey = null;
+function openSeanceFiche(key){
+  const d = seanceDataMap[key];
+  if(!d) return;
+  currentSeanceKey = key;
+  const {item,p,cl,s,sd,total} = d;
+  const saved = JSON.parse(localStorage.getItem('fiche-seance-'+key)||'{}');
+  const g=(f,def)=>saved[f]!==undefined&&saved[f]!==''?saved[f]:def;
+  const semLabel = s.partie ? `Semaine ${s.semaine} (séance ${s.partie}/${s.totalPart} de la semaine)` : `Semaine ${s.semaine}`;
+  document.getElementById('seanceFicheTitre').textContent = `${item.apsa} — Séance ${s.num}/${total}`;
+  document.getElementById('seanceFicheBody').innerHTML = `
+    <div class="fiche-section">
+      <div class="fiche-cond-grid">
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Classe</div><div style="font-weight:700;font-size:0.85rem">${cl}</div></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Cycle</div><div style="font-weight:700;font-size:0.85rem">${p.name} (${p.dates})</div></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Semaine</div><div style="font-weight:700;font-size:0.85rem">${semLabel}</div></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Séance</div><div style="font-weight:700;font-size:0.85rem">${s.num} / ${total}</div></div>
+      </div>
+    </div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🎯</span><span class="fiche-section-title">${s.titre}</span></div>
+      <div class="fiche-fond-text">${s.contenu}</div></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">📋</span><span class="fiche-section-title">Conditions</span></div>
+      <div class="fiche-cond-grid">
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Matériel</div><input class="fiche-edit-input" id="sfmateriel" value="${g('materiel',(sd&&sd.materiel)||'')}"></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Espace</div><input class="fiche-edit-input" id="sfespace" value="${g('espace',(sd&&sd.espace)||'')}"></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Effectif</div><input class="fiche-edit-input" id="sfeffectif" value="${g('effectif',(sd&&sd.effectif)||'')}"></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Durée</div><input class="fiche-edit-input" id="sfduree" value="${g('duree','50 min')}"></div>
+      </div></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🔥</span><span class="fiche-section-title">Échauffement</span></div>
+      <textarea class="fiche-edit-ta" id="sfechauf" style="min-height:60px">${g('echauf','Échauffement général puis spécifique à l\'activité (8–10 min).')}</textarea></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">⚙️</span><span class="fiche-section-title">Corps de séance</span></div>
+      <textarea class="fiche-edit-ta" id="sfcorps" style="min-height:100px">${g('corps',s.contenu)}</textarea></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🧘</span><span class="fiche-section-title">Retour au calme / Bilan</span></div>
+      <textarea class="fiche-edit-ta" id="sfretour" style="min-height:50px">${g('retour','Étirements, verbalisation, bilan collectif (5 min).')}</textarea></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">📝</span><span class="fiche-section-title">Notes personnelles</span></div>
+      <textarea class="fiche-edit-ta" id="sfnotes" style="min-height:50px">${g('notes','')}</textarea></div>
+  `;
+  document.getElementById('modalSeanceFiche').classList.add('open');
+  hideSidebarBtn();
+}
+function closeSeanceFiche(){
+  document.getElementById('modalSeanceFiche')?.classList.remove('open');
+  currentSeanceKey = null;
+  showSidebarBtn();
+}
+function saveSeanceFiche(){
+  if(!currentSeanceKey) return;
+  const fields=['materiel','espace','effectif','duree','echauf','corps','retour','notes'];
+  const data={};
+  fields.forEach(f=>{const el=document.getElementById('sf'+f);if(el)data[f]=el.value;});
+  localStorage.setItem('fiche-seance-'+currentSeanceKey,JSON.stringify(data));
+  const badge=document.getElementById('seanceFicheSavedBadge');
+  if(badge){badge.classList.add('show');setTimeout(()=>badge.classList.remove('show'),2000);}
+  showToast('💾 Fiche de séance sauvegardée !');
+}
+function printSeanceFiche(){
+  let styleEl=document.getElementById('printSeanceFicheStyle');
+  if(!styleEl){styleEl=document.createElement('style');styleEl.id='printSeanceFicheStyle';document.head.appendChild(styleEl);}
+  styleEl.textContent=`
+    @media print{
+      @page{size:A4 portrait;margin:10mm}
+      body>*:not(#modalSeanceFiche){display:none!important}
+      #modalSeanceFiche{display:block!important;position:static!important;background:white!important;padding:0!important}
+      #modalSeanceFiche .fiche-modal{max-height:none!important;box-shadow:none!important;border-radius:0!important;width:100%!important;max-width:100%!important}
+      #modalSeanceFiche .fiche-modal-body{overflow:visible!important;max-height:none!important}
+      #modalSeanceFiche .fiche-modal-ft,#modalSeanceFiche .fiche-modal-close{display:none!important}
+      #modalSeanceFiche textarea,#modalSeanceFiche input{border:none!important;background:transparent!important;resize:none!important}
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    }`;
+  window.print();
+  setTimeout(()=>{styleEl.textContent='';},1000);
 }
 
 // ═══ INIT ═══
@@ -2173,6 +2280,8 @@ document.addEventListener('click',e=>{
     if(panel)panel.style.display='none';
   const overlay=document.getElementById('ficheModalOverlay');
   if(overlay?.classList.contains('open')&&e.target===overlay)closeFicheModal();
+  const seanceOverlay=document.getElementById('modalSeanceFiche');
+  if(seanceOverlay?.classList.contains('open')&&e.target===seanceOverlay)closeSeanceFiche();
 });
 
 // Service worker désactivé - sw.js non présent sur ce dépôt
@@ -2209,6 +2318,24 @@ document.addEventListener('click',e=>{
     <div class="modal-ft">
       <button class="btn btn-outline" onclick="closeModal('modalCreneaux')">Annuler</button>
       <button class="btn btn-teal" onclick="saveCreneauxModal()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE FICHE DE PRÉPARATION DE SÉANCE -->
+<div class="fiche-modal-overlay" id="modalSeanceFiche">
+  <div class="fiche-modal">
+    <div class="fiche-modal-hd" id="seanceFicheHd">
+      <div class="fiche-modal-titre" id="seanceFicheTitre">Fiche de préparation</div>
+      <button class="fiche-modal-close" onclick="closeSeanceFiche()">✕</button>
+    </div>
+    <div class="fiche-modal-body" id="seanceFicheBody"></div>
+    <div class="fiche-modal-ft">
+      <span class="fiche-saved-badge" id="seanceFicheSavedBadge">✅ Sauvegardé</span>
+      <div style="display:flex;gap:8px">
+        <button onclick="printSeanceFiche()" style="background:var(--surface,#f8fafc);color:#095958;border:1.5px solid #0e7c7b;border-radius:8px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;">🖨️ Télécharger / Imprimer</button>
+        <button class="btn btn-teal" onclick="saveSeanceFiche()">💾 Sauvegarder</button>
+      </div>
     </div>
   </div>
 </div>
