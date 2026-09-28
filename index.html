@@ -2069,11 +2069,17 @@ function installPWA(){
 // Filet de sécurité : tout est en localStorage (rien sur un serveur), donc un
 // changement de navigateur/PC ou un cache vidé peut tout effacer. Ce bouton
 // permet de télécharger un fichier de sauvegarde et de le réimporter.
+// IMPORTANT : le localStorage est partagé par TOUT le domaine ecole-app.github.io
+// (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
+// jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
+function isEpsKey(k){
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel)-/.test(k);
+}
 function exportAllData(){
   const data = {};
   for(let i=0;i<localStorage.length;i++){
     const k = localStorage.key(i);
-    data[k] = localStorage.getItem(k);
+    if(isEpsKey(k)) data[k] = localStorage.getItem(k);
   }
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -2082,7 +2088,7 @@ function exportAllData(){
   a.href = url; a.download = `eps-sauvegarde-${date}.json`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast('💾 Sauvegarde téléchargée');
+  showToast('💾 Sauvegarde EPS téléchargée');
 }
 function triggerImport(){
   document.getElementById('importFileInput')?.click();
@@ -2094,10 +2100,14 @@ function importAllData(input){
   reader.onload = e=>{
     try{
       const data = JSON.parse(e.target.result);
-      if(!confirm('Ça va remplacer toutes les données actuelles par celles du fichier de sauvegarde. Continuer ?')) { input.value=''; return; }
-      localStorage.clear();
-      Object.keys(data).forEach(k=>localStorage.setItem(k, data[k]));
-      showToast('✅ Import réussi, rechargement…');
+      const keysToRestore = Object.keys(data).filter(isEpsKey);
+      if(!keysToRestore.length){ alert('Ce fichier ne contient aucune donnée EPS reconnue.'); input.value=''; return; }
+      if(!confirm('Ça va remplacer les données EPS actuelles (programmation, créneaux, fiches) par celles du fichier. Les autres apps (ASMB…) ne sont pas touchées. Continuer ?')) { input.value=''; return; }
+      const existingEpsKeys = [];
+      for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(isEpsKey(k)) existingEpsKeys.push(k); }
+      existingEpsKeys.forEach(k=>localStorage.removeItem(k));
+      keysToRestore.forEach(k=>localStorage.setItem(k, data[k]));
+      showToast('✅ Import EPS réussi, rechargement…');
       setTimeout(()=>location.reload(), 800);
     }catch(err){
       alert('Fichier invalide : '+err.message);
