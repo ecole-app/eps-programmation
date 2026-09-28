@@ -1150,11 +1150,17 @@ let periodesData={
   ]
 };
 
+// jours[]: horaire exact par "partie" (1 = semaine simple/toujours, 2 = 2e séance
+// d'une semaine double) — sert à générer le déroulé horodaté de chaque séance.
 const creneauxDefaut={
-  '6e':{seances:2,detail:'Lundi 15h25–17h15 (×2 séances/sem)'},
-  '5e':{seances:1.5,detail:'Lundi 13h–14h50 (×1/2sem) + Mardi 13h–14h50 (×1/sem)'},
-  '4e':{seances:1.5,detail:'Lundi 13h–14h50 (×1/2sem) + Mercredi 10h55–12h55 (×1/sem)'},
-  '3e':{seances:1.5,detail:'Mercredi 8h50–10h55 + Jeudi 13h–14h50 (×1/sem)'},
+  '6e':{seances:2,detail:'Lundi 15h25–17h15 (×2 séances/sem)',
+    jours:[{jour:'Lundi',debut:'15h25',fin:'16h20',partie:1},{jour:'Lundi',debut:'16h20',fin:'17h15',partie:2}]},
+  '5e':{seances:1.5,detail:'Lundi 13h–14h50 (×1/2sem) + Mardi 13h–14h50 (×1/sem)',
+    jours:[{jour:'Mardi',debut:'13h00',fin:'14h50',partie:1},{jour:'Lundi',debut:'13h00',fin:'14h50',partie:2}]},
+  '4e':{seances:1.5,detail:'Lundi 13h–14h50 (×1/2sem) + Mercredi 10h55–12h55 (×1/sem)',
+    jours:[{jour:'Mercredi',debut:'10h55',fin:'12h55',partie:1},{jour:'Lundi',debut:'13h00',fin:'14h50',partie:2}]},
+  '3e':{seances:1.5,detail:'Mercredi 8h50–10h55 + Jeudi 13h–14h50 (×1/sem)',
+    jours:[{jour:'Jeudi',debut:'13h00',fin:'14h50',partie:1},{jour:'Mercredi',debut:'8h50',fin:'10h55',partie:2}]},
 };
 const creneauxData={};
 function getCreneaux(y){
@@ -2084,6 +2090,83 @@ function buildWeekPlan(semaines, parSem){
   return weeks;
 }
 
+// ═══ LIEUX & DÉROULÉ HORAIRE ═══
+// Tous les trajets se font à pied depuis le collège (20 Rue Paganini).
+const LIEUX = {
+  paganini: {nom:'Collège (20 Rue Paganini)', trajetMin:0},
+  gymnase:  {nom:'Gymnase', trajetMin:5},
+  stade:    {nom:'Stade', trajetMin:7},
+  parc:     {nom:'Parc de Montreynaud', trajetMin:6},
+  siteCO:   {nom:"Site d'évaluation CO", trajetMin:20},
+};
+// Déduit du terrain d'évolution (SPORTS_DATA.espace) — à corriger au cas par cas si besoin.
+const LIEU_PAR_SPORT = {
+  relais:'stade', 'course-longue':'stade', 'demi-fond':'stade', sprint:'stade',
+  basket:'gymnase', football:'stade', ultimate:'stade', 'ballon-prisonnier':'stade',
+  rugby:'stade', badminton:'gymnase', 'tennis-table':'gymnase',
+  acrosport:'gymnase', renfo:'gymnase', 'course-orientation':'parc', lutte:'gymnase',
+};
+function getLieuSeance(sportId, seanceType){
+  if(sportId==='course-orientation' && seanceType==='eval') return LIEUX.siteCO;
+  const key = LIEU_PAR_SPORT[sportId];
+  return (key && LIEUX[key]) || LIEUX.paganini;
+}
+function parseHeure(str){
+  const m = (str||'').match(/(\d{1,2})h(\d{0,2})/);
+  if(!m) return null;
+  return parseInt(m[1],10)*60 + (parseInt(m[2],10)||0);
+}
+function fmtHeure(mins){
+  mins = Math.max(0, Math.round(mins));
+  const h = Math.floor(mins/60), m = mins%60;
+  return h+'h'+String(m).padStart(2,'0');
+}
+function getHoraireSeance(cl, s){
+  const cr = getCreneaux(currentYear);
+  const jours = (cr[cl] && cr[cl].jours) || (creneauxDefaut[cl] && creneauxDefaut[cl].jours) || [];
+  const partieVoulue = s.partie || 1;
+  return jours.find(j=>j.partie===partieVoulue) || jours[0] || null;
+}
+function buildDerouleText(cl, s, sd){
+  const horaire = getHoraireSeance(cl, s);
+  if(!horaire) return '';
+  const debut = parseHeure(horaire.debut);
+  const fin = parseHeure(horaire.fin);
+  if(debut==null || fin==null) return '';
+  const lieu = getLieuSeance(sd?sd.id:null, s.type);
+  const trajet = lieu.trajetMin;
+  const lignes = [];
+  let t = debut;
+  if(trajet>0){
+    lignes.push(`${fmtHeure(t)} — Appel devant le collège, départ à pied vers ${lieu.nom}`);
+    t += trajet;
+    lignes.push(`${fmtHeure(t)} — Arrivée à ${lieu.nom}`);
+    t += 5;
+    lignes.push(`${fmtHeure(t)} — Mise en tenue, installation du matériel`);
+  } else {
+    lignes.push(`${fmtHeure(t)} — Appel, mise en tenue (${lieu.nom})`);
+    t += 3;
+  }
+  const echaufMin = 8;
+  lignes.push(`${fmtHeure(t)}–${fmtHeure(t+echaufMin)} — Échauffement général puis spécifique à l'activité`);
+  t += echaufMin;
+  const rangementMin = trajet>0 ? 5 : 3;
+  const finCorps = fin - trajet - rangementMin - 5;
+  if(finCorps > t){
+    lignes.push(`${fmtHeure(t)}–${fmtHeure(finCorps)} — Corps de séance : ${s.titre}`);
+    t = finCorps;
+  }
+  const calmeFin = t + 5;
+  lignes.push(`${fmtHeure(t)}–${fmtHeure(calmeFin)} — Retour au calme, bilan collectif`);
+  t = calmeFin;
+  if(trajet>0){
+    lignes.push(`${fmtHeure(t)} — Rangement, retour à pied vers le collège`);
+    t += trajet;
+    lignes.push(`${fmtHeure(t)} — Arrivée au collège`);
+  }
+  return lignes.join('\n');
+}
+
 // Clé unique et stable pour un slot semaine/partie (indépendante des décalages)
 function slotKey(semaine, partie){ return semaine+'-'+(partie||1); }
 
@@ -2248,6 +2331,8 @@ function openSeanceFiche(key){
   const saved = JSON.parse(localStorage.getItem('fiche-seance-'+key)||'{}');
   const g=(f,def)=>saved[f]!==undefined&&saved[f]!==''?saved[f]:def;
   const semLabel = s.partie ? `Semaine ${s.semaine} (séance ${s.partie}/${s.totalPart} de la semaine)` : `Semaine ${s.semaine}`;
+  const lieu = getLieuSeance(sd?sd.id:null, s.type);
+  const horaire = getHoraireSeance(cl, s);
   document.getElementById('seanceFicheTitre').textContent = `${item.apsa} — Séance ${s.num}/${total}`;
   document.getElementById('seanceFicheBody').innerHTML = `
     <div class="fiche-section">
@@ -2255,24 +2340,22 @@ function openSeanceFiche(key){
         <div class="fiche-cond-item"><div class="fiche-cond-label">Classe</div><div style="font-weight:700;font-size:0.85rem">${cl}</div></div>
         <div class="fiche-cond-item"><div class="fiche-cond-label">Cycle</div><div style="font-weight:700;font-size:0.85rem">${p.name} (${p.dates})</div></div>
         <div class="fiche-cond-item"><div class="fiche-cond-label">Semaine</div><div style="font-weight:700;font-size:0.85rem">${semLabel}</div></div>
-        <div class="fiche-cond-item"><div class="fiche-cond-label">Séance</div><div style="font-weight:700;font-size:0.85rem">${s.num} / ${total}</div></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Horaire</div><div style="font-weight:700;font-size:0.85rem">${horaire?`${horaire.jour} ${horaire.debut}–${horaire.fin}`:'—'}</div></div>
       </div>
     </div>
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🎯</span><span class="fiche-section-title">${s.titre}</span></div>
       <div class="fiche-fond-text">${s.contenu}</div></div>
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">📋</span><span class="fiche-section-title">Conditions</span></div>
       <div class="fiche-cond-grid">
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Lieu</div><input class="fiche-edit-input" id="sflieu" value="${g('lieu',lieu.nom)}"></div>
         <div class="fiche-cond-item"><div class="fiche-cond-label">Matériel</div><input class="fiche-edit-input" id="sfmateriel" value="${g('materiel',(sd&&sd.materiel)||'')}"></div>
         <div class="fiche-cond-item"><div class="fiche-cond-label">Espace</div><input class="fiche-edit-input" id="sfespace" value="${g('espace',(sd&&sd.espace)||'')}"></div>
         <div class="fiche-cond-item"><div class="fiche-cond-label">Effectif</div><input class="fiche-edit-input" id="sfeffectif" value="${g('effectif',(sd&&sd.effectif)||'')}"></div>
-        <div class="fiche-cond-item"><div class="fiche-cond-label">Durée</div><input class="fiche-edit-input" id="sfduree" value="${g('duree','50 min')}"></div>
       </div></div>
-    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🔥</span><span class="fiche-section-title">Échauffement</span></div>
-      <textarea class="fiche-edit-ta" id="sfechauf" style="min-height:60px">${g('echauf','Échauffement général puis spécifique à l\'activité (8–10 min).')}</textarea></div>
-    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">⚙️</span><span class="fiche-section-title">Corps de séance</span></div>
-      <textarea class="fiche-edit-ta" id="sfcorps" style="min-height:100px">${g('corps',s.contenu)}</textarea></div>
-    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🧘</span><span class="fiche-section-title">Retour au calme / Bilan</span></div>
-      <textarea class="fiche-edit-ta" id="sfretour" style="min-height:50px">${g('retour','Étirements, verbalisation, bilan collectif (5 min).')}</textarea></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">⏱️</span><span class="fiche-section-title">Déroulé horaire</span></div>
+      <textarea class="fiche-edit-ta" id="sfderoule" style="min-height:140px;white-space:pre-wrap">${g('deroule',buildDerouleText(cl,s,sd))}</textarea></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">⚙️</span><span class="fiche-section-title">Détail du corps de séance</span></div>
+      <textarea class="fiche-edit-ta" id="sfcorps" style="min-height:90px">${g('corps',s.contenu)}</textarea></div>
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">📝</span><span class="fiche-section-title">Notes personnelles</span></div>
       <textarea class="fiche-edit-ta" id="sfnotes" style="min-height:50px">${g('notes','')}</textarea></div>
   `;
@@ -2286,7 +2369,7 @@ function closeSeanceFiche(){
 }
 function saveSeanceFiche(){
   if(!currentSeanceKey) return;
-  const fields=['materiel','espace','effectif','duree','echauf','corps','retour','notes'];
+  const fields=['lieu','materiel','espace','effectif','deroule','corps','notes'];
   const data={};
   fields.forEach(f=>{const el=document.getElementById('sf'+f);if(el)data[f]=el.value;});
   localStorage.setItem('fiche-seance-'+currentSeanceKey,JSON.stringify(data));
