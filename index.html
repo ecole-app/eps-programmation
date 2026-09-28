@@ -745,6 +745,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     <button class="alert-btn" id="alertBtn" onclick="toggleAlertPanel()">⚠️ <span class="alert-count" id="alertCount">0</span></button>
     <button class="btn btn-ghost" onclick="toggleOrientation()" id="orientBtn" title="Orientation impression">🖨️ Paysage</button>
     <span id="saveIndicator" style="font-size:0.7rem;color:rgba(255,255,255,0.6);display:none;align-items:center;gap:4px">💾</span>
+    <span id="cloudSyncIndicator" style="font-size:0.7rem;color:rgba(255,255,255,0.75);white-space:nowrap"></span>
     <button id="installBtn" onclick="installPWA()" class="btn btn-ghost" style="display:none;align-items:center;gap:5px">📲 Installer</button>
     <button class="btn btn-ghost" onclick="exportAllData()" title="Télécharger une sauvegarde de toutes les données">⬇️ Sauvegarder</button>
     <button class="btn btn-ghost" onclick="triggerImport()" title="Restaurer une sauvegarde">⬆️ Importer</button>
@@ -1040,7 +1041,8 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 
 <div class="toast" id="toast"></div>
 
-
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 const allSports = {
   col: [
@@ -1172,7 +1174,7 @@ function getCreneaux(y){
   creneauxData[y]=stored||JSON.parse(JSON.stringify(creneauxDefaut));
   return creneauxData[y];
 }
-function saveCreneaux(y){localStorage.setItem('creneaux-'+y,JSON.stringify(creneauxData[y]));}
+function saveCreneaux(y){localStorage.setItem('creneaux-'+y,JSON.stringify(creneauxData[y]));scheduleCloudSync();}
 const creneaux=new Proxy({},{get(_,cl){return getCreneaux(currentYear)[cl];}});
 
 // fin = dernier jour de vacances (dimanche) ; le lundi de rentrée n'est PAS
@@ -1208,8 +1210,8 @@ function getVacances(y){
   return stored || VACANCES_ZONE_A[y] || [];
 }
 function getParams(y){return JSON.parse(localStorage.getItem('params-'+y)||'null')||ANNEE_PARAMS[y]||{finNotes:'',finAnnee:''};}
-function saveParams(y,p){localStorage.setItem('params-'+y,JSON.stringify(p));}
-function saveVacances(y,v){localStorage.setItem('vacances-'+y,JSON.stringify(v));}
+function saveParams(y,p){localStorage.setItem('params-'+y,JSON.stringify(p));scheduleCloudSync();}
+function saveVacances(y,v){localStorage.setItem('vacances-'+y,JSON.stringify(v));scheduleCloudSync();}
 
 let currentYear='2025-26';
 let deleteTarget=null;
@@ -1239,6 +1241,7 @@ function saveAll(){
     contraintes: JSON.parse(JSON.stringify(contraintes)),
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  scheduleCloudSync();
 }
 function loadSaved(){
   const keys = [STORAGE_KEY, 'eps-programmation-v1', 'eps-programmation'];
@@ -1828,6 +1831,7 @@ function saveFicheModal(){
   fields.forEach(f=>{const el=document.getElementById('f'+f);if(el)data[f]=el.value;});
   (s?.bareme||[]).forEach((_,i)=>{['pts','label','detail'].forEach(k=>{const el=document.getElementById('fb'+i+k);if(el)data['b'+i+k]=el.value;});});
   localStorage.setItem('fiche-prog-'+currentFicheId,JSON.stringify(data));
+  scheduleCloudSync();
   const badge=document.getElementById('ficheSavedBadge');
   if(badge){badge.classList.add('show');setTimeout(()=>badge.classList.remove('show'),2000);}
   showToast('💾 Fiche sauvegardée !');
@@ -2108,13 +2112,83 @@ function importAllData(input){
       existingEpsKeys.forEach(k=>localStorage.removeItem(k));
       keysToRestore.forEach(k=>localStorage.setItem(k, data[k]));
       showToast('✅ Import EPS réussi, rechargement…');
-      setTimeout(()=>location.reload(), 800);
+      // Pousse direct vers le cloud (pas de debounce) AVANT de recharger, sinon
+      // le rechargement re-tirerait l'ancienne version du cloud et écraserait
+      // ce qu'on vient d'importer.
+      const reload = ()=>setTimeout(()=>location.reload(), 400);
+      if(cloudReady){
+        const blob = {}; keysToRestore.forEach(k=>blob[k]=data[k]);
+        cloudDocRef().set({blob: JSON.stringify(blob), updatedAt: Date.now()}).then(reload).catch(reload);
+      } else {
+        reload();
+      }
     }catch(err){
       alert('Fichier invalide : '+err.message);
     }
     input.value='';
   };
   reader.readAsText(file);
+}
+
+// ═══ SYNC CLOUD (Firestore) ═══
+// Un seul document partagé ("eps/data") contient tout l'état EPS (mêmes clés
+// que l'export/import ci-dessus). Chargé au démarrage avant d'afficher quoi
+// que ce soit, puis repoussé vers le cloud (avec un léger délai anti-rafale)
+// après chaque sauvegarde locale. Marche hors-ligne en repli sur localStorage.
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD_NTmT-G90SMiEQct_kRMIq7BFB2fbZ8k",
+  authDomain: "eps-programmation.firebaseapp.com",
+  projectId: "eps-programmation",
+  storageBucket: "eps-programmation.firebasestorage.app",
+  messagingSenderId: "865251832182",
+  appId: "1:865251832182:web:5a1b3d35ceb88f57118a57",
+};
+let cloudDb = null, cloudReady = false, applyingFromCloud = false, cloudSyncTimer = null;
+try{
+  if(typeof firebase !== 'undefined'){
+    firebase.initializeApp(FIREBASE_CONFIG);
+    cloudDb = firebase.firestore();
+    cloudReady = true;
+  }
+}catch(e){ console.warn('Firebase indisponible, mode local uniquement', e); }
+function cloudDocRef(){ return cloudDb.collection('eps').doc('data'); }
+function setCloudIndicator(txt){
+  const el = document.getElementById('cloudSyncIndicator');
+  if(!el) return;
+  el.textContent = txt;
+  if(txt) setTimeout(()=>{ if(el.textContent===txt) el.textContent=''; }, 2500);
+}
+function scheduleCloudSync(){
+  if(!cloudReady || applyingFromCloud) return;
+  clearTimeout(cloudSyncTimer);
+  setCloudIndicator('☁️ Synchro…');
+  cloudSyncTimer = setTimeout(()=>{
+    const data = {};
+    for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(isEpsKey(k)) data[k]=localStorage.getItem(k); }
+    cloudDocRef().set({blob: JSON.stringify(data), updatedAt: Date.now()})
+      .then(()=>setCloudIndicator('☁️ Synchronisé'))
+      .catch(err=>{ console.warn('Sync cloud échouée', err); setCloudIndicator('⚠️ Sync échouée'); });
+  }, 1200);
+}
+function pullFromCloudThenInit(){
+  if(!cloudReady){ initApp(); return; }
+  setCloudIndicator('☁️ Chargement…');
+  cloudDocRef().get().then(doc=>{
+    if(doc.exists && doc.data() && doc.data().blob){
+      try{
+        const data = JSON.parse(doc.data().blob);
+        applyingFromCloud = true;
+        Object.keys(data).forEach(k=>{ if(isEpsKey(k)) localStorage.setItem(k, data[k]); });
+        applyingFromCloud = false;
+      }catch(e){ console.warn('Données cloud invalides', e); }
+    }
+    setCloudIndicator('');
+    initApp();
+  }).catch(err=>{
+    console.warn('Lecture cloud échouée, données locales utilisées', err);
+    setCloudIndicator('⚠️ Hors-ligne');
+    initApp();
+  });
 }
 
 // ═══ SÉANCES ═══
@@ -2290,6 +2364,7 @@ function getCancelledSlots(itemKey){
 }
 function saveCancelledSlots(itemKey, set){
   localStorage.setItem('seances-cancel-'+itemKey, JSON.stringify([...set]));
+  scheduleCloudSync();
 }
 function toggleCancelSlot(itemKey, key){
   const set = getCancelledSlots(itemKey);
@@ -2438,6 +2513,7 @@ function saveSeanceFiche(){
   const data={};
   fields.forEach(f=>{const el=document.getElementById('sf'+f);if(el)data[f]=el.value;});
   localStorage.setItem('fiche-seance-'+currentSeanceKey,JSON.stringify(data));
+  scheduleCloudSync();
   const badge=document.getElementById('seanceFicheSavedBadge');
   if(badge){badge.classList.add('show');setTimeout(()=>badge.classList.remove('show'),2000);}
   showToast('💾 Fiche de séance sauvegardée !');
@@ -2461,10 +2537,13 @@ function printSeanceFiche(){
 }
 
 // ═══ INIT ═══
-loadSaved();
-renderContraintes();
-filterSports();
-renderAll();
+function initApp(){
+  loadSaved();
+  renderContraintes();
+  filterSports();
+  renderAll();
+}
+pullFromCloudThenInit();
 
 // Close modals on outside click
 document.addEventListener('click',e=>{
