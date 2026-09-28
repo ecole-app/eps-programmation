@@ -311,7 +311,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 /* ══════════════════════════════════════
    RESPONSIVE MOBILE
 ══════════════════════════════════════ */
-@media (max-width: 768px) {
+@media (max-width: 768px), (max-device-width: 768px) {
 
   html, body { overflow-x: hidden; width: 100%; }
 
@@ -449,7 +449,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
   .sidebar-toggle-btn { display: flex !important; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (max-device-width: 768px) {
   /* ── Sidebar mobile (transform approach) ── */
   .sidebar {
     position: fixed !important;
@@ -471,7 +471,6 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     transform: translateX(0) !important;
   }
   .sidebar-backdrop.open { display: block !important; }
-}
 
   /* ── Modaux mobile ── */
   .modal-overlay { align-items: flex-end; padding: 0; }
@@ -512,8 +511,9 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
   .cycle-row { flex-wrap: wrap !important; }
   .cycle-row-save, .cycle-row-del { display: none !important; }
   .cycle-row-actions { display: flex !important; width: 100% !important; }
+}
 
-@media (max-width: 380px) {
+@media (max-width: 380px), (max-device-width: 380px) {
   .prog-grid { grid-template-columns: 1fr; }
   .nav-tab { font-size: 0.6rem; padding: 4px 6px; }
   .bilan-stats { grid-template-columns: repeat(3, 1fr); }
