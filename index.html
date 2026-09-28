@@ -2108,9 +2108,8 @@ const LIEU_PAR_SPORT = {
 };
 // Le vrai gymnase n'est dispo que le mercredi pour 4e & 3e (contrainte) : sinon ces
 // sports se font à l'école (cour/salle sur place).
-const SPORTS_GYMNASE_REQUIS = new Set(['badminton','tennis-table','acrosport','renfo','lutte']);
+const SPORTS_GYMNASE_REQUIS = new Set(['basket','badminton','tennis-table','acrosport','renfo','lutte']);
 function getLieuSeance(sportId, seanceType, cl, horaire){
-  if(sportId==='basket') return LIEUX.ecole; // basket = toujours à l'école
   if(sportId==='course-orientation' && seanceType==='eval') return LIEUX.siteCO;
   if(SPORTS_GYMNASE_REQUIS.has(sportId)){
     const gymDispo = (cl==='4e'||cl==='3e') && horaire && horaire.jour==='Mercredi';
