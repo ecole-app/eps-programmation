@@ -2273,10 +2273,33 @@ function buildDerouleText(cl, s, sd){
 // Utilisés tels quels quand disponibles ; au-delà (séances non listées ici),
 // on retombe sur la génération générique (axes/diag/éval).
 const THEMES_SEANCES = {
-  '6e': { relais: ["Découverte, règles","Transmission arrêtée, puis mouvement","Transmission en mouvement","Relais en équipe avec focus transmission en mouvement","Travail d'équipe + début de zone de transmission","Optimiser la zone de transmission","Zone de transmission en équipe"] },
-  '5e': { basket: ["Découverte, règles","Travail de passe","Dribble et déplacement","Dribble et passe combiné","Tir en course + dribble","Mini jeu dribble + passe","Tir en course + match"] },
-  '4e': { 'course-orientation': ["Carte + légende","Travail de carte + pose de plots dans la cour pour se repérer sur un plan","Recherche de plots cachés par d'autres équipes + suivi d'itinéraire","Repère sur un plan en conditions réelles (parc de Montreynaud)","Pose + recherche de balises formées par les élèves en extérieur (parc de Montreynaud)"] },
-  '3e': { badminton: ["Mise en jeu + déplacement","Frappe longue + frappe courte","Échange amorti/smash","Mini match + tour du monde","Replacement","Construire un point"] },
+  '6e': {
+    relais: ["Découverte, règles","Transmission arrêtée, puis mouvement","Transmission en mouvement","Relais en équipe avec focus transmission en mouvement","Travail d'équipe + début de zone de transmission","Optimiser la zone de transmission","Zone de transmission en équipe"],
+    'course-longue': ["Découverte, échauffement, notion d'allure","Courir 8-10 min sans s'arrêter","Trouver son allure régulière (fractionné court)","Test VMA / vitesse repère","Courir à allure projet (individuel)","Courir en binôme, allure imposée","Course bilan, comparaison projet/réalisé"],
+    ultimate: ["Découverte, règles, prise en main du disque","Lancer/réception à l'arrêt (revers, coup droit)","Se démarquer, recevoir en mouvement","Progresser vers l'en-but, jeu réduit 3v3","Interception, replacement défensif","Mini-tournoi 5v5, auto-arbitrage","Tournoi final"],
+    rugby: ["Découverte, règles, manipulation du ballon ovale","Passe en arrière, progression collective","Toucher-plaquage, règle du hors-jeu","Créer le surnombre, jeu à 3","Soutien du porteur de balle","Défense en ligne, replacement","Tournoi 5v5"],
+  },
+  '5e': {
+    basket: ["Découverte, règles","Travail de passe","Dribble et déplacement","Dribble et passe combiné","Tir en course + dribble","Mini jeu dribble + passe","Tir en course + match"],
+    ultimate: ["Rappel règles, lancers de base","Travail du démarquage","Jeu réduit 3v3, auto-arbitrage","Progression vers l'en-but, couloirs","Interceptions, transitions défense/attaque","Mini-tournoi 5v5","Tournoi final, spirit of the game"],
+    relais: ["Découverte, prise de marque","Transmission à l'arrêt","Transmission en mouvement","Zone de transmission, synchronisation","Stratégie d'ordre de passage","Relais chronométré en équipe","Tournoi chronométré"],
+    'ballon-prisonnier': ["Découverte, règles, lancers de base","Esquive et déplacement","Précision du lancer","Organisation collective, rôles","Stratégie de libération","Tournoi 3 manches"],
+    'demi-fond': ["Test VMA","Courir à % de VMA (fractionné)","Gérer 2 allures différentes","Construire son projet de course","Course en binôme observateur","Ajuster son projet","Course bilan à 3 allures"],
+  },
+  '4e': {
+    'course-orientation': ["Carte + légende","Travail de carte + pose de plots dans la cour pour se repérer sur un plan","Recherche de plots cachés par d'autres équipes + suivi d'itinéraire","Repère sur un plan en conditions réelles (parc de Montreynaud)","Pose + recherche de balises formées par les élèves en extérieur (parc de Montreynaud)"],
+    basket: ["Découverte, dribble de protection","Passe et démarquage","Tir en course","Jeu à 3, conservation du ballon","Contre-attaque","Attaque placée, lecture du jeu","Tournoi 4v4"],
+    badminton: ["Découverte, prise en main, service","Frappes de base (clear, amorti)","Replacement au centre","Construction de l'échange","Jeu en double","Tournoi simple"],
+    relais: ["Rappel technique de course","Transmission en mouvement","Zone de transmission","Stratégie d'ordre","Relais chronométré en équipe","Tournoi chronométré"],
+    lutte: ["Découverte, règles de sécurité, saisies","Déséquilibres debout","Amener au sol en sécurité","Contrôle au sol","Enchaînement déséquilibre + contrôle","Tournoi par gabarit"],
+  },
+  '3e': {
+    badminton: ["Mise en jeu + déplacement","Frappe longue + frappe courte","Échange amorti/smash","Mini match + tour du monde","Replacement","Construire un point"],
+    renfo: ["Découverte, technique des exercices de base","Test initial, repères personnels","Construction du programme personnalisé","Circuit training encadré","Autonomie, correction par binôme","Circuit évalué"],
+    relais: ["Technique de course, prise de marque","Transmission en mouvement","Optimisation de la zone de transmission","Stratégie d'ordre de passage","Relais chronométré en équipe","Tournoi chronométré"],
+    basket: ["Rappel technique, dribble/passe","Tir en course","Jeu collectif, conservation","Contre-attaque","Attaque placée","Tournoi 4v4"],
+    ultimate: ["Rappel règles, lancers","Démarquage, jeu réduit","Progression vers l'en-but","Défense, interceptions","Mini-tournoi","Tournoi final"],
+  },
 };
 function getThemeSeance(cl, sportId, i){
   const arr = THEMES_SEANCES[cl] && THEMES_SEANCES[cl][sportId];
