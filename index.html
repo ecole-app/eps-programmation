@@ -1874,27 +1874,41 @@ function renderCreneauList(){
   const list=document.getElementById('creneauList');
   if(!list)return;
   const cr=getCreneaux(currentYear);
-  list.innerHTML=classes.map(cl=>`<div class="creneau-item"><div class="creneau-classe">${cl}</div><div class="creneau-detail"><span class="ctag">${cr[cl]?.detail||''}</span> · ${cr[cl]?.seances||2} séance(s)/sem</div></div>`).join('');
+  const eff=getEffectifs(currentYear);
+  list.innerHTML=classes.map(cl=>`<div class="creneau-item"><div class="creneau-classe">${cl}</div><div class="creneau-detail"><span class="ctag">${cr[cl]?.detail||''}</span> · ${cr[cl]?.seances||2} séance(s)/sem${eff[cl]?` · 👥 ${eff[cl]} élèves`:''}</div></div>`).join('');
+}
+function getEffectifs(y){
+  try{ return JSON.parse(localStorage.getItem('effectifs-'+y)||'{}'); }
+  catch(e){ return {}; }
+}
+function saveEffectifs(y, obj){
+  localStorage.setItem('effectifs-'+y, JSON.stringify(obj));
+  scheduleCloudSync();
 }
 function openCreneauxModal(){
   const cr=getCreneaux(currentYear);
+  const eff=getEffectifs(currentYear);
   document.getElementById('creneauxModalBody').innerHTML=`<p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem">Créneaux pour l'année <strong>${currentYear}</strong></p>${
     classes.map(cl=>`<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:8px">
       <div style="font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:var(--teal-d);margin-bottom:8px">${cl}</div>
-      <div class="form-row">
+      <div class="form-row3">
         <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="cr_detail_${cl}" value="${cr[cl]?.detail||''}"></div>
         <div class="form-group"><label class="form-label">Séances/semaine</label><input class="form-input" type="number" step="0.5" min="0.5" max="5" id="cr_seances_${cl}" value="${cr[cl]?.seances||2}"></div>
+        <div class="form-group"><label class="form-label">Effectif</label><input class="form-input" type="number" step="1" min="0" max="45" id="cr_effectif_${cl}" value="${eff[cl]||''}" placeholder="élèves"></div>
       </div></div>`).join('')}`;
   document.getElementById('modalCreneaux').classList.add('open');hideSidebarBtn();
 }
 function saveCreneauxModal(){
   const cr=getCreneaux(currentYear);
+  const eff=getEffectifs(currentYear);
   classes.forEach(cl=>{
     const det=document.getElementById('cr_detail_'+cl)?.value;
     const sea=parseFloat(document.getElementById('cr_seances_'+cl)?.value);
+    const nb=parseInt(document.getElementById('cr_effectif_'+cl)?.value,10);
     if(det)cr[cl].detail=det;if(!isNaN(sea))cr[cl].seances=sea;
+    if(!isNaN(nb)&&nb>0) eff[cl]=nb; else delete eff[cl];
   });
-  saveCreneaux(currentYear);saveAll();
+  saveCreneaux(currentYear);saveEffectifs(currentYear,eff);saveAll();
   closeModal('modalCreneaux');renderCreneauList();renderHeures();
   showToast('✅ Créneaux sauvegardés !');
 }
@@ -2089,7 +2103,7 @@ function installPWA(){
 // (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
 // jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
 function isEpsKey(k){
-  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase)-/.test(k);
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs)-/.test(k);
 }
 function exportAllData(){
   const data = {};
@@ -2674,6 +2688,22 @@ function renderAujourdhui(){
 
 // ═══ FICHE DE PRÉPARATION DE SÉANCE (modale téléchargeable) ═══
 let currentSeanceKey = null;
+// Combine l'effectif réel de la classe avec la taille de groupe habituelle du
+// sport (ex "Équipes de 4–5") pour proposer une répartition en groupes prête
+// à corriger à la main dans la fiche.
+function suggestGroupement(nbEleves, sdEffectifText){
+  if(!nbEleves) return sdEffectifText || '';
+  const nums = (sdEffectifText||'').match(/\d+/g)?.map(Number) || [];
+  if(!nums.length) return `${nbEleves} élèves`;
+  const avg = nums.reduce((a,b)=>a+b,0)/nums.length;
+  const nbGroupes = Math.max(1, Math.round(nbEleves/avg));
+  const base = Math.floor(nbEleves/nbGroupes);
+  const reste = nbEleves - base*nbGroupes;
+  const detail = reste>0
+    ? `${nbGroupes-reste} groupes de ${base} + ${reste} groupe(s) de ${base+1}`
+    : `${nbGroupes} groupes de ${base}`;
+  return `${nbEleves} élèves → ${detail}`;
+}
 function openSeanceFiche(key){
   const d = seanceDataMap[key];
   if(!d) return;
@@ -2681,6 +2711,8 @@ function openSeanceFiche(key){
   const {item,p,cl,s,sd,total} = d;
   const saved = JSON.parse(localStorage.getItem('fiche-seance-'+key)||'{}');
   const g=(f,def)=>saved[f]!==undefined&&saved[f]!==''?saved[f]:def;
+  const effectifClasse = getEffectifs(currentYear)[cl];
+  const effectifDefaut = suggestGroupement(effectifClasse, sd&&sd.effectif) || (sd&&sd.effectif) || '';
   const semLabel = s.partie ? `Semaine ${s.semaine} (séance ${s.partie}/${s.totalPart} de la semaine)` : `Semaine ${s.semaine}`;
   const horaire = getHoraireSeance(cl, s);
   const lieu = getLieuSeance(sd?sd.id:null, s.type, cl, horaire);
@@ -2701,7 +2733,7 @@ function openSeanceFiche(key){
         <div class="fiche-cond-item"><div class="fiche-cond-label">Lieu</div><input class="fiche-edit-input" id="sflieu" value="${g('lieu',lieu.nom)}"></div>
         <div class="fiche-cond-item"><div class="fiche-cond-label">Matériel</div><input class="fiche-edit-input" id="sfmateriel" value="${g('materiel',(sd&&sd.materiel)||'')}"></div>
         <div class="fiche-cond-item"><div class="fiche-cond-label">Espace</div><input class="fiche-edit-input" id="sfespace" value="${g('espace',(sd&&sd.espace)||'')}"></div>
-        <div class="fiche-cond-item"><div class="fiche-cond-label">Effectif</div><input class="fiche-edit-input" id="sfeffectif" value="${g('effectif',(sd&&sd.effectif)||'')}"></div>
+        <div class="fiche-cond-item"><div class="fiche-cond-label">Effectif</div><input class="fiche-edit-input" id="sfeffectif" value="${g('effectif',effectifDefaut)}"></div>
       </div></div>
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">⏱️</span><span class="fiche-section-title">Déroulé horaire</span></div>
       <textarea class="fiche-edit-ta" id="sfderoule" style="min-height:140px;white-space:pre-wrap">${g('deroule',buildDerouleText(cl,s,sd))}</textarea></div>
