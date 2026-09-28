@@ -2269,13 +2269,27 @@ function buildDerouleText(cl, s, sd){
   return lignes.join('\n');
 }
 
+// Thèmes réels donnés par Ahmed, séance par séance, par classe + sport.
+// Utilisés tels quels quand disponibles ; au-delà (séances non listées ici),
+// on retombe sur la génération générique (axes/diag/éval).
+const THEMES_SEANCES = {
+  '6e': { relais: ["Découverte, règles","Transmission arrêtée, puis mouvement","Transmission en mouvement","Relais en équipe avec focus transmission en mouvement","Travail d'équipe + début de zone de transmission","Optimiser la zone de transmission","Zone de transmission en équipe"] },
+  '5e': { basket: ["Découverte, règles","Travail de passe","Dribble et déplacement","Dribble et passe combiné","Tir en course + dribble","Mini jeu dribble + passe","Tir en course + match"] },
+  '4e': { 'course-orientation': ["Carte + légende","Travail de carte + pose de plots dans la cour pour se repérer sur un plan","Recherche de plots cachés par d'autres équipes + suivi d'itinéraire","Repère sur un plan en conditions réelles (parc de Montreynaud)","Pose + recherche de balises formées par les élèves en extérieur (parc de Montreynaud)"] },
+  '3e': { badminton: ["Mise en jeu + déplacement","Frappe longue + frappe courte","Échange amorti/smash","Mini match + tour du monde","Replacement","Construire un point"] },
+};
+function getThemeSeance(cl, sportId, i){
+  const arr = THEMES_SEANCES[cl] && THEMES_SEANCES[cl][sportId];
+  return (arr && arr[i]) || null;
+}
+
 // Clé unique et stable pour un slot semaine/partie (indépendante des décalages)
 function slotKey(semaine, partie){ return semaine+'-'+(partie||1); }
 
 // Génère les slots (semaine, partie) en continuant le motif hebdo au-delà du
 // cycle nominal, pour pouvoir décaler une séance annulée sur les semaines
 // suivantes sans perdre de séance.
-function buildSeances(apsa, semaines, parSem, cancelledSet){
+function buildSeances(cl, apsa, semaines, parSem, cancelledSet){
   const sd = findSportData(apsa);
   const axes = (sd && sd.axes && sd.axes.length) ? sd.axes : ['Découverte','Apprentissage','Application','Complexification','Évaluation'];
   const nominalTotal = buildWeekPlan(semaines, parSem).reduce((a,b)=>a+b,0);
@@ -2302,7 +2316,11 @@ function buildSeances(apsa, semaines, parSem, cancelledSet){
   const out = [];
   for(let i=0;i<n;i++){
     let titre, type, contenu;
-    if(i===0){
+    const theme = getThemeSeance(cl, sd?sd.id:null, i);
+    if(theme){
+      titre = theme; contenu = theme;
+      type = (i===0) ? 'diag' : (i===n-1) ? 'eval' : 'appr';
+    } else if(i===0){
       titre='Évaluation diagnostique'; type='diag';
       contenu='Situation de référence, observation du niveau de départ. Mise en place des règles de sécurité et des rôles.';
     } else if(i===n-1){
@@ -2375,7 +2393,7 @@ function renderSeances(){
       const f = familleConfig[item.famille]||{icon:'🏃',label:''};
       const itemKey = `${currentYear}_${p.id}_${cl}_${itemIdx}_${slugSport(item.apsa)}`;
       const cancelledSet = getCancelledSlots(itemKey);
-      const {list, cancelledInfo} = buildSeances(item.apsa, item.semaines, parSem, cancelledSet);
+      const {list, cancelledInfo} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet);
       const nb = list.length;
       const sd = findSportData(item.apsa);
       html += `
