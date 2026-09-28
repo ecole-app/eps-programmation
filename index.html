@@ -2575,18 +2575,22 @@ function getAujourdhuiInfo(){
     const items = (planning()[activeCycle.id]||{})[cl]||[];
     if(!items.length) return;
     const parSem = cr[cl]?.seances || 2;
+    // rawWeek sert UNIQUEMENT à retrouver la bonne séance (déduit du calendrier
+    // réel, aligné sur le motif d'alternance simple/double généré par
+    // buildSeances) — la calibration ne doit jamais changer quelle séance est
+    // sélectionnée, seulement le numéro affiché à l'écran.
     const rawWeek = countTeachingWeeks(mondayOf(range.debut), mondayOf(today), vacs);
-    const weekIndex = rawWeek + (calib[activeCycle.id]||0);
+    const dispOffset = calib[activeCycle.id]||0;
     items.forEach((item, itemIdx)=>{
       const itemKey = `${currentYear}_${activeCycle.id}_${cl}_${itemIdx}_${slugSport(item.apsa)}`;
       const cancelledSet = getCancelledSlots(itemKey);
       const {list} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet);
       todaysSlots.forEach(slot=>{
-        const seance = list.find(s => s.semaine===weekIndex && (s.partie||1)===slot.partie);
+        const seance = list.find(s => s.semaine===rawWeek && (s.partie||1)===slot.partie);
         if(seance){
           const key = `${activeCycle.id}_${cl}_${itemIdx}_${seance.num}`;
           seanceDataMap[key] = {item, p:activeCycle, cl, s:seance, sd:findSportData(item.apsa), total:list.length};
-          results.push({cl, item, cycle:activeCycle, slot, seance, key, rawWeek});
+          results.push({cl, item, cycle:activeCycle, slot, seance, key, rawWeek, dispSemaine: rawWeek + dispOffset});
         }
       });
     });
@@ -2620,7 +2624,7 @@ function renderAujourdhui(){
     const f = familleConfig[r.item.famille]||{icon:'🏃',label:''};
     const s = r.seance;
     const col = s.type==='diag'?'#0077b6':s.type==='eval'?'#d62828':s.type==='revision'?'#f0a500':'var(--teal)';
-    const semLabel = s.partie ? `S${s.semaine} · ${s.partie}/${s.totalPart}` : `S${s.semaine}`;
+    const semLabel = s.partie ? `S${r.dispSemaine} · ${s.partie}/${s.totalPart}` : `S${r.dispSemaine}`;
     return `<div class="section-card" style="margin-bottom:1rem;border-left:4px solid ${col}">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:0.75rem">
         <span style="font-size:1.4rem">${f.icon}</span>
