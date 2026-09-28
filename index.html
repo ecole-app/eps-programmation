@@ -2089,7 +2089,7 @@ function installPWA(){
 // (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
 // jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
 function isEpsKey(k){
-  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib)-/.test(k);
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase)-/.test(k);
 }
 function exportAllData(){
   const data = {};
@@ -2326,21 +2326,28 @@ function slotKey(semaine, partie){ return semaine+'-'+(partie||1); }
 // Génère les slots (semaine, partie) en continuant le motif hebdo au-delà du
 // cycle nominal, pour pouvoir décaler une séance annulée sur les semaines
 // suivantes sans perdre de séance.
-function buildSeances(cl, apsa, semaines, parSem, cancelledSet){
+function buildSeances(cl, apsa, semaines, parSem, cancelledSet, phaseShift){
   const sd = findSportData(apsa);
   const axes = (sd && sd.axes && sd.axes.length) ? sd.axes : ['Découverte','Apprentissage','Application','Complexification','Évaluation'];
   const nominalTotal = buildWeekPlan(semaines, parSem).reduce((a,b)=>a+b,0);
   const cancelled = cancelledSet || new Set();
   const base = Math.max(1, Math.floor(parSem) || 1);
   const frac = Math.max(0, parSem - base);
+  // phaseShift (0 ou 1) : deux classes avec le même nombre de séances/semaine
+  // (ex 1.5) peuvent alterner semaine simple/double sur des semaines réelles
+  // différentes (leurs emplois du temps ne sont pas forcément synchronisés).
+  // Ce décalage ne change QUE la parité simple/double, jamais le numéro de
+  // semaine enregistré (qui reste séquentiel 1,2,3,...).
+  const shift = phaseShift||0;
   const activeSlots = [];
   const cancelledInfo = [];
   let week = 0, prevCum = 0;
   while(activeSlots.length < nominalTotal && week < 300){
     week++;
     const cum = frac>0 ? Math.round(week*frac) : 0;
-    const c = base + (cum>prevCum ? 1 : 0);
+    let c = base + (cum>prevCum ? 1 : 0);
     prevCum = cum;
+    if(shift && frac>0){ c = (c===base) ? base+1 : base; } // inverse simple/double
     for(let k=0;k<c;k++){
       const partie = c===2 ? (k+1) : null;
       const key = slotKey(week, partie);
@@ -2391,6 +2398,29 @@ function toggleCancelSlot(itemKey, key){
   renderSeances();
 }
 
+// Décalage de phase simple/double par (année, cycle, classe) : deux classes
+// avec le même nombre de séances/semaine (ex 1.5) peuvent alterner sur des
+// semaines réelles différentes selon leur propre emploi du temps.
+function getPhaseMap(year){
+  try{ return JSON.parse(localStorage.getItem('phase-'+year)||'{}'); }
+  catch(e){ return {}; }
+}
+function savePhaseMap(year, map){
+  localStorage.setItem('phase-'+year, JSON.stringify(map));
+  scheduleCloudSync();
+}
+function getPhaseShift(year, cycleId, cl){
+  return getPhaseMap(year)[cycleId+'_'+cl] || 0;
+}
+function toggleAujourdhuiPhase(cycleId, cl){
+  const map = getPhaseMap(currentYear);
+  const k = cycleId+'_'+cl;
+  map[k] = map[k] ? 0 : 1;
+  savePhaseMap(currentYear, map);
+  showToast('🔀 '+cl+' recalée sur son vrai rythme');
+  renderAujourdhui();
+}
+
 function renderSeancesSelectors(){
   const selC = document.getElementById('seancesClasse');
   const selCy = document.getElementById('seancesCycle');
@@ -2430,7 +2460,7 @@ function renderSeances(){
       const f = familleConfig[item.famille]||{icon:'🏃',label:''};
       const itemKey = `${currentYear}_${p.id}_${cl}_${itemIdx}_${slugSport(item.apsa)}`;
       const cancelledSet = getCancelledSlots(itemKey);
-      const {list, cancelledInfo} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet);
+      const {list, cancelledInfo} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet, getPhaseShift(currentYear, p.id, cl));
       const nb = list.length;
       const sd = findSportData(item.apsa);
       html += `
@@ -2584,13 +2614,14 @@ function getAujourdhuiInfo(){
     items.forEach((item, itemIdx)=>{
       const itemKey = `${currentYear}_${activeCycle.id}_${cl}_${itemIdx}_${slugSport(item.apsa)}`;
       const cancelledSet = getCancelledSlots(itemKey);
-      const {list} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet);
+      const phaseShift = getPhaseShift(currentYear, activeCycle.id, cl);
+      const {list} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet, phaseShift);
       todaysSlots.forEach(slot=>{
         const seance = list.find(s => s.semaine===rawWeek && (s.partie||1)===slot.partie);
         if(seance){
           const key = `${activeCycle.id}_${cl}_${itemIdx}_${seance.num}`;
           seanceDataMap[key] = {item, p:activeCycle, cl, s:seance, sd:findSportData(item.apsa), total:list.length};
-          results.push({cl, item, cycle:activeCycle, slot, seance, key, rawWeek, dispSemaine: rawWeek + dispOffset, total: list.length});
+          results.push({cl, item, cycle:activeCycle, slot, seance, key, rawWeek, dispSemaine: rawWeek + dispOffset, total: list.length, hasAlternance: (parSem % 1) !== 0});
         }
       });
     });
@@ -2636,6 +2667,7 @@ function renderAujourdhui(){
       </div>
       <div style="font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;color:${col};margin-bottom:3px">${s.titre}</div>
       <div style="font-size:0.78rem;line-height:1.5;color:var(--text)">${s.contenu}</div>
+      ${r.hasAlternance ? `<div style="margin-top:0.6rem"><a href="javascript:void(0)" onclick="toggleAujourdhuiPhase('${r.cycle.id}','${r.cl}')" style="font-size:0.7rem;color:var(--muted);text-decoration:underline">🔀 La ${r.cl} n'a pas cours cette semaine ? Corriger l'alternance</a></div>` : ''}
     </div>`;
   }).join('');
 }
