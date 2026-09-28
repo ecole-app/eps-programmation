@@ -2094,6 +2094,7 @@ function buildWeekPlan(semaines, parSem){
 // Tous les trajets se font à pied depuis le collège (20 Rue Paganini).
 const LIEUX = {
   paganini: {nom:'Collège (20 Rue Paganini)', trajetMin:0},
+  ecole:    {nom:"École (cour / salle sur place)", trajetMin:2},
   gymnase:  {nom:'Gymnase', trajetMin:5},
   stade:    {nom:'Stade', trajetMin:7},
   parc:     {nom:'Parc de Montreynaud', trajetMin:6},
@@ -2102,12 +2103,19 @@ const LIEUX = {
 // Déduit du terrain d'évolution (SPORTS_DATA.espace) — à corriger au cas par cas si besoin.
 const LIEU_PAR_SPORT = {
   relais:'stade', 'course-longue':'stade', 'demi-fond':'stade', sprint:'stade',
-  basket:'gymnase', football:'stade', ultimate:'stade', 'ballon-prisonnier':'stade',
-  rugby:'stade', badminton:'gymnase', 'tennis-table':'gymnase',
-  acrosport:'gymnase', renfo:'gymnase', 'course-orientation':'parc', lutte:'gymnase',
+  football:'stade', ultimate:'stade', 'ballon-prisonnier':'stade', rugby:'stade',
+  'course-orientation':'parc',
 };
-function getLieuSeance(sportId, seanceType){
+// Le vrai gymnase n'est dispo que le mercredi pour 4e & 3e (contrainte) : sinon ces
+// sports se font à l'école (cour/salle sur place).
+const SPORTS_GYMNASE_REQUIS = new Set(['badminton','tennis-table','acrosport','renfo','lutte']);
+function getLieuSeance(sportId, seanceType, cl, horaire){
+  if(sportId==='basket') return LIEUX.ecole; // basket = toujours à l'école
   if(sportId==='course-orientation' && seanceType==='eval') return LIEUX.siteCO;
+  if(SPORTS_GYMNASE_REQUIS.has(sportId)){
+    const gymDispo = (cl==='4e'||cl==='3e') && horaire && horaire.jour==='Mercredi';
+    return gymDispo ? LIEUX.gymnase : LIEUX.ecole;
+  }
   const key = LIEU_PAR_SPORT[sportId];
   return (key && LIEUX[key]) || LIEUX.paganini;
 }
@@ -2133,7 +2141,7 @@ function buildDerouleText(cl, s, sd){
   const debut = parseHeure(horaire.debut);
   const fin = parseHeure(horaire.fin);
   if(debut==null || fin==null) return '';
-  const lieu = getLieuSeance(sd?sd.id:null, s.type);
+  const lieu = getLieuSeance(sd?sd.id:null, s.type, cl, horaire);
   const trajet = lieu.trajetMin;
   const lignes = [];
   let t = debut;
@@ -2331,8 +2339,8 @@ function openSeanceFiche(key){
   const saved = JSON.parse(localStorage.getItem('fiche-seance-'+key)||'{}');
   const g=(f,def)=>saved[f]!==undefined&&saved[f]!==''?saved[f]:def;
   const semLabel = s.partie ? `Semaine ${s.semaine} (séance ${s.partie}/${s.totalPart} de la semaine)` : `Semaine ${s.semaine}`;
-  const lieu = getLieuSeance(sd?sd.id:null, s.type);
   const horaire = getHoraireSeance(cl, s);
+  const lieu = getLieuSeance(sd?sd.id:null, s.type, cl, horaire);
   document.getElementById('seanceFicheTitre').textContent = `${item.apsa} — Séance ${s.num}/${total}`;
   document.getElementById('seanceFicheBody').innerHTML = `
     <div class="fiche-section">
