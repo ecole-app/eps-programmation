@@ -746,6 +746,9 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     <button class="btn btn-ghost" onclick="toggleOrientation()" id="orientBtn" title="Orientation impression">🖨️ Paysage</button>
     <span id="saveIndicator" style="font-size:0.7rem;color:rgba(255,255,255,0.6);display:none;align-items:center;gap:4px">💾</span>
     <button id="installBtn" onclick="installPWA()" class="btn btn-ghost" style="display:none;align-items:center;gap:5px">📲 Installer</button>
+    <button class="btn btn-ghost" onclick="exportAllData()" title="Télécharger une sauvegarde de toutes les données">⬇️ Sauvegarder</button>
+    <button class="btn btn-ghost" onclick="triggerImport()" title="Restaurer une sauvegarde">⬆️ Importer</button>
+    <input type="file" id="importFileInput" accept="application/json" style="display:none" onchange="importAllData(this)">
     <button class="btn btn-amber" onclick="openAddModal()">+ APSA</button>
   </div>
 </header>
@@ -2058,6 +2061,47 @@ function installPWA(){
   if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});}
 }
 
+// ═══ SAUVEGARDE / RESTAURATION (export-import JSON) ═══
+// Filet de sécurité : tout est en localStorage (rien sur un serveur), donc un
+// changement de navigateur/PC ou un cache vidé peut tout effacer. Ce bouton
+// permet de télécharger un fichier de sauvegarde et de le réimporter.
+function exportAllData(){
+  const data = {};
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    data[k] = localStorage.getItem(k);
+  }
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `eps-sauvegarde-${date}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('💾 Sauvegarde téléchargée');
+}
+function triggerImport(){
+  document.getElementById('importFileInput')?.click();
+}
+function importAllData(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!confirm('Ça va remplacer toutes les données actuelles par celles du fichier de sauvegarde. Continuer ?')) { input.value=''; return; }
+      localStorage.clear();
+      Object.keys(data).forEach(k=>localStorage.setItem(k, data[k]));
+      showToast('✅ Import réussi, rechargement…');
+      setTimeout(()=>location.reload(), 800);
+    }catch(err){
+      alert('Fichier invalide : '+err.message);
+    }
+    input.value='';
+  };
+  reader.readAsText(file);
+}
 
 // ═══ SÉANCES ═══
 function slugSport(nom){
