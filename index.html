@@ -1247,15 +1247,19 @@ function loadSaved(){
       const raw = localStorage.getItem(key);
       if(!raw) continue;
       const d = JSON.parse(raw);
-      // Only load if there's actual APSA data saved
-      const hasData = d.plannings && Object.values(d.plannings).some(yr =>
-        Object.values(yr).some(p => Object.values(p).some(cl => cl.length > 0))
-      );
+      if(!d.plannings) continue;
+      // Vérifie AN PAR AN si la sauvegarde contient vraiment quelque chose.
+      // Avant : un seul test global sur tout le blob -> si UNE année avait du
+      // contenu (ex: 2026-27), le blob entier était accepté et écrasait aussi
+      // les années vides (ex: 2025-26), effaçant les exemples par défaut.
+      const yearHasData = (yr) => !!yr && Object.values(yr).some(p => Object.values(p).some(cl => cl.length > 0));
+      const mergedPlannings = {};
+      new Set([...Object.keys(plannings), ...Object.keys(d.plannings)]).forEach(y=>{
+        mergedPlannings[y] = yearHasData(d.plannings[y]) ? d.plannings[y] : (plannings[y] || d.plannings[y] || {});
+      });
+      const hasData = Object.values(mergedPlannings).some(yearHasData);
       if(!hasData) continue;
-      if(d.plannings){
-        for(const y of Object.keys(plannings)){ if(!(y in d.plannings)) d.plannings[y]=plannings[y]; }
-        plannings = d.plannings;
-      }
+      plannings = mergedPlannings;
       if(d.periodesData){
         for(const y of Object.keys(periodesData)){ if(!(y in d.periodesData)) d.periodesData[y]=periodesData[y]; }
         periodesData = d.periodesData;
