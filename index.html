@@ -2089,7 +2089,7 @@ function installPWA(){
 // (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
 // jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
 function isEpsKey(k){
-  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel)-/.test(k);
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib)-/.test(k);
 }
 function exportAllData(){
   const data = {};
@@ -2509,6 +2509,29 @@ function parseCycleDateRange(p, year){
   if(!d1||!d2) return null;
   return {debut:d1, fin:d2};
 }
+// Calibration manuelle du numéro de semaine par cycle : le calcul calendaire
+// (depuis la date de début du cycle) peut diverger de la réalité (rentrée en
+// milieu de semaine, ajustements d'emploi du temps...). Ahmed peut recaler le
+// numéro affiché sur la réalité ; le décalage est ensuite appliqué à toutes
+// les semaines suivantes du même cycle, sans y retoucher.
+function getSemaineCalib(year){
+  try{ return JSON.parse(localStorage.getItem('semaine-calib-'+year)||'{}'); }catch(e){ return {}; }
+}
+function saveSemaineCalib(year, calib){
+  localStorage.setItem('semaine-calib-'+year, JSON.stringify(calib));
+  scheduleCloudSync();
+}
+function calibrerSemaine(cycleId, rawWeek){
+  const val = prompt('Numéro réel de la semaine en cours (cycle '+cycleId+') :', String(rawWeek));
+  if(val===null) return;
+  const n = parseInt(val,10);
+  if(isNaN(n) || n<1){ showToast('⚠️ Numéro invalide'); return; }
+  const calib = getSemaineCalib(currentYear);
+  calib[cycleId] = n - rawWeek;
+  saveSemaineCalib(currentYear, calib);
+  showToast('✅ Semaine calée sur S'+n);
+  renderAujourdhui();
+}
 function countTeachingWeeks(startMonday, endMonday, vacs){
   let n = 0, cur = new Date(startMonday);
   while(cur <= endMonday){
@@ -2538,6 +2561,7 @@ function getAujourdhuiInfo(){
 
   const cr = getCreneaux(currentYear);
   const ps = periodes()||[];
+  const calib = getSemaineCalib(currentYear);
   classes.forEach(cl=>{
     const jours = (cr[cl] && cr[cl].jours) || (creneauxDefaut[cl] && creneauxDefaut[cl].jours) || [];
     const todaysSlots = jours.filter(j=>j.jour===jourAuj);
@@ -2551,7 +2575,8 @@ function getAujourdhuiInfo(){
     const items = (planning()[activeCycle.id]||{})[cl]||[];
     if(!items.length) return;
     const parSem = cr[cl]?.seances || 2;
-    const weekIndex = countTeachingWeeks(mondayOf(range.debut), mondayOf(today), vacs);
+    const rawWeek = countTeachingWeeks(mondayOf(range.debut), mondayOf(today), vacs);
+    const weekIndex = rawWeek + (calib[activeCycle.id]||0);
     items.forEach((item, itemIdx)=>{
       const itemKey = `${currentYear}_${activeCycle.id}_${cl}_${itemIdx}_${slugSport(item.apsa)}`;
       const cancelledSet = getCancelledSlots(itemKey);
@@ -2561,7 +2586,7 @@ function getAujourdhuiInfo(){
         if(seance){
           const key = `${activeCycle.id}_${cl}_${itemIdx}_${seance.num}`;
           seanceDataMap[key] = {item, p:activeCycle, cl, s:seance, sd:findSportData(item.apsa), total:list.length};
-          results.push({cl, item, cycle:activeCycle, slot, seance, key});
+          results.push({cl, item, cycle:activeCycle, slot, seance, key, rawWeek});
         }
       });
     });
@@ -2601,7 +2626,7 @@ function renderAujourdhui(){
         <span style="font-size:1.4rem">${f.icon}</span>
         <div style="flex:1;min-width:160px">
           <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800">${r.cl} — ${r.item.apsa}</div>
-          <div style="font-size:0.74rem;color:var(--muted)">${r.slot.debut}–${r.slot.fin} · ${r.cycle.name} · Séance ${s.num}/${r.total} (${semLabel})</div>
+          <div style="font-size:0.74rem;color:var(--muted)">${r.slot.debut}–${r.slot.fin} · ${r.cycle.name} · Séance ${s.num}/${r.total} (${semLabel} <a href="javascript:void(0)" onclick="calibrerSemaine('${r.cycle.id}',${r.rawWeek})" title="Corriger le numéro de semaine" style="color:var(--muted);text-decoration:underline">✏️</a>)</div>
         </div>
         <button onclick="openSeanceFiche('${r.key}')" title="Fiche de préparation" style="flex-shrink:0;background:${col};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">📄 Fiche</button>
       </div>
