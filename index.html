@@ -1687,6 +1687,8 @@ function deleteCycle(pid){
 
 // ═══ ANNEES ═══
 function renderYearButtons(){
+  const titleEl=document.getElementById('mainTitle');
+  if(titleEl) titleEl.textContent=`Planning ${currentYear}`;
   const list=document.getElementById('yearBtnList');
   if(!list)return;
   const years=Object.keys(periodesData).sort();
@@ -1713,8 +1715,6 @@ function renderYearButtons(){
 }
 function setYear(y){
   currentYear=y;
-  const el=document.getElementById('mainTitle');
-  if(el) el.textContent=`Planning ${y}`;
   renderYearButtons();renderAll();saveAll();
 }
 function addYear(){
