@@ -734,7 +734,8 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 <header>
   <div class="logo">🏃 EPS Collège <span class="logo-badge">Pro</span></div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('planning',this)">📅 Planning</button>
+    <button class="nav-tab active" onclick="showPage('aujourdhui',this)">🏠 Aujourd'hui</button>
+    <button class="nav-tab" onclick="showPage('planning',this)">📅 Planning</button>
     <button class="nav-tab" onclick="showPage('cycles',this)">⚙️ Cycles</button>
     <button class="nav-tab" onclick="showPage('bilan',this)">📊 Bilan</button>
     <button class="nav-tab" onclick="showPage('comparaison',this)">🔀 Comparaison</button>
@@ -852,7 +853,18 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 <main class="main">
 
   <!-- ══ PAGE PLANNING ══ -->
-  <div class="page active" id="page-planning">
+  <!-- ══ PAGE AUJOURD'HUI ══ -->
+  <div class="page active" id="page-aujourdhui">
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="aujTitle">Aujourd'hui</div>
+        <div class="page-sub" id="aujSub"></div>
+      </div>
+    </div>
+    <div id="aujourdhuiContent"></div>
+  </div>
+
+  <div class="page" id="page-planning">
     <div class="page-header">
       <div>
         <div class="page-title" id="mainTitle">Planning 2025–26</div>
@@ -1286,6 +1298,7 @@ function renderAll(){
   renderStats();
   renderProg();
   renderSeances();
+  renderAujourdhui();
 }
 
 // ═══ GRID ═══
@@ -1958,6 +1971,7 @@ function showPage(id,btn){
   if(id==='comparaison')renderComparaison();
   if(id==='cycles')renderCycles();
   if(id==='seances')renderSeances();
+  if(id==='aujourdhui')renderAujourdhui();
 }
 
 // ═══ SIDEBAR ═══
@@ -2463,6 +2477,138 @@ function renderSeances(){
   box.innerHTML = vide
     ? `<div class="section-card" style="text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:0.85rem">Aucune APSA planifiée pour ${cl}${cyFilter!=='all'?' sur ce cycle':''}.<br><span style="font-size:0.76rem">Ajoute des APSA dans l'onglet Planning.</span></div>`
     : html;
+}
+
+// ═══ AUJOURD'HUI ═══
+// Répond à "c'est quel jour, j'ai quelle classe, je bosse quoi avec eux" en
+// combinant : le jour de la semaine réel, les horaires exacts (jours[] des
+// créneaux), le cycle dont la plage de dates couvre aujourd'hui, et le
+// numéro de semaine d'enseignement (vacances/décalages exclus) pour retrouver
+// la bonne séance dans la liste générée par buildSeances().
+function mondayOf(d){
+  const c = new Date(d); const dow = c.getDay();
+  c.setDate(c.getDate() - (dow===0?6:dow-1));
+  c.setHours(0,0,0,0);
+  return c;
+}
+function parseCycleDateRange(p, year){
+  const val = (p && p.dates) || '';
+  const sep = val.includes('–') ? '–' : (val.includes(' - ') ? ' - ' : null);
+  if(!sep) return null;
+  const parts = val.split(sep).map(s=>s.trim());
+  if(parts.length !== 2) return null;
+  function parseD(s){
+    const pp = s.split('/');
+    if(pp.length < 2) return null;
+    const day = parseInt(pp[0],10), month = parseInt(pp[1],10)-1;
+    const yearStr = year.split('-')[0];
+    const y = month>=8 ? parseInt(yearStr,10) : parseInt(yearStr,10)+1;
+    return new Date(y, month, day);
+  }
+  const d1 = parseD(parts[0]), d2 = parseD(parts[1]);
+  if(!d1||!d2) return null;
+  return {debut:d1, fin:d2};
+}
+function countTeachingWeeks(startMonday, endMonday, vacs){
+  let n = 0, cur = new Date(startMonday);
+  while(cur <= endMonday){
+    const inVac = vacs.some(v=>{
+      if(!v.debut||!v.fin) return false;
+      const vd = new Date(v.debut), vf = new Date(v.fin);
+      return cur>=vd && cur<=vf;
+    });
+    if(!inVac) n++;
+    cur.setDate(cur.getDate()+7);
+  }
+  return n;
+}
+function getAujourdhuiInfo(){
+  const JOURS=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const jourAuj = JOURS[today.getDay()];
+  const vacs = getVacances(currentYear);
+  const vacActive = vacs.find(v=>{
+    if(!v.debut||!v.fin) return false;
+    const vd=new Date(v.debut), vf=new Date(v.fin);
+    return today>=vd && today<=vf;
+  });
+  const weekend = (jourAuj==='Samedi'||jourAuj==='Dimanche');
+  const results = [];
+  if(weekend || vacActive) return {jourAuj, today, weekend, vacances: vacActive?vacActive.nom:null, results};
+
+  const cr = getCreneaux(currentYear);
+  const ps = periodes()||[];
+  classes.forEach(cl=>{
+    const jours = (cr[cl] && cr[cl].jours) || (creneauxDefaut[cl] && creneauxDefaut[cl].jours) || [];
+    const todaysSlots = jours.filter(j=>j.jour===jourAuj);
+    if(!todaysSlots.length) return;
+    let activeCycle=null, range=null;
+    for(const p of ps){
+      const r = parseCycleDateRange(p, currentYear);
+      if(r && today>=mondayOf(r.debut) && today<=r.fin){ activeCycle=p; range=r; break; }
+    }
+    if(!activeCycle) return;
+    const items = (planning()[activeCycle.id]||{})[cl]||[];
+    if(!items.length) return;
+    const parSem = cr[cl]?.seances || 2;
+    const weekIndex = countTeachingWeeks(mondayOf(range.debut), mondayOf(today), vacs);
+    items.forEach((item, itemIdx)=>{
+      const itemKey = `${currentYear}_${activeCycle.id}_${cl}_${itemIdx}_${slugSport(item.apsa)}`;
+      const cancelledSet = getCancelledSlots(itemKey);
+      const {list} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet);
+      todaysSlots.forEach(slot=>{
+        const seance = list.find(s => s.semaine===weekIndex && (s.partie||1)===slot.partie);
+        if(seance){
+          const key = `${activeCycle.id}_${cl}_${itemIdx}_${seance.num}`;
+          seanceDataMap[key] = {item, p:activeCycle, cl, s:seance, sd:findSportData(item.apsa), total:list.length};
+          results.push({cl, item, cycle:activeCycle, slot, seance, key});
+        }
+      });
+    });
+  });
+  results.sort((a,b)=> (a.slot.debut||'').localeCompare(b.slot.debut||''));
+  return {jourAuj, today, weekend:false, vacances:null, results};
+}
+function renderAujourdhui(){
+  const box = document.getElementById('aujourdhuiContent');
+  if(!box) return;
+  const info = getAujourdhuiInfo();
+  const dateStr = info.today.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+  const titleEl = document.getElementById('aujTitle');
+  const subEl = document.getElementById('aujSub');
+  if(titleEl) titleEl.textContent = info.jourAuj[0].toUpperCase()+info.jourAuj.slice(1);
+  if(subEl) subEl.textContent = dateStr.charAt(0).toUpperCase()+dateStr.slice(1);
+
+  if(info.weekend){
+    box.innerHTML = `<div class="section-card" style="text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:0.85rem">🎉 Pas cours le week-end.</div>`;
+    return;
+  }
+  if(info.vacances){
+    box.innerHTML = `<div class="section-card" style="text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:0.85rem">🏖️ Vacances de ${info.vacances}.</div>`;
+    return;
+  }
+  if(!info.results.length){
+    box.innerHTML = `<div class="section-card" style="text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:0.85rem">Pas d'EPS prévue aujourd'hui.</div>`;
+    return;
+  }
+  box.innerHTML = info.results.map(r=>{
+    const f = familleConfig[r.item.famille]||{icon:'🏃',label:''};
+    const s = r.seance;
+    const col = s.type==='diag'?'#0077b6':s.type==='eval'?'#d62828':s.type==='revision'?'#f0a500':'var(--teal)';
+    const semLabel = s.partie ? `S${s.semaine} · ${s.partie}/${s.totalPart}` : `S${s.semaine}`;
+    return `<div class="section-card" style="margin-bottom:1rem;border-left:4px solid ${col}">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:0.75rem">
+        <span style="font-size:1.4rem">${f.icon}</span>
+        <div style="flex:1;min-width:160px">
+          <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800">${r.cl} — ${r.item.apsa}</div>
+          <div style="font-size:0.74rem;color:var(--muted)">${r.slot.debut}–${r.slot.fin} · ${r.cycle.name} · Séance ${s.num}/${r.total} (${semLabel})</div>
+        </div>
+        <button onclick="openSeanceFiche('${r.key}')" title="Fiche de préparation" style="flex-shrink:0;background:${col};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">📄 Fiche</button>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;color:${col};margin-bottom:3px">${s.titre}</div>
+      <div style="font-size:0.78rem;line-height:1.5;color:var(--text)">${s.contenu}</div>
+    </div>`;
+  }).join('');
 }
 
 // ═══ FICHE DE PRÉPARATION DE SÉANCE (modale téléchargeable) ═══
