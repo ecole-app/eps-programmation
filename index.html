@@ -2590,7 +2590,7 @@ function getAujourdhuiInfo(){
         if(seance){
           const key = `${activeCycle.id}_${cl}_${itemIdx}_${seance.num}`;
           seanceDataMap[key] = {item, p:activeCycle, cl, s:seance, sd:findSportData(item.apsa), total:list.length};
-          results.push({cl, item, cycle:activeCycle, slot, seance, key, rawWeek, dispSemaine: rawWeek + dispOffset});
+          results.push({cl, item, cycle:activeCycle, slot, seance, key, rawWeek, dispSemaine: rawWeek + dispOffset, total: list.length});
         }
       });
     });
