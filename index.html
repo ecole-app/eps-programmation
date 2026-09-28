@@ -747,9 +747,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     <span id="saveIndicator" style="font-size:0.7rem;color:rgba(255,255,255,0.6);display:none;align-items:center;gap:4px">💾</span>
     <span id="cloudSyncIndicator" style="font-size:0.7rem;color:rgba(255,255,255,0.75);white-space:nowrap"></span>
     <button id="installBtn" onclick="installPWA()" class="btn btn-ghost" style="display:none;align-items:center;gap:5px">📲 Installer</button>
-    <button class="btn btn-ghost" onclick="exportAllData()" title="Télécharger une sauvegarde de toutes les données">⬇️ Sauvegarder</button>
-    <button class="btn btn-ghost" onclick="triggerImport()" title="Restaurer une sauvegarde">⬆️ Importer</button>
-    <input type="file" id="importFileInput" accept="application/json" style="display:none" onchange="importAllData(this)">
+    <button class="btn btn-ghost" onclick="exportAllData()" title="Télécharger une copie de secours (au cas où le cloud tombe)">⬇️ Sauvegarder</button>
     <button class="btn btn-amber" onclick="openAddModal()">+ APSA</button>
   </div>
 </header>
@@ -2093,41 +2091,6 @@ function exportAllData(){
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast('💾 Sauvegarde EPS téléchargée');
-}
-function triggerImport(){
-  document.getElementById('importFileInput')?.click();
-}
-function importAllData(input){
-  const file = input.files && input.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e=>{
-    try{
-      const data = JSON.parse(e.target.result);
-      const keysToRestore = Object.keys(data).filter(isEpsKey);
-      if(!keysToRestore.length){ alert('Ce fichier ne contient aucune donnée EPS reconnue.'); input.value=''; return; }
-      if(!confirm('Ça va remplacer les données EPS actuelles (programmation, créneaux, fiches) par celles du fichier. Les autres apps (ASMB…) ne sont pas touchées. Continuer ?')) { input.value=''; return; }
-      const existingEpsKeys = [];
-      for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(isEpsKey(k)) existingEpsKeys.push(k); }
-      existingEpsKeys.forEach(k=>localStorage.removeItem(k));
-      keysToRestore.forEach(k=>localStorage.setItem(k, data[k]));
-      showToast('✅ Import EPS réussi, rechargement…');
-      // Pousse direct vers le cloud (pas de debounce) AVANT de recharger, sinon
-      // le rechargement re-tirerait l'ancienne version du cloud et écraserait
-      // ce qu'on vient d'importer.
-      const reload = ()=>setTimeout(()=>location.reload(), 400);
-      if(cloudReady){
-        const blob = {}; keysToRestore.forEach(k=>blob[k]=data[k]);
-        cloudDocRef().set({blob: JSON.stringify(blob), updatedAt: Date.now()}).then(reload).catch(reload);
-      } else {
-        reload();
-      }
-    }catch(err){
-      alert('Fichier invalide : '+err.message);
-    }
-    input.value='';
-  };
-  reader.readAsText(file);
 }
 
 // ═══ SYNC CLOUD (Firestore) ═══
