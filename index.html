@@ -1168,8 +1168,8 @@ let periodesData={
 // jours[]: horaire exact par "partie" (1 = semaine simple/toujours, 2 = 2e séance
 // d'une semaine double) — sert à générer le déroulé horodaté de chaque séance.
 const creneauxDefaut={
-  '6e':{seances:2,detail:'Lundi 15h25–16h20 + Mardi 15h25–16h20 (×2 séances/sem, toutes les semaines)',
-    jours:[{jour:'Lundi',debut:'15h25',fin:'16h20',partie:1},{jour:'Mardi',debut:'15h25',fin:'16h20',partie:2}]},
+  '6e':{seances:2,detail:'Lundi 15h25–17h15 + Mardi 15h25–17h15 (2 cours de 2h/sem, toutes les semaines)',
+    jours:[{jour:'Lundi',debut:'15h25',fin:'17h15',partie:1},{jour:'Mardi',debut:'15h25',fin:'17h15',partie:2}]},
   '5e':{seances:1.5,detail:'Lundi 13h–14h50 (×1/2sem) + Mardi 13h–14h50 (×1/sem)',
     jours:[{jour:'Mardi',debut:'13h00',fin:'14h50',partie:1},{jour:'Lundi',debut:'13h00',fin:'14h50',partie:2}]},
   '4e':{seances:1.5,detail:'Lundi 13h–14h50 (×1/2sem) + Mercredi 10h55–12h55 (×1/sem)',
@@ -1181,11 +1181,14 @@ const creneauxData={};
 function getCreneaux(y){
   if(creneauxData[y]) return creneauxData[y];
   let stored=JSON.parse(localStorage.getItem('creneaux-'+y)||'null');
-  // Migration : l'ancien créneau 6e (2 séances le même jour, lundi) était faux —
-  // en réalité la 6e a cours le lundi ET le mardi, toutes les semaines. On
-  // détecte l'ancienne structure (les 2 jours identiques) et on la corrige.
+  // Migration : les anciennes structures du créneau 6e étaient fausses (2
+  // séances le même jour, ou 2 demi-séances de 55min) — en réalité la 6e a
+  // cours le lundi ET le mardi, toutes les semaines, 2h pleines à chaque fois
+  // (15h25–17h15). On détecte toute structure qui ne correspond pas à ça et
+  // on la remplace par la bonne.
   if(stored && stored['6e'] && Array.isArray(stored['6e'].jours) && stored['6e'].jours.length===2
-     && stored['6e'].jours[0].jour===stored['6e'].jours[1].jour){
+     && (stored['6e'].jours[0].jour===stored['6e'].jours[1].jour
+         || stored['6e'].jours.some(j=>j.fin!=='17h15'))){
     stored['6e'] = JSON.parse(JSON.stringify(creneauxDefaut['6e']));
     localStorage.setItem('creneaux-'+y, JSON.stringify(stored));
   }
