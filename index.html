@@ -1273,13 +1273,16 @@ function loadSaved(){
       const d = JSON.parse(raw);
       if(!d.plannings) continue;
       // Vérifie AN PAR AN si la sauvegarde contient vraiment quelque chose.
-      // Avant : un seul test global sur tout le blob -> si UNE année avait du
-      // contenu (ex: 2026-27), le blob entier était accepté et écrasait aussi
-      // les années vides (ex: 2025-26), effaçant les exemples par défaut.
+      // IMPORTANT : une année réellement présente dans la sauvegarde (même si
+      // elle "semble vide" à cet instant) n'est JAMAIS remplacée par les
+      // exemples par défaut du code — sinon une vraie programmation vidée
+      // temporairement (ou juste pas encore rechargée) se ferait écraser par
+      // les données d'exemple. Les exemples ne servent que pour une année qui
+      // n'existe pas DU TOUT dans la sauvegarde (clé absente).
       const yearHasData = (yr) => !!yr && Object.values(yr).some(p => Object.values(p).some(cl => cl.length > 0));
       const mergedPlannings = {};
       new Set([...Object.keys(plannings), ...Object.keys(d.plannings)]).forEach(y=>{
-        mergedPlannings[y] = yearHasData(d.plannings[y]) ? d.plannings[y] : (plannings[y] || d.plannings[y] || {});
+        mergedPlannings[y] = (y in d.plannings) ? d.plannings[y] : (plannings[y] || {});
       });
       const hasData = Object.values(mergedPlannings).some(yearHasData);
       if(!hasData) continue;
