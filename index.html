@@ -1265,6 +1265,10 @@ function saveAll(){
   scheduleCloudSync();
 }
 function loadSaved(){
+  // Garde une référence aux valeurs par défaut du code AVANT toute fusion
+  // avec la sauvegarde, pour pouvoir réparer 2026-27 plus bas si besoin.
+  const codeDefaultPlannings2627 = plannings['2026-27'];
+  const codeDefaultPeriodes2627 = periodesData['2026-27'];
   const keys = [STORAGE_KEY, 'eps-programmation-v1', 'eps-programmation'];
   for(const key of keys){
     try{
@@ -1291,9 +1295,29 @@ function loadSaved(){
         for(const y of Object.keys(periodesData)){ if(!(y in d.periodesData)) d.periodesData[y]=periodesData[y]; }
         periodesData = d.periodesData;
       }
+      // Réparation ponctuelle de 2026-27 : cette année a été créée très tôt via
+      // le bouton "+" (copie des dates de 2025-26 + programmation vide), avant
+      // que les vraies dates/sports de 2026-27 ne soient connus. Cette coquille
+      // "existe" dans la sauvegarde donc la règle ci-dessus (année présente =
+      // jamais recréée) la préserve telle quelle pour toujours, même vide. On
+      // détecte précisément cette coquille (dates copiées de 2025-26 ET aucune
+      // séance sur 2026-27) et on la remplace par la vraie programmation
+      // 2026-27 restaurée depuis le PDF du 18/09/2026 (valeurs par défaut du
+      // code, désormais correctes).
+      const oldCopiedDates2526=['1/09 – 17/10','3/11 – 5/12','8/12 – 5/02','9/02 – 19/03','23/03 – 12/06'];
+      const pd2627=periodesData['2026-27'];
+      const isStillOldEmptyShell = Array.isArray(pd2627) && pd2627.length===5
+        && pd2627.every((p,i)=>p.dates===oldCopiedDates2526[i])
+        && !yearHasData(plannings['2026-27']);
+      let needsResave = false;
+      if(isStillOldEmptyShell && codeDefaultPlannings2627 && codeDefaultPeriodes2627){
+        plannings['2026-27']=JSON.parse(JSON.stringify(codeDefaultPlannings2627));
+        periodesData['2026-27']=JSON.parse(JSON.stringify(codeDefaultPeriodes2627));
+        needsResave = true;
+      }
       if(d.contraintes) contraintes.splice(0, 99, ...d.contraintes);
       if(d.currentYear && periodesData[d.currentYear]) currentYear = d.currentYear;
-      if(key !== STORAGE_KEY) saveAll();
+      if(key !== STORAGE_KEY || needsResave) saveAll();
       return true;
     }catch(e){}
   }
