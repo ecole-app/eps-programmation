@@ -2461,13 +2461,23 @@ function savePhaseMap(year, map){
   localStorage.setItem('phase-'+year, JSON.stringify(map));
   scheduleCloudSync();
 }
+// La 4e et la 5e ont toutes les deux 1,5 séance/semaine avec le lundi comme
+// jour "double" (une semaine sur deux) — mais ce n'est JAMAIS le même lundi
+// pour les deux : confirmé le 05/10/2026 (4e le 5/10, 5e le 28/09). Sans ce
+// décalage par défaut, les deux tombent sur la même parité calculée et donc
+// soit aucune des deux n'a cours le lundi un jour donné, soit les deux en
+// même temps — ce qui ne correspond jamais à la réalité.
+const PHASE_DEFAUT={'4e':1};
 function getPhaseShift(year, cycleId, cl){
-  return getPhaseMap(year)[cycleId+'_'+cl] || 0;
+  const map = getPhaseMap(year);
+  const k = cycleId+'_'+cl;
+  if(k in map) return map[k];
+  return PHASE_DEFAUT[cl] || 0;
 }
 function toggleAujourdhuiPhase(cycleId, cl){
   const map = getPhaseMap(currentYear);
   const k = cycleId+'_'+cl;
-  map[k] = map[k] ? 0 : 1;
+  map[k] = getPhaseShift(currentYear, cycleId, cl) ? 0 : 1;
   savePhaseMap(currentYear, map);
   showToast('🔀 '+cl+' recalée sur son vrai rythme');
   renderAujourdhui();
@@ -2663,19 +2673,29 @@ function getAujourdhuiInfo(){
     // sélectionnée, seulement le numéro affiché à l'écran.
     const rawWeek = countTeachingWeeks(mondayOf(range.debut), mondayOf(today), vacs);
     const dispOffset = calib[activeCycle.id]||0;
-    items.forEach((item, itemIdx)=>{
-      const itemKey = `${currentYear}_${activeCycle.id}_${cl}_${itemIdx}_${slugSport(item.apsa)}`;
-      const cancelledSet = getCancelledSlots(itemKey);
-      const phaseShift = getPhaseShift(currentYear, activeCycle.id, cl);
-      const {list} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet, phaseShift);
-      todaysSlots.forEach(slot=>{
+    const phaseShift = getPhaseShift(currentYear, activeCycle.id, cl);
+    todaysSlots.forEach(slot=>{
+      let matched = false;
+      items.forEach((item, itemIdx)=>{
+        const itemKey = `${currentYear}_${activeCycle.id}_${cl}_${itemIdx}_${slugSport(item.apsa)}`;
+        const cancelledSet = getCancelledSlots(itemKey);
+        const {list} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet, phaseShift);
         const seance = list.find(s => s.semaine===rawWeek && (s.partie||1)===slot.partie);
         if(seance){
+          matched = true;
           const key = `${activeCycle.id}_${cl}_${itemIdx}_${seance.num}`;
           seanceDataMap[key] = {item, p:activeCycle, cl, s:seance, sd:findSportData(item.apsa), total:list.length};
           results.push({cl, item, cycle:activeCycle, slot, seance, key, rawWeek, dispSemaine: rawWeek + dispOffset, total: list.length, hasAlternance: (parSem % 1) !== 0});
         }
       });
+      // Créneau alterné (ex : lundi une semaine sur deux) qui ne tombe sur
+      // aucune séance cette semaine d'après le calcul. Si en réalité la classe
+      // a bien cours aujourd'hui, l'alternance calculée est inversée par
+      // rapport à la réalité (cf. "La X n'a pas cours ?" pour le cas inverse) —
+      // on propose la même correction plutôt que de simplement ne rien afficher.
+      if(!matched && (parSem % 1) !== 0 && (slot.partie||1) > 1){
+        results.push({cl, cycle:activeCycle, slot, rawWeek, dispSemaine: rawWeek + dispOffset, missing:true});
+      }
     });
   });
   results.sort((a,b)=> (a.slot.debut||'').localeCompare(b.slot.debut||''));
@@ -2704,6 +2724,13 @@ function renderAujourdhui(){
     return;
   }
   box.innerHTML = info.results.map(r=>{
+    if(r.missing){
+      return `<div class="section-card" style="margin-bottom:1rem;border-left:4px solid #f0a500;opacity:0.85">
+      <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800">${r.cl}</div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.3rem">${r.slot.debut}–${r.slot.fin} · ${r.cycle.name} · pas de séance ${r.cl} prévue aujourd'hui d'après l'alternance calculée (S${r.dispSemaine})</div>
+      <div style="margin-top:0.6rem"><a href="javascript:void(0)" onclick="toggleAujourdhuiPhase('${r.cycle.id}','${r.cl}')" style="font-size:0.7rem;color:var(--muted);text-decoration:underline">🔀 La ${r.cl} a cours aujourd'hui en réalité ? Corriger l'alternance</a></div>
+    </div>`;
+    }
     const f = familleConfig[r.item.famille]||{icon:'🏃',label:''};
     const s = r.seance;
     const col = s.type==='diag'?'#0077b6':s.type==='eval'?'#d62828':s.type==='revision'?'#f0a500':'var(--teal)';
