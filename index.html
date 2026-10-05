@@ -2266,7 +2266,7 @@ const LIEUX = {
   gymnase:  {nom:'Gymnase', trajetMin:5},
   stade:    {nom:'Stade', trajetMin:7},
   parc:     {nom:'Parc de Montreynaud', trajetMin:6},
-  siteCO:   {nom:"Site d'évaluation CO", trajetMin:20},
+  siteCO:   {nom:"Méons (site CO)", trajetMin:20},
 };
 // Déduit du terrain d'évolution (SPORTS_DATA.espace) — à corriger au cas par cas si besoin.
 const LIEU_PAR_SPORT = {
@@ -2277,7 +2277,8 @@ const LIEU_PAR_SPORT = {
 // Le vrai gymnase n'est dispo que le mercredi pour 4e & 3e (contrainte) : sinon ces
 // sports se font à l'école (cour/salle sur place).
 const SPORTS_GYMNASE_REQUIS = new Set(['basket','badminton','tennis-table','acrosport','renfo','lutte']);
-function getLieuSeance(sportId, seanceType, cl, horaire){
+function getLieuSeance(sportId, seanceType, cl, horaire, s){
+  if(s && s.lieuKey && LIEUX[s.lieuKey]) return LIEUX[s.lieuKey];
   if(sportId==='course-orientation' && seanceType==='eval') return LIEUX.siteCO;
   if(SPORTS_GYMNASE_REQUIS.has(sportId)){
     const gymDispo = (cl==='4e'||cl==='3e') && horaire && horaire.jour==='Mercredi';
@@ -2308,7 +2309,7 @@ function buildDerouleText(cl, s, sd){
   const debut = parseHeure(horaire.debut);
   const fin = parseHeure(horaire.fin);
   if(debut==null || fin==null) return '';
-  const lieu = getLieuSeance(sd?sd.id:null, s.type, cl, horaire);
+  const lieu = getLieuSeance(sd?sd.id:null, s.type, cl, horaire, s);
   const trajet = lieu.trajetMin;
   const lignes = [];
   let t = debut;
@@ -2360,7 +2361,7 @@ const THEMES_SEANCES = {
     'demi-fond': ["Test VMA","Courir à % de VMA (fractionné)","Gérer 2 allures différentes","Construire son projet de course","Course en binôme observateur","Ajuster son projet","Course bilan à 3 allures"],
   },
   '4e': {
-    'course-orientation': ["Carte + légende","Travail de carte + pose de plots dans la cour pour se repérer sur un plan","Recherche de plots cachés par d'autres équipes + suivi d'itinéraire","Repère sur un plan en conditions réelles (parc de Montreynaud)","Pose + recherche de balises formées par les élèves en extérieur (parc de Montreynaud)"],
+    'course-orientation': ["Découverte des lieux → faire le plan du parc (découverte divisée en 2 × 3 parties du parc)","Récup bâtons → poser les bâtons → recherche des bâtons des autres équipes","Récup bâtons → recherche de bâtons","Récup bâtons + pose → recherche de tous les bâtons des autres équipes","Méons : découverte du site","Méons : évaluation"],
     basket: ["Découverte, dribble de protection","Passe et démarquage","Tir en course","Jeu à 3, conservation du ballon","Contre-attaque","Attaque placée, lecture du jeu","Tournoi 4v4"],
     badminton: ["Découverte, prise en main, service","Frappes de base (clear, amorti)","Replacement au centre","Construction de l'échange","Jeu en double","Tournoi simple"],
     relais: ["Rappel technique de course","Transmission en mouvement","Zone de transmission","Stratégie d'ordre","Relais chronométré en équipe","Tournoi chronométré"],
@@ -2374,6 +2375,11 @@ const THEMES_SEANCES = {
     ultimate: ["Rappel règles, lancers","Démarquage, jeu réduit","Progression vers l'en-but","Défense, interceptions","Mini-tournoi","Tournoi final"],
   },
 };
+// Nombre de séances fixé par Ahmed (prime sur semaines × séances/semaine) :
+// 4e CO = 4 séances au parc de Montreynaud + 2 à Méons (découverte puis évaluation).
+const SEANCES_TOTAL_FIXE = {'4e':{'course-orientation':6}};
+// Lieu imposé pour certaines séances (index 0 = 1re séance) : sinon lieu du sport.
+const LIEU_SEANCE_FIXE = {'4e':{'course-orientation':{4:'siteCO',5:'siteCO'}}};
 function getThemeSeance(cl, sportId, i){
   const arr = THEMES_SEANCES[cl] && THEMES_SEANCES[cl][sportId];
   return (arr && arr[i]) || null;
@@ -2388,7 +2394,8 @@ function slotKey(semaine, partie){ return semaine+'-'+(partie||1); }
 function buildSeances(cl, apsa, semaines, parSem, cancelledSet, phaseShift){
   const sd = findSportData(apsa);
   const axes = (sd && sd.axes && sd.axes.length) ? sd.axes : ['Découverte','Apprentissage','Application','Complexification','Évaluation'];
-  const nominalTotal = buildWeekPlan(semaines, parSem).reduce((a,b)=>a+b,0);
+  const fixe = SEANCES_TOTAL_FIXE[cl] && SEANCES_TOTAL_FIXE[cl][sd?sd.id:null];
+  const nominalTotal = fixe || buildWeekPlan(semaines, parSem).reduce((a,b)=>a+b,0);
   const cancelled = cancelledSet || new Set();
   const base = Math.max(1, Math.floor(parSem) || 1);
   const frac = Math.max(0, parSem - base);
@@ -2437,7 +2444,8 @@ function buildSeances(cl, apsa, semaines, parSem, cancelledSet, phaseShift){
       titre = axes[idx]; type='appr';
       contenu='Échauffement spécifique → situation d\'apprentissage sur « '+axes[idx]+' » → situation globale → retour au calme et bilan.';
     }
-    out.push({num:i+1, titre, type, contenu, semaine:activeSlots[i].semaine, partie:activeSlots[i].partie, totalPart:activeSlots[i].totalPart, key:activeSlots[i].key});
+    const lieuKey = (LIEU_SEANCE_FIXE[cl] && LIEU_SEANCE_FIXE[cl][sd?sd.id:null] || {})[i] || null;
+    out.push({num:i+1, titre, type, contenu, lieuKey, semaine:activeSlots[i].semaine, partie:activeSlots[i].partie, totalPart:activeSlots[i].totalPart, key:activeSlots[i].key});
   }
   return {list:out, cancelledInfo};
 }
@@ -2787,7 +2795,7 @@ function openSeanceFiche(key){
   const effectifDefaut = suggestGroupement(effectifClasse, sd&&sd.effectif) || (sd&&sd.effectif) || '';
   const semLabel = s.partie ? `Semaine ${s.semaine} (séance ${s.partie}/${s.totalPart} de la semaine)` : `Semaine ${s.semaine}`;
   const horaire = getHoraireSeance(cl, s);
-  const lieu = getLieuSeance(sd?sd.id:null, s.type, cl, horaire);
+  const lieu = getLieuSeance(sd?sd.id:null, s.type, cl, horaire, s);
   document.getElementById('seanceFicheTitre').textContent = `${item.apsa} — Séance ${s.num}/${total}`;
   document.getElementById('seanceFicheBody').innerHTML = `
     <div class="fiche-section">
