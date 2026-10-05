@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barèmes EPS — Collège</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap');
+:root{
+  --teal:#0e7c7b;--teal-d:#085e5d;--teal-l:#E1F5EE;
+  --amber:#f0a500;--c3:#2563eb;--c3-l:#dbeafe;
+  --ca1:#e85d04;--ca2:#2d6a4f;--ca3:#7209b7;--ca4:#0e7c7b;
+  --bg:#f4f6f5;--white:#fff;--gray:#e8eceb;--text:#1a2524;--muted:#6b7f7e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:var(--teal-d);color:#fff;padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.22);gap:10px}
+.topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:1px;white-space:nowrap}
+.sport-nav{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;flex:1}
+.sport-nav::-webkit-scrollbar{display:none}
+.snb{font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:600;padding:4px 9px;border-radius:5px;border:none;cursor:pointer;background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);white-space:nowrap;transition:all .15s}
+.snb:hover,.snb.active{background:#fff;color:var(--teal-d)}
+
+/* CYCLE SWITCHER */
+.cycle-bar{background:var(--white);border-bottom:1px solid var(--gray);padding:10px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:52px;z-index:190}
+.cycle-label{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.cycle-btns{display:flex;gap:6px}
+.cyc-btn{padding:6px 16px;border-radius:8px;border:2px solid var(--gray);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;color:var(--muted)}
+.cyc-btn.c3.active{background:var(--c3);border-color:var(--c3);color:#fff}
+.cyc-btn.c4.active{background:var(--teal);border-color:var(--teal);color:#fff}
+.cycle-badge{font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:20px;color:#fff;margin-left:4px}
+.badge-c3{background:var(--c3)}
+.badge-c4{background:var(--teal)}
+
+/* CONTAINER */
+.container{max-width:540px;margin:0 auto;padding:20px 16px 60px}
+
+/* PANELS */
+.sport-panel{display:none}
+.sport-panel.active{display:block}
+.cycle-block{display:none}
+.cycle-block.active{display:block}
+
+/* SPORT HEADER */
+.sport-header{margin-bottom:18px}
+.sport-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--teal);letter-spacing:1px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sport-sub{font-size:.85rem;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ca-pill{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:20px;color:#fff;display:inline-block}
+.cycle-tag{font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:20px}
+
+/* TABS */
+.tabs{display:flex;border-bottom:2px solid var(--gray);margin-bottom:18px}
+.tab{padding:9px 18px;font-size:.88rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
+.tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+
+/* CARD */
+.card{background:var(--white);border-radius:14px;padding:22px 18px;width:100%;box-shadow:0 2px 12px rgba(14,124,123,.08);margin-bottom:12px}
+.field-lbl{display:block;font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
+.prenom-input{width:100%;font-family:'DM Sans',sans-serif;font-size:1.1rem;font-weight:600;padding:10px 13px;border:2px solid var(--gray);border-radius:10px;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;margin-bottom:20px}
+.prenom-input:focus{border-color:var(--teal);background:var(--white)}
+
+/* CRITERES */
+.critere{margin-bottom:18px}
+.critere-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.critere-title{font-weight:600;font-size:.92rem}
+.critere-max{font-size:.76rem;color:var(--muted);font-weight:500}
+.critere-hint{font-size:.76rem;color:var(--muted);margin-bottom:8px;line-height:1.4;font-style:italic}
+.sous-critere{margin-bottom:12px;padding-left:10px;border-left:2px solid var(--gray)}
+.sous-critere-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.sous-critere-title{font-size:.78rem;font-weight:600;color:var(--muted)}
+.sous-critere-max{font-size:.73rem;color:var(--muted)}
+.pts-row{display:flex;flex-wrap:wrap;gap:6px}
+.pts-btn{width:36px;height:36px;border-radius:8px;border:2px solid var(--gray);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .13s}
+.pts-btn:hover{border-color:var(--teal);color:var(--teal)}
+.pts-btn.sel{background:var(--teal);border-color:var(--teal);color:#fff;transform:scale(1.08)}
+
+/* TOTAL */
+.divider{height:1px;background:var(--gray);margin:16px 0}
+.total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.total-lbl{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:1px}
+.total-val{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--teal);line-height:1}
+.total-val span{font-size:1rem;color:var(--muted)}
+.btn-valider{width:100%;padding:13px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:1.5px;cursor:pointer;transition:background .2s,transform .1s}
+.btn-valider:hover{background:var(--teal-d)}
+.btn-valider:active{transform:scale(.98)}
+.btn-valider:disabled{background:var(--gray);color:var(--muted);cursor:not-allowed}
+
+/* LISTE */
+.liste-title{font-size:.76rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:18px 0 7px}
+.eleve-item{background:var(--white);border-radius:10px;padding:10px 13px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 5px rgba(14,124,123,.06);animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.eleve-prenom{font-weight:600;font-size:.92rem}
+.eleve-detail{font-size:.7rem;color:var(--muted);margin-top:2px}
+.eleve-note{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--teal);line-height:1;margin-left:8px;flex-shrink:0}
+.eleve-note span{font-size:.75rem;color:var(--muted)}
+.btn-ic{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.78rem;padding:3px 6px;border-radius:5px;transition:background .15s,color .15s;margin-left:3px}
+.btn-ic:hover{background:var(--gray)}
+.btn-del:hover{color:#e05555}
+.btn-edit:hover{color:var(--teal)}
+.btn-export{width:100%;max-width:540px;padding:11px;background:var(--amber);color:#fff;border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1.5px;cursor:pointer;transition:opacity .2s;margin-top:4px;display:none}
+.btn-export:hover{opacity:.88}
+
+/* CRITERES TAB */
+.detail-card{background:var(--white);border-radius:12px;padding:16px 14px;margin-bottom:10px;box-shadow:0 1px 7px rgba(14,124,123,.07)}
+.detail-title{font-weight:600;font-size:.92rem;margin-bottom:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.dbadge{background:var(--teal-l);color:var(--teal-d);font-size:.68rem;font-weight:600;padding:2px 8px;border-radius:20px}
+.detail-hint{font-size:.73rem;color:var(--muted);margin-bottom:9px;line-height:1.4;font-style:italic}
+.sub-label{font-size:.73rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 5px}
+table{width:100%;border-collapse:collapse;font-size:.78rem;margin-bottom:5px}
+th{text-align:left;color:var(--muted);font-weight:600;padding:0 0 4px;border-bottom:1px solid var(--gray)}
+th:last-child{text-align:right}
+td{padding:5px 0;border-bottom:1px solid var(--gray);color:var(--text);line-height:1.35;vertical-align:top}
+td:last-child{text-align:right;font-weight:600;color:var(--teal);white-space:nowrap;padding-left:8px}
+tr:last-child td{border-bottom:none}
+.ca-box{background:var(--bg);border-radius:9px;padding:11px 13px;font-size:.75rem;color:var(--muted);line-height:1.5;margin-top:4px}
+.ca-box strong{color:var(--text)}
+
+/* HOME */
+.home-header{text-align:center;margin-bottom:22px;padding-top:8px}
+.home-title{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;color:var(--teal);letter-spacing:2px;line-height:1}
+.home-sub{font-size:.88rem;color:var(--muted);margin-top:4px}
+.fam-section{margin-bottom:16px}
+.fam-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:7px;padding-bottom:3px;border-bottom:1px solid var(--gray)}
+.home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:400px){.home-grid{grid-template-columns:repeat(2,1fr)}}
+.home-card{background:var(--white);border-radius:11px;padding:13px 10px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 1px 7px rgba(14,124,123,.07);display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;border:2px solid transparent}
+.home-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(14,124,123,.13)}
+.home-card.has-data{border-color:var(--teal-l)}
+.home-emoji{font-size:1.5rem}
+.home-nom{font-weight:700;font-size:.75rem;color:var(--text);line-height:1.2}
+.home-fam{font-size:.62rem;color:var(--muted)}
+.home-count{font-size:.6rem;font-weight:600;color:var(--teal)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:22px 18px;width:92%;max-width:400px;max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal h3{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;color:var(--teal);margin-bottom:14px;letter-spacing:1px}
+.modal-critere{margin-bottom:13px}
+.modal-critere p{font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.modal-btns{display:flex;gap:7px;margin-top:18px}
+.btn-save{flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:9px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1px;cursor:pointer}
+.btn-save:hover{background:var(--teal-d)}
+.btn-cancel{padding:11px 16px;background:var(--gray);color:var(--muted);border:none;border-radius:9px;font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1px;cursor:pointer}
+
+/* TOAST */
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--teal-d);color:#fff;padding:10px 20px;border-radius:10px;font-weight:600;font-size:.88rem;transition:transform .32s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:400}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">🏃 EPS</div>
+  <nav class="sport-nav" id="sportNav"></nav>
+</div>
+
+<div class="cycle-bar">
+  <span class="cycle-label">Cycle</span>
+  <div class="cycle-btns">
+    <button class="cyc-btn c3 active" id="btn-c3" onclick="setCycle('c3')">3 — 6e</button>
+    <button class="cyc-btn c4" id="btn-c4" onclick="setCycle('c4')">4 — 5e / 4e / 3e</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="sport-panel active" id="panel-home">
+    <div class="home-header">
+      <div class="home-title">Barèmes EPS</div>
+      <div class="home-sub" id="home-sub">15 APSA · Cycle 3 — 6e</div>
+    </div>
+    <div id="homeContent"></div>
+  </div>
+  <div id="sportPanels"></div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-titre">Modifier</h3>
+    <div id="modal-criteres"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-save" onclick="saveEdit()">✓ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DONNÉES — 15 SPORTS × 2 CYCLES
+// ═══════════════════════════════════════════════════════
+const SPORTS = [
+
+  // ── RELAIS ──────────────────────────────────────────
+  { id:'relais', nom:'Relais', emoji:'🏃', ca:'CA1', famille:'Athlétisme',
+    c3:{
+      seances:'10–12',
+      ca_texte:'Courir vite sur sa fraction de course, réussir le passage de témoin. Tenir le rôle de chronométreur de son équipe.',
+      criteres:[
+        { id:'temps', label:'⏱ Temps collectif', max:6, hint:'Course 4×40m — 3 tentatives, meilleur temps retenu',
+          sous:null,
+          table:[['< 36s','6'],['36–38s','5'],['38–40s','4'],['40–43s','3'],['43–46s','2'],['> 46s','1']] },
+        { id:'passage', label:'🤝 Passages de témoin', max:6, hint:'3 passages notés 0–2 : zone respectée, continuité de course',
+          sous:[{id:'p1',label:'Passage 1',max:2},{id:'p2',label:'Passage 2',max:2},{id:'p3',label:'Passage 3',max:2}],
+          table:[['Passage sans ralentissement, zone OK','2'],['Léger ralentissement ou zone limite','1'],['Arrêt ou hors-zone','0']] },
+        { id:'chrono', label:'📋 Chronométreur', max:4, hint:'Relève les temps de son équipe avec précision',
+          sous:null,
+          table:[['3 temps exacts + fiche lisible','4'],['2 temps exacts','2'],['1 temps ou fiche illisible','1'],['Absent','0']] },
+        { id:'regul', label:'📊 Régularité', max:4, hint:'Écart entre meilleur et moins bon essai',
+          sous:null,
+          table:[['Écart < 2s','4'],['Écart 2–3s','3'],['Écart 3–4s','2'],['Écart > 4s','1']] }
+      ]
+    },
+    c4:{
+      seances:'10–12',
+      ca_texte:'Optimiser le passage de témoin en aveugle. Comprendre que la performance collective dépasse la somme des performances individuelles. Analyser et proposer des ajustements.',
+      criteres:[
+        { id:'temps', label:'⏱ Temps collectif', max:6, hint:'Course 4×50m — 3 tentatives, meilleur temps retenu',
+          sous:null,
+          table:[['< 30s','6'],['30–32s','5'],['32–34s','4'],['34–36s','3'],['36–39s','2'],['> 39s','1']] },
+        { id:'passage', label:'🤝 Passages de témoin', max:6, hint:'Passage en aveugle, zone réglementaire, vitesse maintenue',
+          sous:[{id:'p1',label:'Passage 1',max:2},{id:'p2',label:'Passage 2',max:2},{id:'p3',label:'Passage 3',max:2}],
+          table:[['Aveugle, zone OK, vitesse maintenue','2'],['Aveugle tenté mais ralentissement','1'],['Avec regard ou hors-zone','0']] },
+        { id:'analyse', label:'📋 Analyse collective', max:4, hint:'Fiche avec temps + identification des passages à corriger',
+          sous:null,
+          table:[['3 temps + analyse ciblée + proposition','4'],['3 temps + identification problème','3'],['Temps seulement','2'],['Fiche absente','0']] },
+        { id:'regul', label:'📊 Régularité', max:4, hint:'Constance sur les 3 essais',
+          sous:null,
+          table:[['Écart < 1s','4'],['Écart 1–2s','3'],['Écart 2–3s','2'],['Écart > 3s','1']] }
+      ]
+    }
+  },
+
+  // ── COURSE LONGUE ───────────────────────────────────
+  { id:'course-longue', nom:'Course longue', emoji:'🏃', ca:'CA1', famille:'Athlétisme',
+    c3:{
+      seances:'10–12',
+      ca_texte:"Courir à allure régulière sans s'arrêter. Connaître sa fréquence cardiaque et ses sensations. Commencer à se fixer un objectif de durée.",
+      criteres:[
+        { id:'duree', label:'⏱ Durée de course', max:6, hint:'Courir sans interruption — durée atteinte',
+          sous:null,
+          table:[['≥ 16 min','6'],['14–16 min','5'],['12–14 min','4'],['10–12 min','3'],['8–10 min','2'],['< 8 min','1']] },
+        { id:'regul', label:'📊 Régularité d\'allure', max:6, hint:'Variation entre tours chronométrés',
+          sous:null,
+          table:[['Variation < 8%','6'],['Variation 8–12%','4–5'],['Variation 12–18%','2–3'],['Variation > 18%','1']] },
+        { id:'projet', label:'🎯 Projet tenu', max:5, hint:'L\'élève annonce une durée cible — écart réel/prévu',
+          sous:null,
+          table:[['Écart ≤ 1 min','5'],['Écart 1–2 min','4'],['Écart 2–3 min','3'],['Écart 3–4 min','2'],['Écart > 4 min','1']] },
+        { id:'fiche', label:'📋 Fiche de suivi', max:3, hint:'Ressenti, FC, durée relevés à chaque séance',
+          sous:null,
+          table:[['Fiche complète 5 séances','3'],['Fiche incomplète','2'],['Quelques notes','1'],['Absente','0']] }
+      ]
+    },
+    c4:{
+      seances:'10–12',
+      ca_texte:"Établir et tenir un projet de course basé sur sa VMA. Gérer son effort sur 12 minutes. Observer un camarade et proposer un retour constructif.",
+      criteres:[
+        { id:'vma', label:'📐 Palier VMA', max:4, hint:'Test Vameval ou Léger-Boucher en début de cycle',
+          sous:null,
+          table:[['Palier ≥ 10','4'],['Palier 8–9','3'],['Palier 6–7','2'],['Palier 4–5','1'],['Palier < 4','0']] },
+        { id:'projet', label:'🎯 Tenue du projet', max:8, hint:'Écart distance prévue / réalisée sur 12 min',
+          sous:null,
+          table:[['Écart ≤ 50m','8'],['Écart 50–100m','6'],['Écart 100–200m','4'],['Écart 200–300m','2'],['Écart > 300m','0']] },
+        { id:'regul', label:'📊 Régularité d\'allure', max:5, hint:'Constance des passages par segment',
+          sous:null,
+          table:[['Variation < 5%','5'],['Variation 5–10%','4'],['Variation 10–15%','3'],['Variation 15–20%','2'],['> 20%','1']] },
+        { id:'obs', label:'📋 Observateur', max:3, hint:'Retour écrit ou oral sur la course d\'un camarade',
+          sous:null,
+          table:[['Retour précis avec données chiffrées','3'],['Retour général correct','2'],['Retour vague','1'],['Absent','0']] }
+      ]
+    }
+  },
+
+  // ── DEMI-FOND ───────────────────────────────────────
+  { id:'demi-fond', nom:'Demi-fond', emoji:'🏃', ca:'CA1', famille:'Athlétisme',
+    c3:{
+      seances:'10',
+      ca_texte:"Courir à allure soutenue sur 6–8 minutes. Connaître ses sensations d'effort et s'y référer pour gérer sa course.",
+      criteres:[
+        { id:'duree', label:'⏱ Durée soutenue', max:5, hint:'Course à allure rapide mais tenue sans interruption',
+          sous:null,
+          table:[['≥ 8 min','5'],['7–8 min','4'],['6–7 min','3'],['5–6 min','2'],['< 5 min','1']] },
+        { id:'regul', label:'📊 Régularité', max:6, hint:'Constance de l\'allure — tours chronométrés',
+          sous:null,
+          table:[['Variation < 8%','6'],['Variation 8–14%','4'],['Variation 14–20%','2'],['> 20%','1']] },
+        { id:'projet', label:'🎯 Projet tenu', max:6, hint:'Annonce une allure cible — écart avec réalisé',
+          sous:null,
+          table:[['Écart ≤ 5%','6'],['Écart 5–10%','4'],['Écart 10–15%','2'],['> 15%','1']] },
+        { id:'fiche', label:'📋 Fiche sensations', max:3, hint:'Ressenti par allure (facile/moyen/difficile) noté',
+          sous:null,
+          table:[['Fiche complète','3'],['Fiche partielle','2'],['Quelques notes','1'],['Absente','0']] }
+      ]
+    },
+    c4:{
+      seances:'11',
+      ca_texte:"Gérer son effort entre 3 et 9 minutes. Planifier et réaliser un projet de course basé sur %VMA. Analyser sa propre performance.",
+      criteres:[
+        { id:'vma', label:'📐 Palier VMA', max:4, hint:'Palier au test initial',
+          sous:null,
+          table:[['Palier ≥ 11','4'],['Palier 9–10','3'],['Palier 7–8','2'],['Palier 5–6','1'],['< 5','0']] },
+        { id:'projet', label:'🎯 Écart projet/réalisé', max:9, hint:'3 allures progressives sur 15 min — écart global prévu/réalisé',
+          sous:null,
+          table:[['Écart ≤ 5%','9'],['Écart 5–10%','7'],['Écart 10–15%','5'],['Écart 15–20%','3'],['> 20%','1']] },
+        { id:'perf', label:'⚡ Performance absolue', max:5, hint:'Distance parcourue sur les 3 allures',
+          sous:null,
+          table:[['≥ 3000m','5'],['2600–3000m','4'],['2200–2600m','3'],['1800–2200m','2'],['< 1800m','1']] },
+        { id:'fiche', label:'📋 Fiche individuelle', max:2, hint:'VMA, projet, résultat, analyse',
+          sous:null,
+          table:[['Fiche complète et analysée','2'],['Fiche présente, incomplète','1'],['Absente','0']] }
+      ]
+    }
+  },
+
+  // ── SPRINT ─────────────────────────────────────────
+  { id:'sprint', nom:'Sprint', emoji:'⚡', ca:'CA1', famille:'Athlétisme',
+    c3:{
+      seances:'10',
+      ca_texte:"Courir le plus vite possible sur 30–40m. Réagir au signal. Chronométrer ses camarades.",
+      criteres:[
+        { id:'perf', label:'⚡ Meilleur temps (40m)', max:8, hint:'3 passages — meilleur temps retenu',
+          sous:null,
+          table:[['< 6s','8'],['6–6,5s','7'],['6,5–7s','6'],['7–7,5s','5'],['7,5–8s','4'],['8–9s','3'],['9–10s','2'],['> 10s','1']] },
+        { id:'depart', label:'🎯 Réactivité au départ', max:5, hint:'Observation sur 2 passages — posture + réaction',
+          sous:null,
+          table:[['Réaction < 0,5s, bonne inclinaison','5'],['Réaction correcte, légère hésitation','3–4'],['Départ lent ou posture haute','1–2']] },
+        { id:'regul', label:'📊 Régularité', max:4, hint:'Écart entre meilleur et moins bon des 3 passages',
+          sous:null,
+          table:[['Écart < 0,4s','4'],['Écart 0,4–0,7s','3'],['Écart 0,7–1s','2'],['> 1s','1']] },
+        { id:'chrono', label:'📋 Chronométreur', max:3, hint:'Temps des camarades relevés correctement',
+          sous:null,
+          table:[['Temps corrects + restitution orale','3'],['Temps corrects','2'],['Temps partiels','1'],['Absent','0']] }
+      ]
+    },
+    c4:{
+      seances:'10',
+      ca_texte:"Produire un effort maximal sur 50m. Maîtriser la technique de départ et d'accélération. Chronométrer avec précision et analyser.",
+      criteres:[
+        { id:'perf', label:'⚡ Meilleur temps (50m)', max:8, hint:'3 passages — meilleur temps retenu',
+          sous:null,
+          table:[['< 7s','8'],['7–7,5s','7'],['7,5–8s','6'],['8–8,5s','5'],['8,5–9s','4'],['9–10s','3'],['10–11s','2'],['> 11s','1']] },
+        { id:'tech', label:'🎯 Technique', max:5, hint:'Départ, montée en vitesse, coordination',
+          sous:[{id:'dep',label:'Départ explosif + inclinaison',max:2},{id:'mont',label:'Montée en fréquence',max:2},{id:'coord',label:'Coordination bras/jambes',max:1}],
+          table:[['Départ explosif, corps incliné','2/2'],['Montée progressive à fréquence élevée','2/2'],['Balancé symétrique','1/1']] },
+        { id:'regul', label:'📊 Régularité', max:4, hint:'Écart entre meilleur et moins bon passage',
+          sous:null,
+          table:[['Écart < 0,3s','4'],['Écart 0,3–0,6s','3'],['Écart 0,6–1s','2'],['> 1s','1']] },
+        { id:'chrono', label:'📋 Chronométreur', max:3, hint:'Temps + analyse (vitesse de pointe, phase de décélération)',
+          sous:null,
+          table:[['Temps corrects + analyse','3'],['Temps corrects','2'],['Temps partiels','1'],['Absent','0']] }
+      ]
+    }
+  },
+
+  // ── BASKET ─────────────────────────────────────────
+  { id:'basket', nom:'Basket-ball', emoji:'🏀', ca:'CA4', famille:'Sports collectifs',
+    c3:{
+      seances:'10–12',
+      ca_texte:"S'organiser à 3 ou 4 pour progresser vers la cible et tirer. Respecter les règles élémentaires. Tenir le rôle d'arbitre.",
+      criteres:[
+        { id:'perf', label:'⚡ Performance', max:4, hint:'Matchs 3v3 — paniers marqués par l\'élève',
+          sous:null,
+          table:[['≥ 5 paniers','4'],['3–4 paniers','3'],['1–2 paniers','2'],['0 panier','1']] },
+        { id:'jeu', label:'🤝 Jeu collectif', max:8, hint:'3 critères observés sur 2 matchs',
+          sous:[{id:'pass',label:'Passes utiles (sans dribble inutile)',max:3},{id:'dem',label:'Démarquage avant et après passe',max:3},{id:'cible',label:'Orientation vers le panier',max:2}],
+          table:[['Passe directe sans dribble systématique','3/3'],['Se démarque en espace libre','3/3'],['Regarde vers le panier dès réception','2/2']] },
+        { id:'regles', label:'📖 Respect des règles', max:4, hint:'Marcher, sortie, contacts — infractions comptées',
+          sous:null,
+          table:[['0–1 infraction','4'],['2 infractions','3'],['3 infractions','2'],['4+ infractions','1']] },
+        { id:'arb', label:'⚖️ Arbitrage', max:4, hint:'Arbitre un match en entier',
+          sous:null,
+          table:[['Score annoncé + fautes signalées','4'],['Score correct, fautes partielles','3'],['Quelques oublis','2'],['Arbitrage absent','1']] }
+      ]
+    },
+    c4:{
+      seances:'10–12',
+      ca_texte:"S'organiser collectivement pour créer des déséquilibres et marquer. Faire des choix tactiques. Assumer les rôles joueur, arbitre, observateur.",
+      criteres:[
+        { id:'perf', label:'⚡ Performance', max:5, hint:'Tournoi 4v4 — 3 matchs de 6 min',
+          sous:null,
+          table:[['3 victoires','5'],['2 victoires','4'],['1 victoire + 1 nul','3'],['1 victoire','2'],['0 victoire','1']] },
+        { id:'jeu', label:'🤝 Jeu collectif', max:8, hint:'Démarquage, passes, espaces — 2 matchs observés',
+          sous:[{id:'dem',label:'Démarquage actif',max:3},{id:'pass',label:'Passes utiles et précises',max:3},{id:'esp',label:'Utilisation des espaces',max:2}],
+          table:[['Se démarque avant et après chaque passe','3/3'],['Passe sans dribble inutile','3/3'],['Joue en largeur et en profondeur','2/2']] },
+        { id:'arb', label:'⚖️ Arbitrage', max:4, hint:'Match entier : annonce, règles, litiges',
+          sous:null,
+          table:[['Score + marcher + contacts + litiges','4'],['Score + marcher + contacts','3'],['Score seulement','2'],['Arbitrage absent','1']] },
+        { id:'obs', label:'📋 Grille observateur', max:3, hint:'Grille complète et analysée sur un match',
+          sous:null,
+          table:[['Grille complète + analyse orale','3'],['Grille complète','2'],['Grille partielle','1'],['Absent','0']] }
+      ]
+    }
+  },
+
+  // ── FOOTBALL ───────────────────────────────────────
+  { id:'football', nom:'Football', emoji:'⚽', ca:'CA4', famille:'Sports collectifs',
+    c3:{
+      seances:'10–12',
+      ca_texte:"Conduire, passer et tirer en situation de jeu simple. Respecter les règles élémentaires. Jouer en équipe.",
+      criteres:[
+        { id:'perf', label:'⚡ Performance', max:4, hint:'Matchs 4v4 — buts marqués par l\'élève',
+          sous:null,
+          table:[['≥ 4 buts','4'],['2–3 buts','3'],['1 but','2'],['0 but participatif','1']] },
+        { id:'jeu', label:'🤝 Jeu collectif', max:8, hint:'Passes, soutien, utilisation de l\'espace',
+          sous:[{id:'pass',label:'Passes réussies vers un partenaire libre',max:3},{id:'sout',label:'Soutien du porteur',max:3},{id:'esp',label:'Utilisation de l\'espace',max:2}],
+          table:[['Passe précise vers partenaire libre','3/3'],['Toujours à portée du porteur','3/3'],['Se déplace pour créer espace','2/2']] },
+        { id:'regles', label:'📖 Respect des règles', max:4, hint:'Mains, hors-jeu simplifié, remises en jeu',
+          sous:null,
+          table:[['0–1 infraction','4'],['2 infractions','3'],['3 infractions','2'],['4+ infractions','1']] },
+        { id:'arb', label:'⚖️ Arbitrage', max:4, hint:'Match entier — fautes, sorties, corners',
+          sous:null,
+          table:[['Mains + sorties + corners corrects','4'],['Mains + sorties','3'],['Sorties seulement','2'],['Refus','1']] }
+      ]
+    },
+    c4:{
+      seances:'10–12',
+      ca_texte:"Comprendre et utiliser l'espace de jeu pour créer des occasions de but. Rôles arbitre et observateur tenus avec rigueur.",
+      criteres:[
+        { id:'perf', label:'⚡ Performance', max:5, hint:'Tournoi 5v5 — 3 matchs de 7 min',
+          sous:null,
+          table:[['3 victoires','5'],['2 victoires','4'],['1 victoire + 1 nul','3'],['1 victoire','2'],['0 victoire','1']] },
+        { id:'jeu', label:'🤝 Jeu collectif', max:8, hint:'Espaces, passes, soutien — 2 matchs',
+          sous:[{id:'pass',label:'Passes courtes précises',max:3},{id:'esp',label:'Utilisation des espaces libres',max:3},{id:'sout',label:'Soutien du porteur',max:2}],
+          table:[['Passe sans pression, balle tendue','3/3'],['Se déplace vers espace libre','3/3'],['Toujours en soutien proche','2/2']] },
+        { id:'arb', label:'⚖️ Arbitrage', max:4, hint:'Mains, sorties, hors-jeu, corners',
+          sous:null,
+          table:[['Fautes + remises en jeu correctes','4'],['Fautes principales correctes','3'],['Partiel','2'],['Refus','1']] },
+        { id:'obs', label:'📋 Grille observateur', max:3, hint:'Grille actions offensives sur un match',
+          sous:null,
+          table:[['Grille complète + analyse','3'],['Grille complète','2'],['Grille partielle','1'],['Absent','0']] }
+      ]
+    }
+  },
+
+  // ── ULTIMATE ───────────────────────────────────────
+  { id:'ultimate', nom:'Ultimate', emoji:'🥏', ca:'CA4', famille:'Sports collectifs',
+    c3:{
+      seances:'10',
+      ca_texte:"Lancer et réceptionner le disque avec précision. Progresser vers la zone d'en-but sans courir avec le disque. Respecter les règles de base.",
+      criteres:[
+        { id:'technique', label:'🎯 Technique disque', max:6, hint:'Lancers et réceptions évalués en situation',
+          sous:[{id:'lancer',label:'Précision des lancers',max:3},{id:'recept',label:'Réceptions sécurisées',max:3}],
+          table:[['Lancer plat et précis sur 10m','3/3'],['Réception deux mains, contrôle','3/3']] },
+        { id:'perf', label:'⚡ Performance', max:5, hint:'Points marqués dans le tournoi 4v4',
+          sous:null,
+          table:[['Équipe gagnante','5'],['Équipe intermédiaire','3'],['Équipe en difficulté','1']] },
+        { id:'spirit', label:'🌟 Spirit', max:5, hint:'Respect des règles de base et auto-arbitrage initié',
+          sous:null,
+          table:[['Respecte règles + annonce fautes soi-même','5'],['Respecte les règles','3'],['Quelques infractions','1']] },
+        { id:'regles', label:'📖 Connaît les règles', max:4, hint:'Pivot, stall count, zone d\'en-but',
+          sous:null,
+          table:[['3 règles maîtrisées','4'],['2 règles','3'],['1 règle','2'],['Aucune','1']] }
+      ]
+    },
+    c4:{
+      seances:'10',
+      ca_texte:"Construire une attaque collective sans courir avec le disque. Appliquer l'auto-arbitrage et le spirit of the game avec exigence.",
+      criteres:[
+        { id:'perf', label:'⚡ Performance', max:5, hint:'Points marqués en tournoi 5v5 — 3 matchs',
+          sous:null,
+          table:[['Meilleure équipe','5'],['Équipe intermédiaire','3'],['Équipe en difficulté','1']] },
+        { id:'jeu', label:'🤝 Jeu collectif', max:7, hint:'Passes, démarquage, progression zone par zone',
+          sous:[{id:'lanc',label:'Précision des lancers (3 types)',max:3},{id:'dem',label:'Démarquage et pivots',max:2},{id:'prog',label:'Progression vers la zone',max:2}],
+          table:[['Forehand/backhand/hammer maîtrisés','3/3'],['Se démarque, pivote avant de lancer','2/2'],['Progresse zone par zone','2/2']] },
+        { id:'spirit', label:'🌟 Spirit of the game', max:5, hint:'Auto-arbitrage intégral + fair-play',
+          sous:null,
+          table:[['Auto-arbitre + aide adversaire','5'],['Auto-arbitre correctement','4'],['Quelques oublis','3'],['Litiges fréquents','2'],['Refus','0']] },
+        { id:'obs', label:'📋 Grille spirit score', max:3, hint:'Évalue l\'esprit de jeu de l\'équipe adverse',
+          sous:null,
+          table:[['Grille complète + analyse','3'],['Grille complète','2'],['Grille partielle','1']] }
+      ]
+    }
+  },
+
+  // ── BALLON PRISONNIER ──────────────────────────────
+  { id:'ballon-prisonnier', nom:'Ballon prisonnier', emoji:'🎯', ca:'CA4', famille:'Sports collectifs',
+    c3:{
+      seances:'8–10',
+      ca_texte:"Lancer avec précision pour éliminer. Esquiver les lancers adverses. Coopérer pour libérer les prisonniers.",
+      criteres:[
+        { id:'perf', label:'⚡ Performance', max:5, hint:'Victoires en tournoi + nombre d\'éliminations',
+          sous:null,
+          table:[['3 victoires','5'],['2 victoires','4'],['1 victoire','3'],['0 victoire participatif','2'],['Peu impliqué','1']] },
+        { id:'tech', label:'🎯 Technique', max:6, hint:'Qualité des lancers et des esquives',
+          sous:[{id:'lancer',label:'Lancer précis et fort',max:3},{id:'esquive',label:'Esquive réactive',max:3}],
+          table:[['Lancer dirigé, touche l\'adversaire','3/3'],['Esquive en pas chassés, anticipe','3/3']] },
+        { id:'coop', label:'🤝 Coopération', max:5, hint:'Communication, libération des prisonniers, organisation',
+          sous:null,
+          table:[['Libère prisonniers + communique + s\'organise','5'],['Libère + communique','3'],['Joue seul','1']] },
+        { id:'regles', label:'📖 Règles', max:4, hint:'Sorties, relancés, réceptions — infractions comptées',
+          sous:null,
+          table:[['0–1 infraction','4'],['2 infractions','3'],['3 infractions','2'],['4+ infractions','1']] }
+      ]
+    },
+    c4:{
+      seances:'8–10',
+      ca_texte:"Éliminer les adversaires tout en évitant d'être touché. Construire une stratégie collective d'attaque et de défense. Arbitrer.",
+      criteres:[
+        { id:'perf', label:'⚡ Performance', max:5, hint:'Résultats des 3 manches de 5 min',
+          sous:null,
+          table:[['3 victoires','5'],['2 victoires','4'],['1 victoire','3'],['0 victoire participatif','2'],['Peu impliqué','1']] },
+        { id:'strat', label:'🧠 Stratégie collective', max:7, hint:'Distribution des rôles, libération, coordination',
+          sous:[{id:'roles',label:'Distribution des rôles',max:3},{id:'lib',label:'Libération des prisonniers',max:2},{id:'coord',label:'Coordination attaque/défense',max:2}],
+          table:[['Rôles définis et respectés','3/3'],['Libère efficacement','2/2'],['Alterne attaque/défense','2/2']] },
+        { id:'tech', label:'🎯 Technique', max:4, hint:'Lancers et esquives observés',
+          sous:null,
+          table:[['Lancer précis + esquive réactive','4'],['Lancer correct, esquive passive','3'],['Lancer fort imprécis','2'],['Aléatoire','1']] },
+        { id:'arb', label:'⚖️ Arbitrage', max:4, hint:'Arbitre une manche entière',
+          sous:null,
+          table:[['Arbitre + observe, grille complète','4'],['Arbitre correctement','2'],['Refuse','0']] }
+      ]
+    }
+  },
+
+  // ── RUGBY ──────────────────────────────────────────
+  { id:'rugby', nom:'Rugby à 7', emoji:'🏉', ca:'CA4', famille:'Sports collectifs',
+    c3:{
+      seances:'10',
+      ca_texte:"Avancer en passant en arrière. Soutenir le porteur. Respecter les règles du toucher-plaquage.",
+      criteres:[
+        { id:'perf', label:'⚡ Essais', max:5, hint:'Essais marqués en tournoi toucher-plaquage',
+          sous:null,
+          table:[['≥ 3 essais','5'],['2 essais','4'],['1 essai','3'],['0 essai participatif','2'],['Peu impliqué','1']] },
+        { id:'passes', label:'🤝 Passes en arrière', max:6, hint:'Qualité et respect de la règle de la passe',
+          sous:null,
+          table:[['Toutes passes en arrière, sans faute','6'],['1–2 fautes de passe','4'],['3–4 fautes','2'],['> 4 fautes','1']] },
+        { id:'soutien', label:'🏃 Soutien du porteur', max:5, hint:'Suit le porteur, propose une solution',
+          sous:null,
+          table:[['Toujours présent derrière le porteur','5'],['La plupart du temps','4'],['Parfois','2'],['Joue seul','1']] },
+        { id:'regles', label:'📖 Règles', max:4, hint:'Toucher, zone de toucher, hors-jeu défense',
+          sous:null,
+          table:[['0–1 infraction','4'],['2 infractions','3'],['3 infractions','2'],['4+ infractions','1']] }
+      ]
+    },
+    c4:{
+      seances:'10–12',
+      ca_texte:"Créer des surnombres pour aplatir. Soutenir, passer en arrière, défendre en ligne. Arbitrer avec rigueur.",
+      criteres:[
+        { id:'perf', label:'⚡ Performance', max:5, hint:'Essais marqués en tournoi 5v5 ou 7v7',
+          sous:null,
+          table:[['≥ 3 essais','5'],['2 essais','4'],['1 essai','3'],['0 essai participatif','2'],['Peu impliqué','1']] },
+        { id:'jeu', label:'🤝 Jeu collectif', max:8, hint:'Passes, soutien, surnombres — 2 matchs',
+          sous:[{id:'pass',label:'Passes en arrière précises',max:3},{id:'sout',label:'Soutien du porteur',max:3},{id:'surnom',label:'Création de surnombre',max:2}],
+          table:[['Passe en arrière sans faute','3/3'],['Suit le porteur, toujours proche','3/3'],['Décale pour créer le 2v1','2/2']] },
+        { id:'regles', label:'⚖️ Respect des règles', max:4, hint:'Passe en arrière, toucher, remises en jeu',
+          sous:null,
+          table:[['0 faute de règle','4'],['1–2 fautes','3'],['3–4 fautes','2'],['> 4 fautes','1']] },
+        { id:'obs', label:'📋 Grille observateur', max:3, hint:'Grille jeu collectif sur un match',
+          sous:null,
+          table:[['Grille complète + analyse','3'],['Grille complète','2'],['Grille partielle','1']] }
+      ]
+    }
+  },
+
+  // ── BADMINTON ──────────────────────────────────────
+  { id:'badminton', nom:'Badminton', emoji:'🏸', ca:'CA4', famille:'Raquettes',
+    c3:{
+      seances:'10–12',
+      ca_texte:"Mettre le volant en jeu, l'envoyer dans le camp adverse et maintenir l'échange. Compter les points et arbitrer simplement.",
+      criteres:[
+        { id:'tech', label:'🎯 Technique de frappe', max:8, hint:'Frappes évaluées sur 2 matchs',
+          sous:[{id:'traj',label:'Trajectoires dirigées',max:3},{id:'serv',label:'Service réussi (court et long)',max:3},{id:'depl',label:'Déplacements vers le volant',max:2}],
+          table:[['Dirige le volant dans les 2 zones (fond/court)','3/3'],['Service court et long réussis','3/3'],['Va chercher le volant, ne laisse pas tomber','2/2']] },
+        { id:'perf', label:'⚡ Performance', max:6, hint:'Terrain final en pyramide 4 terrains',
+          sous:null,
+          table:[['Terrain 1','6'],['Terrain 2','4'],['Terrain 3','3'],['Terrain 4','2']] },
+        { id:'arb', label:'⚖️ Arbitrage', max:3, hint:'Score annoncé, fautes de service signalées',
+          sous:null,
+          table:[['Score + service + limites','3'],['Score annoncé','2'],['Score partiel','1'],['Refus','0']] },
+        { id:'regles', label:'📖 Règles connues', max:3, hint:'Règle du volant au sol, services alternés, limites de terrain',
+          sous:null,
+          table:[['3 règles maîtrisées','3'],['2 règles','2'],['1 règle','1'],['Aucune','0']] }
+      ]
+    },
+    c4:{
+      seances:'10–12',
+      ca_texte:"Rechercher le gain d'une rencontre par des frappes variées en longueur ou largeur. Exploiter les espaces adverses. Assurer la gestion du tournoi pyramide.",
+      criteres:[
+        { id:'tech', label:'🎯 Technique & Tactique', max:10, hint:'3 sous-critères observés sur 2 matchs',
+          sous:[{id:'traj',label:'Trajectoires variées',max:4},{id:'frapp',label:'Frappes efficaces',max:4},{id:'depl',label:'Déplacements (retour centre)',max:2}],
+          table:[['Joue dans les 4 zones','4/4'],['Frappes variées qui mettent en difficulté','4/4'],['Retour au centre systématique','2/2']] },
+        { id:'perf', label:'⚡ Performance', max:6, hint:'Terrain final après tournoi pyramide 4 terrains',
+          sous:null,
+          table:[['Terrain 1 — sommet','6'],['Terrain 2','4'],['Terrain 3','3'],['Terrain 4 — base','2']] },
+        { id:'arb', label:'⚖️ Arbitrage', max:4, hint:'Match entier : annonce, règles, litiges',
+          sous:null,
+          table:[['Annonce score + règles + gère litiges','4'],['Annonce + règles','3'],['Annonce seulement','2'],['Refus','1']] }
+      ]
+    }
+  },
+
+  // ── TENNIS DE TABLE ────────────────────────────────
+  { id:'tennis-table', nom:'Tennis de table', emoji:'🏓', ca:'CA4', famille:'Raquettes',
+    c3:{
+      seances:'10',
+      ca_texte:"Mettre la balle en jeu, maintenir des échanges réguliers. Compter les points en autonomie. Connaître les règles de base.",
+      criteres:[
+        { id:'regul', label:'📊 Régularité des échanges', max:7, hint:'Nombre moyen de coups par échange en matchs',
+          sous:null,
+          table:[['> 6 coups en moyenne','7'],['4–6 coups','5'],['2–4 coups','3'],['1–2 coups','1']] },
+        { id:'perf', label:'⚡ Performance', max:6, hint:'Résultats du tournoi — matchs en 11 points',
+          sous:null,
+          table:[['1er','6'],['2e','5'],['3e','4'],['4e','3'],['5e','2']] },
+        { id:'service', label:'🎯 Service réussi', max:4, hint:'Service coup droit correct — 3 essais',
+          sous:null,
+          table:[['3/3 corrects (rebond 2 côtés)','4'],['2/3 corrects','3'],['1/3 correct','2'],['0/3','1']] },
+        { id:'arb', label:'⚖️ Arbitrage', max:3, hint:'Score correct en autonomie sur un match',
+          sous:null,
+          table:[['Score correct + règle du service','3'],['Score correct','2'],['Score partiel','1'],['Refus','0']] }
+      ]
+    },
+    c4:{
+      seances:'10',
+      ca_texte:"Construire l'échange par la régularité et la variation. Passer du renvoi à la construction intentionnelle. Arbitrer et gérer le score en autonomie.",
+      criteres:[
+        { id:'perf', label:'⚡ Performance', max:6, hint:'Tournoi suédois — matchs en 11 points',
+          sous:null,
+          table:[['1er','6'],['2e','5'],['3e','4'],['4e','3'],['5e','2']] },
+        { id:'regul', label:'📊 Régularité', max:6, hint:'Échanges construits — observé sur 2 matchs',
+          sous:null,
+          table:[['Échanges > 5 coups réguliers','6'],['Échanges 3–5 coups','4–5'],['Échanges 1–3 coups','2–3'],['Renvoi aléatoire','1']] },
+        { id:'variete', label:'🎭 Variété', max:5, hint:'Effets, directions, rythmes variés intentionnellement',
+          sous:[{id:'eff',label:'Effets (lifté/coupé)',max:2},{id:'dir',label:'Directions (croisé/long de table)',max:2},{id:'rythme',label:'Variations de rythme',max:1}],
+          table:[['Lifté ou coupé maîtrisé','2/2'],['Croisé ET long de table','2/2'],['Accélère/ralentit intentionnellement','1/1']] },
+        { id:'arb', label:'⚖️ Arbitrage', max:3, hint:'Gestion score + règles en autonomie',
+          sous:null,
+          table:[['Score + règles service + litiges','3'],['Score + règles','2'],['Score seulement','1'],['Refus','0']] }
+      ]
+    }
+  },
+
+  // ── ACROSPORT ──────────────────────────────────────
+  { id:'acrosport', nom:'Acrosport', emoji:'🤸', ca:'CA3', famille:'Gym / Renfo',
+    c3:{
+      seances:'10–12',
+      ca_texte:"Créer et présenter des figures à 3 en respectant les exigences de sécurité. Assurer les rôles porteur, voltigeur, pareur.",
+      criteres:[
+        { id:'figures', label:'⭐ Figures réalisées', max:6, hint:'Nombre et niveau des figures dans l\'enchaînement (3–4 figures)',
+          sous:null,
+          table:[['4 figures niveau 2','6'],['3 figures niveau 2 + 1 niveau 1','4–5'],['Figures niveau 1 uniquement','2–3'],['< 3 figures','1']] },
+        { id:'exec', label:'✅ Exécution', max:6, hint:'Tenue 3 secondes, corps aligné',
+          sous:null,
+          table:[['Toutes figures tenues 3s, corps droit','6'],['La plupart tenues, quelques écarts','4–5'],['Tenues partielles','2–3'],['Non tenues','1']] },
+        { id:'secu', label:'🛡 Sécurité', max:5, hint:'Parades respectées, posture du pareur',
+          sous:null,
+          table:[['Parade active sur toutes les figures','5'],['Parade présente mais passive','3'],['Parade oubliée','1']] },
+        { id:'compo', label:'🎭 Présentation', max:3, hint:'Début, fin marqués, fluidité entre les figures',
+          sous:null,
+          table:[['Début/fin + liaisons','3'],['Début/fin sans liaisons','2'],['Enchaînement non mémorisé','1']] }
+      ]
+    },
+    c4:{
+      seances:'10–12',
+      ca_texte:"Créer et présenter un enchaînement acrobatique collectif maîtrisé et esthétique. Tenir les rôles de porteur, voltigeur, pareur avec exigence.",
+      criteres:[
+        { id:'diff', label:'⭐ Difficulté', max:6, hint:'Niveau des figures (4 à 6 figures dans l\'enchaînement)',
+          sous:null,
+          table:[['Figures niveau 3 (renversements)','6'],['Figures niveau 2 (équilibre épaules)','4–5'],['Figures niveau 1 (pyramides simples)','2–3'],['Figures sans renversement','1']] },
+        { id:'exec', label:'✅ Exécution', max:6, hint:'Tenue 3s, alignements, amplitude',
+          sous:null,
+          table:[['Toutes figures tenues 3s, corps tendu','6'],['La plupart tenues, quelques écarts','4–5'],['Tenues partielles, tremblements','2–3'],['Non tenues','1']] },
+        { id:'compo', label:'🎭 Composition', max:5, hint:'Liaisons, artistique, mémorisation',
+          sous:[{id:'liais',label:'Liaisons fluides',max:2},{id:'art',label:'Qualité artistique',max:2},{id:'mem',label:'Mémorisation (sans aide)',max:1}],
+          table:[['Passages fluides entre toutes les figures','2/2'],['Expression, synchronisation musicale','2/2'],['Enchaînement complet sans aide','1/1']] },
+        { id:'secu', label:'🛡 Sécurité', max:3, hint:'Parades respectées, aucune mise en danger',
+          sous:null,
+          table:[['Parade active, jamais de danger','3'],['Parade présente mais passive','2'],['Parade oubliée 1–2 fois','1'],['Sécurité non assurée','0']] }
+      ]
+    }
+  },
+
+  // ── RENFO ──────────────────────────────────────────
+  { id:'renfo', nom:'Renfo musculaire', emoji:'💪', ca:'CA1', famille:'Gym / Renfo',
+    c3:{
+      seances:'10',
+      ca_texte:"Réaliser des exercices au poids de corps en respectant les consignes de posture. Connaître les groupes musculaires sollicités.",
+      criteres:[
+        { id:'tech', label:'🎯 Posture & technique', max:6, hint:'4 exercices évalués : gainage, pompes, squats, abdos',
+          sous:null,
+          table:[['4/4 corrects','6'],['3/4 corrects','4–5'],['2/4 corrects','2–3'],['1/4 correct','1']] },
+        { id:'connaissance', label:'📖 Connaissances', max:5, hint:'Nomme les muscles sollicités pour 4 exercices',
+          sous:null,
+          table:[['4/4 muscles nommés','5'],['3/4','4'],['2/4','3'],['1/4','2'],['0/4','1']] },
+        { id:'programme', label:'📋 Participation active', max:5, hint:'Engagement dans toutes les séances',
+          sous:null,
+          table:[['Toujours actif, aide ses camarades','5'],['Régulier, quelques pauses','4'],['Irrégulier','2'],['Peu impliqué','1']] },
+        { id:'echauf', label:'🔥 Échauffement', max:4, hint:'Participe activement à l\'échauffement',
+          sous:null,
+          table:[['Actif et attentif','4'],['Présent mais passif','2'],['Absent ou distrait','1']] }
+      ]
+    },
+    c4:{
+      seances:'10',
+      ca_texte:"Réaliser les exercices avec la bonne technique. Construire et suivre un programme personnalisé. Mesurer ses progrès sur le cycle.",
+      criteres:[
+        { id:'tech', label:'🎯 Technique d\'exécution', max:5, hint:'Circuit 6 exercices — qualité gestuelle',
+          sous:null,
+          table:[['6/6 corrects','5'],['5/6 corrects','4'],['4/6 corrects','3'],['3/6 corrects','2'],['< 3/6','1']] },
+        { id:'programme', label:'📋 Programme individuel', max:5, hint:'Fiche : exercices, séries, reps, évolution',
+          sous:null,
+          table:[['Fiche complète + évolution 5 séances','5'],['Fiche complète sans évolution','4'],['Fiche partielle','2–3'],['Absente','0']] },
+        { id:'progres', label:'📈 Progrès mesurés', max:5, hint:'Amélioration entre début et fin de cycle',
+          sous:null,
+          table:[['Progression sur ≥ 3 exercices','5'],['Progression sur 2 exercices','4'],['Progression sur 1','3'],['Stagnation','2'],['Régression','1']] },
+        { id:'echauf', label:'🔥 Échauffement autonome', max:5, hint:'Échauffement réalisé seul en début de séance',
+          sous:null,
+          table:[['Complet et progressif, seul','5'],['Correct, quelques oublis','4'],['Partiel','2–3'],['Absent','1']] }
+      ]
+    }
+  },
+
+  // ── COURSE ORIENTATION ─────────────────────────────
+  { id:'course-orientation', nom:"Course d'orientation", emoji:'🗺️', ca:'CA2', famille:'Plein air',
+    c3:{
+      seances:'8–10',
+      ca_texte:"Lire une carte simplifiée et se repérer dans un espace connu. Trouver des balises en binôme. Respecter les limites de sécurité.",
+      criteres:[
+        { id:'balises', label:'📍 Balises trouvées', max:7, hint:'Parcours en score 12 min en binôme',
+          sous:null,
+          table:[['Score ≥ 80%','7'],['60–79%','5–6'],['40–59%','3–4'],['20–39%','2'],['< 20%','1']] },
+        { id:'carte', label:'🗺 Lecture de carte', max:5, hint:'Orientée la carte correctement, utilise les symboles',
+          sous:null,
+          table:[['Carte orientée + 3 symboles utilisés','5'],['Carte orientée + 1–2 symboles','4'],['Carte orientée seulement','2–3'],['Carte non orientée','1']] },
+        { id:'secu', label:'🛡 Respect des limites', max:4, hint:'Reste dans la zone autorisée, revient dans les temps',
+          sous:null,
+          table:[['Respect total','4'],['1 dépassement mineur','3'],['2 dépassements','2'],['Hors-zone fréquent','1']] },
+        { id:'bilan', label:'📋 Bilan de parcours', max:4, hint:'Trace son itinéraire sur la carte après le parcours',
+          sous:null,
+          table:[['Tracé complet','4'],['Tracé partiel','2'],['Absence de tracé','1']] }
+      ]
+    },
+    c4:{
+      seances:'8–10',
+      ca_texte:"Lire une carte et se repérer dans l'espace réel. Planifier son parcours, prendre des décisions autonomes. Gérer sa sécurité.",
+      criteres:[
+        { id:'balises', label:'📍 Balises trouvées', max:7, hint:'Parcours en score 15–20 min individuel',
+          sous:null,
+          table:[['Score ≥ 90%','7'],['70–89%','5–6'],['50–69%','3–4'],['30–49%','2'],['< 30%','1']] },
+        { id:'strat', label:'🧠 Stratégie de parcours', max:5, hint:'Itinéraire optimisé, ordre des balises',
+          sous:null,
+          table:[['Itinéraire optimisé, ordre logique','5'],['Bon parcours, 1–2 détours','4'],['Plusieurs allers-retours','2–3'],['Aléatoire','1']] },
+        { id:'auto', label:'🧭 Autonomie', max:5, hint:'Sans aide de l\'enseignant',
+          sous:null,
+          table:[['0 aide demandée','5'],['1 aide','4'],['2–3 aides','2–3'],['Dépendant','1']] },
+        { id:'bilan', label:'📋 Bilan de parcours', max:3, hint:'Tracé + analyse des erreurs',
+          sous:null,
+          table:[['Tracé exact + analyse','3'],['Tracé présent','2'],['Tracé partiel','1'],['Absent','0']] }
+      ]
+    }
+  },
+
+  // ── LUTTE ──────────────────────────────────────────
+  { id:'lutte', nom:'Lutte', emoji:'🥋', ca:'CA4', famille:'Combat',
+    c3:{
+      seances:'10',
+      ca_texte:"S'engager en sécurité dans un corps-à-corps codifié. Déséquilibrer son adversaire et le mettre au sol. Respecter les règles et son partenaire.",
+      criteres:[
+        { id:'perf', label:'⚡ Performance', max:5, hint:'Tournoi 1×2 min — points marqués',
+          sous:null,
+          table:[['≥ 5 points','5'],['3–4 points','4'],['2 points','3'],['1 point','2'],['0 point','1']] },
+        { id:'tech', label:'🎯 Technique', max:6, hint:'Qualité des actions offensives',
+          sous:[{id:'desq',label:'Déséquilibre (tirer/pousser)',max:3},{id:'sol',label:'Amener au sol',max:3}],
+          table:[['Utilise tirer + pousser pour déséquilibrer','3/3'],['Amène au sol de façon contrôlée','3/3']] },
+        { id:'secu', label:'🛡 Sécurité & respect', max:5, hint:'Respect des interdits, gestes contrôlés',
+          sous:null,
+          table:[['0 geste dangereux, accompagne','5'],['1–2 manquements légers','4'],['3 manquements','3'],['Gestes dangereux','1']] },
+        { id:'regles', label:'📖 Règles connues', max:4, hint:'Interdits (cou, doigts, cheveux), mise au sol, contrôle 3s',
+          sous:null,
+          table:[['3 règles maîtrisées','4'],['2 règles','3'],['1 règle','2'],['Aucune','1']] }
+      ]
+    },
+    c4:{
+      seances:'10',
+      ca_texte:"S'engager en sécurité dans un corps-à-corps codifié. Déséquilibrer, amener au sol et contrôler l'adversaire. Arbitrer un combat.",
+      criteres:[
+        { id:'perf', label:'⚡ Performance', max:6, hint:'Tournoi 2×2 min — points (mise au sol=1, contrôle 3s=2)',
+          sous:null,
+          table:[['≥ 8 points','6'],['6–7 points','5'],['4–5 points','4'],['2–3 points','3'],['1 point','2'],['0 point','1']] },
+        { id:'tech', label:'🎯 Technique offensive', max:6, hint:'Déséquilibre, projection, contrôle',
+          sous:[{id:'desq',label:'Déséquilibre avant projection',max:2},{id:'proj',label:'Projection maîtrisée',max:2},{id:'ctrl',label:'Contrôle au sol 3s',max:2}],
+          table:[['Saisit et tire/pousse avant de projeter','2/2'],['Projection technique, adversaire accompagné','2/2'],['Maintient 3s sans danger','2/2']] },
+        { id:'secu', label:'🛡 Sécurité & respect', max:5, hint:'Interdits, gestes contrôlés, attitude',
+          sous:null,
+          table:[['0 interdit, accompagne toujours','5'],['1–2 manquements mineurs','4'],['3 manquements','3'],['Gestes dangereux répétés','1']] },
+        { id:'arb', label:'⚖️ Arbitrage', max:3, hint:'Arbitre un combat 2×2 min',
+          sous:null,
+          table:[['Points corrects + litiges gérés','3'],['Points corrects','2'],['Hésitant','1'],['Refuse','0']] }
+      ]
+    }
+  }
+];
+
+// ═══════════════════════════════════════════════════════
+// STATE & HELPERS
+// ═══════════════════════════════════════════════════════
+let currentCycle = 'c3';
+const state = {};
+SPORTS.forEach(s => { state[s.id] = { c3:{ eleves:[], scores:{} }, c4:{ eleves:[], scores:{} } }; });
+let editIdx = null, editSportId = null, editCycle = null;
+const modalState = {};
+
+function getCriteres(sid) { return SPORTS.find(s=>s.id===sid)[currentCycle].criteres; }
+function getSc(sid) { return state[sid][currentCycle].scores; }
+function getEleves(sid) { return state[sid][currentCycle].eleves; }
+
+function allKeys(criteres) {
+  const keys = [];
+  criteres.forEach(c => {
+    if(c.sous) c.sous.forEach(sc => keys.push({ key: c.id+'_'+sc.id, max: sc.max, label: sc.label }));
+    else keys.push({ key: c.id, max: c.max, label: c.label });
+  });
+  return keys;
+}
+
+function computeTotal(criteres, scores) {
+  let t = 0;
+  criteres.forEach(c => {
+    if(c.sous) c.sous.forEach(sc => { t += (scores[c.id+'_'+sc.id]||0); });
+    else t += (scores[c.id]||0);
+  });
+  return t;
+}
+
+function maxTotal(criteres) { return criteres.reduce((s,c)=>s+c.max,0); }
+function caColor(ca) { return {CA1:'#e85d04',CA2:'#2d6a4f',CA3:'#7209b7',CA4:'#0e7c7b'}[ca]||'#888'; }
+
+// ═══════════════════════════════════════════════════════
+// CYCLE SWITCH
+// ═══════════════════════════════════════════════════════
+function setCycle(c) {
+  currentCycle = c;
+  document.getElementById('btn-c3').classList.toggle('active', c==='c3');
+  document.getElementById('btn-c4').classList.toggle('active', c==='c4');
+  document.getElementById('home-sub').textContent =
+    c==='c3' ? '15 APSA · Cycle 3 — 6e' : '15 APSA · Cycle 4 — 5e / 4e / 3e';
+  document.querySelectorAll('.cycle-block').forEach(function(el) {
+    el.classList.toggle('active', el.dataset.cycle === c);
+  });
+  // Mettre à jour le sous-titre du sport actif
+  var ap = document.querySelector('.sport-panel.active');
+  if(ap && ap.id !== 'panel-home') {
+    var sid = ap.id.replace('panel-','');
+    var sp = SPORTS.find(function(s){ return s.id===sid; });
+    if(sp) {
+      var sub = document.getElementById(sid+'-sub');
+      if(sub) sub.textContent = sp[c].seances + ' séances · Cycle ' + (c==='c3'?'3 — 6e':'4 — 5e/4e/3e');
+    }
+  }
+  buildHome();
+}
+
+// ═══════════════════════════════════════════════════════
+// BUILD NAV
+// ═══════════════════════════════════════════════════════
+function buildNav() {
+  const nav = document.getElementById('sportNav');
+  const h = document.createElement('button');
+  h.className='snb active'; h.textContent='🏠'; h.onclick=()=>showPanel('home');
+  nav.appendChild(h);
+  SPORTS.forEach(s => {
+    const b = document.createElement('button');
+    b.className='snb'; b.id='nav-'+s.id;
+    b.textContent = s.emoji+' '+s.nom;
+    b.onclick = ()=>showPanel(s.id);
+    nav.appendChild(b);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// BUILD HOME
+// ═══════════════════════════════════════════════════════
+function buildHome() {
+  const familles = {};
+  SPORTS.forEach(s => { if(!familles[s.famille]) familles[s.famille]=[]; familles[s.famille].push(s); });
+  const cnt = document.getElementById('homeContent');
+  cnt.innerHTML='';
+  Object.entries(familles).forEach(([fam,sports]) => {
+    const sec=document.createElement('div'); sec.className='fam-section';
+    sec.innerHTML=`<div class="fam-label">${fam}</div>`;
+    const grid=document.createElement('div'); grid.className='home-grid';
+    sports.forEach(s => {
+      const nb = state[s.id][currentCycle].eleves.length;
+      const card=document.createElement('div');
+      card.className='home-card'+(nb>0?' has-data':'');
+      card.id='hcard-'+s.id;
+      card.innerHTML=`<div class="home-emoji">${s.emoji}</div>
+        <div class="home-nom">${s.nom}</div>
+        <div class="home-fam"><span class="ca-pill" style="background:${caColor(s.ca)}">${s.ca}</span></div>
+        ${nb>0?`<div class="home-count">${nb} élève${nb>1?'s':''}</div>`:''}`;
+      card.onclick=()=>showPanel(s.id);
+      grid.appendChild(card);
+    });
+    sec.appendChild(grid); cnt.appendChild(sec);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// BUILD PANELS
+// ═══════════════════════════════════════════════════════
+function buildPanels() {
+  const container=document.getElementById('sportPanels');
+  SPORTS.forEach(s => {
+    const panel=document.createElement('div');
+    panel.className='sport-panel'; panel.id='panel-'+s.id;
+    panel.innerHTML=buildPanelHTML(s);
+    container.appendChild(panel);
+    ['c3','c4'].forEach(cyc => initBtns(s,cyc));
+  });
+  // CO config blocks
+  ['c3','c4'].forEach(function(cyc) {
+    var block = document.getElementById('course-orientation-'+cyc+'-block');
+    if(!block) return;
+    var cfg = document.createElement('div');
+    cfg.style.cssText = 'background:var(--white);border-radius:12px;padding:16px 18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(14,124,123,.08);border:2px solid var(--teal-l)';
+    var defDuree = cyc==='c3' ? 30 : 40;
+    // Build cfg via DOM (avoid quoting hell)
+    var btnStyle = 'width:32px;height:32px;border-radius:7px;border:1.5px solid var(--gray);background:var(--bg);font-size:1.1rem;cursor:pointer;font-weight:700';
+    function mkRow(labelTxt, paramName, displayId, defVal) {
+      var row = document.createElement('div');
+      var lbl = document.createElement('label');
+      lbl.style.cssText = 'font-size:.75rem;font-weight:600;color:var(--muted);display:block;margin-bottom:5px';
+      lbl.textContent = labelTxt;
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;align-items:center;gap:8px';
+      var bm = document.createElement('button');
+      bm.style.cssText = btnStyle; bm.textContent = '−';
+      bm.addEventListener('click', (function(c,p){return function(){coAdj(c,p,-5);};})(cyc, paramName));
+      var disp = document.createElement('span');
+      disp.id = displayId; disp.textContent = defVal;
+      disp.style.cssText = 'font-family:Bebas Neue,sans-serif;font-size:1.6rem;color:var(--teal);min-width:44px;text-align:center';
+      var bp = document.createElement('button');
+      bp.style.cssText = btnStyle; bp.textContent = '+';
+      bp.addEventListener('click', (function(c,p){return function(){coAdj(c,p,5);};})(cyc, paramName));
+      wrap.appendChild(bm); wrap.appendChild(disp); wrap.appendChild(bp);
+      row.appendChild(lbl); row.appendChild(wrap);
+      return row;
+    }
+    var header = document.createElement('p');
+    header.style.cssText = 'font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px';
+    header.textContent = '⚙️ Paramètres évaluation CO';
+    var grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px';
+    grid.appendChild(mkRow('⏱ Durée (min)', 'duree', 'co-duree-'+cyc, defDuree));
+    grid.appendChild(mkRow('📍 Nb balises total', 'balises', 'co-balises-'+cyc, 30));
+    var barBox = document.createElement('div');
+    barBox.style.cssText = 'background:var(--bg);border-radius:8px;padding:10px 12px';
+    var barLbl = document.createElement('p');
+    barLbl.style.cssText = 'font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:6px';
+    barLbl.textContent = 'Barème adapté — balises trouvées';
+    var barDiv = document.createElement('div');
+    barDiv.id = 'co-bareme-'+cyc;
+    barBox.appendChild(barLbl); barBox.appendChild(barDiv);
+    cfg.appendChild(header); cfg.appendChild(grid); cfg.appendChild(barBox);
+    var saisieDiv = document.getElementById('course-orientation-'+cyc+'-saisie');
+    if(saisieDiv) block.insertBefore(cfg, saisieDiv);
+    coUpdateBareme(cyc);
+  });
+}
+
+function buildPanelHTML(s) {
+  let html = `
+    <div class="sport-header">
+      <div class="sport-title">${s.emoji} ${s.nom} <span class="ca-pill" style="background:${caColor(s.ca)}">${s.ca}</span></div>
+      <div class="sport-sub" id="${s.id}-sub"></div>
+    </div>
+    <div class="tabs" id="${s.id}-tabs">
+      <div class="tab active" onclick="switchTab('${s.id}','saisie',this)">✏️ Saisie</div>
+      <div class="tab" onclick="switchTab('${s.id}','criteres',this)">📋 Critères</div>
+    </div>`;
+
+  ['c3','c4'].forEach(cyc => {
+    const cd = s[cyc];
+    const mxT = maxTotal(cd.criteres);
+    let saisieCriteres='';
+    cd.criteres.forEach(c => {
+      if(c.sous) {
+        saisieCriteres+=`<div class="critere">
+          <div class="critere-header">
+            <span class="critere-title">${c.label}</span>
+            <span class="critere-max">/ ${c.max} pts — <span id="${s.id}-${cyc}-run-${c.id}">0</span>/${c.max}</span>
+          </div>
+          ${c.hint?`<p class="critere-hint">${c.hint}</p>`:''}`;
+        c.sous.forEach(sc => {
+          saisieCriteres+=`<div class="sous-critere">
+            <div class="sous-critere-header">
+              <span class="sous-critere-title">${sc.label}</span>
+              <span class="sous-critere-max">/ ${sc.max} pts</span>
+            </div>
+            <div class="pts-row" id="${s.id}-${cyc}-btn-${c.id}_${sc.id}"></div>
+          </div>`;
+        });
+        saisieCriteres+=`</div>`;
+      } else {
+        saisieCriteres+=`<div class="critere">
+          <div class="critere-header">
+            <span class="critere-title">${c.label}</span>
+            <span class="critere-max">/ ${c.max} pts</span>
+          </div>
+          ${c.hint?`<p class="critere-hint">${c.hint}</p>`:''}
+          <div class="pts-row" id="${s.id}-${cyc}-btn-${c.id}"></div>
+        </div>`;
+      }
+    });
+    let detailHTML='';
+    cd.criteres.forEach(c => {
+      let tbl='';
+      if(c.table&&c.table.length){
+        tbl='<table><tr><th>Observation</th><th>Pts</th></tr>';
+        c.table.forEach(r=>{ tbl+=`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`; });
+        tbl+='</table>';
+      }
+      let sous='';
+      if(c.sous){ c.sous.forEach(sc=>{ sous+=`<p class="sub-label">${sc.label} — /${sc.max} pts</p>`; }); sous+=tbl; }
+      detailHTML+=`<div class="detail-card">
+        <div class="detail-title">${c.label} <span class="dbadge">/ ${c.max} pts</span></div>
+        <p class="detail-hint">${c.hint||''}</p>
+        ${c.sous?sous:tbl}
+      </div>`;
+    });
+    detailHTML+=`<div class="ca-box"><strong>Compétence attendue :</strong><br>${cd.ca_texte}</div>`;
+
+    html+=`
+    <div class="cycle-block ${cyc==='c3'?'active':''}" data-cycle="${cyc}" id="${s.id}-${cyc}-block">
+      <div id="${s.id}-${cyc}-saisie">
+        <div class="card">
+          <label class="field-lbl" for="${s.id}-${cyc}-prenom">Prénom de l'élève</label>
+          <input class="prenom-input" type="text" id="${s.id}-${cyc}-prenom"
+            placeholder="ex : Karim" autocomplete="off"
+            oninput="checkReady('${s.id}','${cyc}')"/>
+          ${saisieCriteres}
+          <div class="divider"></div>
+          <div class="total-row">
+            <span class="total-lbl">Total</span>
+            <span class="total-val" id="${s.id}-${cyc}-total">—<span> / ${mxT}</span></span>
+          </div>
+          <button class="btn-valider" id="${s.id}-${cyc}-valider" disabled
+            onclick="valider('${s.id}','${cyc}')">✓ Valider et passer au suivant</button>
+          <div id="${s.id}-${cyc}-liste-section" style="display:none">
+            <p class="liste-title">Élèves saisis — <span id="${s.id}-${cyc}-nb">0</span></p>
+            <div id="${s.id}-${cyc}-liste"></div>
+          </div>
+        </div>
+        <button class="btn-export" id="${s.id}-${cyc}-export" onclick="imprimer('${s.id}','${cyc}')">🖨 Imprimer</button>
+      </div>
+      <div id="${s.id}-${cyc}-criteres" style="display:none">${detailHTML}</div>
+    </div>`;
+  });
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT BUTTONS
+// ═══════════════════════════════════════════════════════
+function initBtns(s, cyc) {
+  const sc = state[s.id][cyc].scores;
+  s[cyc].criteres.forEach(c => {
+    if(c.sous) {
+      c.sous.forEach(sub => {
+        const key = c.id+'_'+sub.id;
+        sc[key]=null;
+        mkBtns(`${s.id}-${cyc}-btn-${key}`, sub.max, key, sc, ()=>updateTotal(s,cyc));
+      });
+    } else {
+      sc[c.id]=null;
+      mkBtns(`${s.id}-${cyc}-btn-${c.id}`, c.max, c.id, sc, ()=>updateTotal(s,cyc));
+    }
+  });
+}
+
+function mkBtns(cid, max, key, scObj, cb) {
+  const c=document.getElementById(cid); if(!c) return;
+  for(let i=0;i<=max;i++){
+    const b=document.createElement('button');
+    b.className='pts-btn'; b.textContent=i;
+    b.onclick=()=>{
+      c.querySelectorAll('.pts-btn').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel'); scObj[key]=i; if(cb)cb();
+    };
+    c.appendChild(b);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// TOTAL & READY
+// ═══════════════════════════════════════════════════════
+function updateTotal(sport, cyc) {
+  const sc=state[sport.id][cyc].scores;
+  sport[cyc].criteres.forEach(c => {
+    if(c.sous){
+      let sub=0; c.sous.forEach(s=>{sub+=(sc[c.id+'_'+s.id]||0);});
+      const el=document.getElementById(`${sport.id}-${cyc}-run-${c.id}`);
+      if(el) el.textContent=sub;
+    }
+  });
+  const all=sport[cyc].criteres.every(c=>{
+    if(c.sous) return c.sous.every(s=>sc[c.id+'_'+s.id]!==null);
+    return sc[c.id]!==null;
+  });
+  if(all){
+    const t=computeTotal(sport[cyc].criteres,sc);
+    const mxT=maxTotal(sport[cyc].criteres);
+    document.getElementById(`${sport.id}-${cyc}-total`).innerHTML=t+`<span> / ${mxT}</span>`;
+  }
+  checkReady(sport.id, cyc);
+}
+
+function checkReady(sid, cyc) {
+  const sport=SPORTS.find(s=>s.id===sid);
+  const sc=state[sid][cyc].scores;
+  const prenomOk=(document.getElementById(`${sid}-${cyc}-prenom`)?.value.trim().length>0);
+  const allFilled=sport[cyc].criteres.every(c=>{
+    if(c.sous) return c.sous.every(s=>sc[c.id+'_'+s.id]!==null);
+    return sc[c.id]!==null;
+  });
+  const btn=document.getElementById(`${sid}-${cyc}-valider`);
+  if(btn) btn.disabled=!(prenomOk&&allFilled);
+}
+
+// ═══════════════════════════════════════════════════════
+// VALIDER
+// ═══════════════════════════════════════════════════════
+function valider(sid, cyc) {
+  const sport=SPORTS.find(s=>s.id===sid);
+  const prenom=document.getElementById(`${sid}-${cyc}-prenom`).value.trim();
+  const sc=state[sid][cyc].scores;
+  const scoresCopy={...sc};
+  const total=computeTotal(sport[cyc].criteres, scoresCopy);
+  const mxT=maxTotal(sport[cyc].criteres);
+  state[sid][cyc].eleves.unshift({prenom, scores:scoresCopy, total, max:mxT});
+  renderListe(sid, cyc);
+  showToast(prenom+' enregistré ✓');
+  resetSport(sid, cyc);
+  refreshHomeCard(sid);
+}
+
+// ═══════════════════════════════════════════════════════
+// LISTE
+// ═══════════════════════════════════════════════════════
+function renderListe(sid, cyc) {
+  const sport=SPORTS.find(s=>s.id===sid);
+  const eleves=state[sid][cyc].eleves;
+  const liste=document.getElementById(`${sid}-${cyc}-liste`);
+  const section=document.getElementById(`${sid}-${cyc}-liste-section`);
+  const nb=document.getElementById(`${sid}-${cyc}-nb`);
+  const exp=document.getElementById(`${sid}-${cyc}-export`);
+  liste.innerHTML='';
+  nb.textContent=eleves.length;
+  section.style.display=eleves.length>0?'block':'none';
+  exp.style.display=eleves.length>0?'block':'none';
+  const keys=allKeys(sport[cyc].criteres);
+  eleves.forEach((e,i)=>{
+    const detail=keys.slice(0,4).map(k=>{
+      const lbl=k.label.replace(/^[^\wÀ-ÿ]*/,'').split(' ').slice(0,2).join(' ');
+      return lbl+' '+(e.scores[k.key]!==null&&e.scores[k.key]!==undefined?e.scores[k.key]:'—')+'/'+k.max;
+    }).join(' · ');
+    const item=document.createElement('div');
+    item.className='eleve-item';
+    item.innerHTML=`
+      <div style="flex:1;min-width:0">
+        <div class="eleve-prenom">${e.prenom}</div>
+        <div class="eleve-detail">${detail}</div>
+      </div>
+      <div style="display:flex;align-items:center">
+        <button class="btn-ic btn-edit" onclick="openModal('${sid}','${cyc}',${i})">✏️</button>
+        <button class="btn-ic btn-del" onclick="supprimerEleve('${sid}','${cyc}',${i})">🗑</button>
+        <div class="eleve-note" style="margin-left:6px">${e.total}<span>/${e.max}</span></div>
+      </div>`;
+    liste.appendChild(item);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// SUPPRIMER
+// ═══════════════════════════════════════════════════════
+function supprimerEleve(sid, cyc, idx) {
+  const prenom=state[sid][cyc].eleves[idx].prenom;
+  state[sid][cyc].eleves.splice(idx,1);
+  renderListe(sid,cyc);
+  refreshHomeCard(sid);
+  showToast(prenom+' supprimé');
+}
+
+// ═══════════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════════
+function resetSport(sid, cyc) {
+  const sport=SPORTS.find(s=>s.id===sid);
+  const sc=state[sid][cyc].scores;
+  Object.keys(sc).forEach(k=>sc[k]=null);
+  const block=document.getElementById(`${sid}-${cyc}-block`);
+  block.querySelectorAll('.pts-btn').forEach(b=>b.classList.remove('sel'));
+  const mxT=maxTotal(sport[cyc].criteres);
+  document.getElementById(`${sid}-${cyc}-total`).innerHTML=`—<span> / ${mxT}</span>`;
+  sport[cyc].criteres.forEach(c=>{
+    if(c.sous){ const el=document.getElementById(`${sid}-${cyc}-run-${c.id}`); if(el) el.textContent='0'; }
+  });
+  const inp=document.getElementById(`${sid}-${cyc}-prenom`);
+  if(inp){inp.value='';inp.focus();}
+  document.getElementById(`${sid}-${cyc}-valider`).disabled=true;
+}
+
+// ═══════════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════════
+function openModal(sid, cyc, idx) {
+  const sport=SPORTS.find(s=>s.id===sid);
+  const e=state[sid][cyc].eleves[idx];
+  editIdx=idx; editSportId=sid; editCycle=cyc;
+  Object.assign(modalState, e.scores);
+  document.getElementById('modal-titre').textContent='Modifier — '+e.prenom;
+  const mc=document.getElementById('modal-criteres'); mc.innerHTML='';
+  allKeys(sport[cyc].criteres).forEach(k=>{
+    const div=document.createElement('div'); div.className='modal-critere';
+    div.innerHTML=`<p>${k.label} — /${k.max}</p><div class="pts-row" id="mbtn-${k.key}"></div>`;
+    mc.appendChild(div);
+    const cont=document.getElementById('mbtn-'+k.key);
+    for(let i=0;i<=k.max;i++){
+      const b=document.createElement('button');
+      b.className='pts-btn'+(e.scores[k.key]===i?' sel':''); b.textContent=i;
+      b.onclick=()=>{ cont.querySelectorAll('.pts-btn').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); modalState[k.key]=i; };
+      cont.appendChild(b);
+    }
+  });
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  editIdx=null; editSportId=null; editCycle=null;
+}
+
+function saveEdit(){
+  if(editIdx===null) return;
+  const sport=SPORTS.find(s=>s.id===editSportId);
+  const e=state[editSportId][editCycle].eleves[editIdx];
+  Object.assign(e.scores, modalState);
+  e.total=computeTotal(sport[editCycle].criteres, e.scores);
+  renderListe(editSportId, editCycle);
+  showToast(e.prenom+' mis à jour');
+  closeModal();
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function showPanel(id) {
+  document.querySelectorAll('.sport-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.snb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  const nb = id==='home'
+    ? document.querySelector('.snb')
+    : document.getElementById('nav-'+id);
+  if(nb) nb.classList.add('active');
+  if(id==='home') buildHome();
+  else {
+    // Update sub and tabs state
+    const sport=SPORTS.find(s=>s.id===id);
+    const cd=sport[currentCycle];
+    const sub=document.getElementById(id+'-sub');
+    if(sub) sub.textContent=`${cd.seances} séances · Cycle ${currentCycle==='c3'?'3 — 6e':'4 — 5e/4e/3e'}`;
+    // Reset tabs to saisie
+    document.querySelectorAll(`#panel-${id} .tab`).forEach((t,i)=>t.classList.toggle('active',i===0));
+    ['c3','c4'].forEach(cyc=>{
+      const s=document.getElementById(`${id}-${cyc}-saisie`);
+      const cr=document.getElementById(`${id}-${cyc}-criteres`);
+      if(s) s.style.display='block';
+      if(cr) cr.style.display='none';
+    });
+  }
+  window.scrollTo(0,0);
+}
+
+function switchTab(sid, name, btn) {
+  ['c3','c4'].forEach(cyc=>{
+    const s=document.getElementById(`${sid}-${cyc}-saisie`);
+    const cr=document.getElementById(`${sid}-${cyc}-criteres`);
+    if(s) s.style.display=name==='saisie'?'block':'none';
+    if(cr) cr.style.display=name==='criteres'?'block':'none';
+  });
+  document.querySelectorAll(`#${sid}-tabs .tab`).forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+// HOME CARD UPDATE
+// ═══════════════════════════════════════════════════════
+function refreshHomeCard(sid) {
+  const card=document.getElementById('hcard-'+sid);
+  if(!card) return;
+  const nb=state[sid][currentCycle].eleves.length;
+  card.classList.toggle('has-data',nb>0);
+  let countEl=card.querySelector('.home-count');
+  if(nb>0){
+    if(!countEl){ countEl=document.createElement('div'); countEl.className='home-count'; card.appendChild(countEl); }
+    countEl.textContent=nb+' élève'+(nb>1?'s':'');
+  } else if(countEl) countEl.remove();
+}
+
+// ═══════════════════════════════════════════════════════
+// IMPRIMER
+// ═══════════════════════════════════════════════════════
+function imprimer(sid, cyc) {
+  const sport=SPORTS.find(s=>s.id===sid);
+  const eleves=state[sid][cyc].eleves;
+  const keys=allKeys(sport[cyc].criteres);
+  const cycLabel=cyc==='c3'?'Cycle 3 — 6e':'Cycle 4 — 5e/4e/3e';
+  let html=`<html><head><meta charset="UTF-8"><title>${sport.nom} ${cycLabel}</title>
+  <style>body{font-family:sans-serif;padding:20px}h2{color:#0e7c7b;margin-bottom:14px;font-size:16px}
+  table{width:100%;border-collapse:collapse}th{background:#0e7c7b;color:white;padding:7px 9px;text-align:left;font-size:11px}
+  td{padding:6px 9px;border-bottom:1px solid #e0e0e0;font-size:11px}tr:nth-child(even) td{background:#f4f6f5}
+  .t{font-weight:700;color:#0e7c7b}</style></head><body>
+  <h2>${sport.emoji} ${sport.nom} — ${cycLabel} · ${sport[cyc].seances} séances</h2>
+  <table><tr><th>Prénom</th>`;
+  keys.forEach(k=>{
+    const lbl=k.label.replace(/^[^\wÀ-ÿ]*/,'').split(' ').slice(0,2).join(' ');
+    html+=`<th>${lbl} /${k.max}</th>`;
+  });
+  html+=`<th>Total /${maxTotal(sport[cyc].criteres)}</th></tr>`;
+  eleves.forEach(e=>{
+    html+=`<tr><td>${e.prenom}</td>`;
+    keys.forEach(k=>{ html+=`<td>${e.scores[k.key]!==null&&e.scores[k.key]!==undefined?e.scores[k.key]:'—'}</td>`; });
+    html+=`<td class="t">${e.total}</td></tr>`;
+  });
+  html+=`</table></body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html); w.document.close(); w.print();
+}
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2100);
+}
+
+document.getElementById('modal-overlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('modal-overlay')) closeModal();
+});
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+var coParams = { c3:{ duree:30, balises:30 }, c4:{ duree:40, balises:30 } };
+
+function coAdj(cyc, param, delta) {
+  var mn = 10, mx = param==='duree' ? 60 : 50;
+  coParams[cyc][param] = Math.max(mn, Math.min(mx, coParams[cyc][param]+delta));
+  var el = document.getElementById('co-'+param+'-'+cyc);
+  if(el) el.textContent = coParams[cyc][param];
+  coUpdateBareme(cyc);
+}
+
+function coUpdateBareme(cyc) {
+  var el = document.getElementById('co-bareme-'+cyc);
+  if(!el) return;
+  var nb = coParams[cyc].balises;
+  var duree = coParams[cyc].duree;
+  var thresholds = [
+    { pts:'7 pts',   min: Math.round(nb*0.9) },
+    { pts:'5-6 pts', min: Math.round(nb*0.7) },
+    { pts:'3-4 pts', min: Math.round(nb*0.5) },
+    { pts:'2 pts',   min: Math.round(nb*0.3) },
+    { pts:'1 pt',    min: 1 }
+  ];
+  var html = '';
+  for(var i=0;i<thresholds.length;i++){
+    var t = thresholds[i];
+    var maxB = i===0 ? nb : thresholds[i-1].min-1;
+    var range = i===0 ? ('≥'+t.min) : (t.min===1 ? '1–'+maxB : t.min+'–'+maxB);
+    html += '<span style="display:inline-block;margin-right:10px;white-space:nowrap"><b style="color:var(--teal)">'+t.pts+'</b> : '+range+' bal.</span>';
+  }
+  html += '<div style="margin-top:5px;font-size:.7rem;color:var(--muted)">'+duree+' min · '+nb+' balises posées</div>';
+  el.innerHTML = html;
+}
+
+buildNav();
+buildPanels();
+buildHome();
+</script>
+</body>
+</html>

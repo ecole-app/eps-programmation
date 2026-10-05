@@ -741,6 +741,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     <button class="nav-tab" onclick="showPage('comparaison',this)">🔀 Comparaison</button>
     <button class="nav-tab" onclick="showPage('programmations',this)">📚 Programmations</button>
     <button class="nav-tab" onclick="showPage('seances',this)">🗓️ Séances</button>
+    <button class="nav-tab" onclick="showPage('baremes',this)">🎯 Barèmes</button>
   </div>
   <div class="h-actions">
     <button class="alert-btn" id="alertBtn" onclick="toggleAlertPanel()">⚠️ <span class="alert-count" id="alertCount">0</span></button>
@@ -862,6 +863,11 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
       </div>
     </div>
     <div id="aujourdhuiContent"></div>
+  </div>
+
+  <!-- ══ PAGE BARÈMES (outil de notation, isolé dans une iframe : baremes.html) ══ -->
+  <div class="page" id="page-baremes">
+    <iframe id="baremesFrame" title="Barèmes EPS" style="width:100%;height:calc(100vh - 110px);min-height:520px;border:0;border-radius:12px;background:#fff"></iframe>
   </div>
 
   <div class="page" id="page-planning">
@@ -2024,6 +2030,7 @@ function showPage(id,btn){
   if(id==='cycles')renderCycles();
   if(id==='seances')renderSeances();
   if(id==='aujourdhui')renderAujourdhui();
+  if(id==='baremes'){const f=document.getElementById('baremesFrame');if(f&&!f.getAttribute('src'))f.setAttribute('src','baremes.html');}
 }
 
 // ═══ SIDEBAR ═══
