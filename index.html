@@ -2361,7 +2361,7 @@ const THEMES_SEANCES = {
     'demi-fond': ["Test VMA","Courir à % de VMA (fractionné)","Gérer 2 allures différentes","Construire son projet de course","Course en binôme observateur","Ajuster son projet","Course bilan à 3 allures"],
   },
   '4e': {
-    'course-orientation': ["Découverte des lieux → faire le plan du parc (découverte divisée en 2 × 3 parties du parc)","Récup bâtons → poser les bâtons → recherche des bâtons des autres équipes","Récup bâtons → recherche de bâtons","Récup bâtons + pose → recherche de tous les bâtons des autres équipes","Méons : découverte du site","Méons : évaluation"],
+    'course-orientation': ["Carte + légende","Travail de carte + pose de plots dans la cour pour se repérer sur un plan","Recherche de plots cachés par d'autres équipes + suivi d'itinéraire","Découverte des lieux → faire le plan du parc (découverte divisée en 2 × 3 parties du parc)","Récup bâtons → poser les bâtons → recherche des bâtons des autres équipes","Récup bâtons → recherche de bâtons","Récup bâtons + pose → recherche de tous les bâtons des autres équipes","Méons : découverte du site","Méons : évaluation"],
     basket: ["Découverte, dribble de protection","Passe et démarquage","Tir en course","Jeu à 3, conservation du ballon","Contre-attaque","Attaque placée, lecture du jeu","Tournoi 4v4"],
     badminton: ["Découverte, prise en main, service","Frappes de base (clear, amorti)","Replacement au centre","Construction de l'échange","Jeu en double","Tournoi simple"],
     relais: ["Rappel technique de course","Transmission en mouvement","Zone de transmission","Stratégie d'ordre","Relais chronométré en équipe","Tournoi chronométré"],
@@ -2375,11 +2375,11 @@ const THEMES_SEANCES = {
     ultimate: ["Rappel règles, lancers","Démarquage, jeu réduit","Progression vers l'en-but","Défense, interceptions","Mini-tournoi","Tournoi final"],
   },
 };
-// Nombre de séances fixé par Ahmed (prime sur semaines × séances/semaine) :
-// 4e CO = 4 séances au parc de Montreynaud + 2 à Méons (découverte puis évaluation).
-const SEANCES_TOTAL_FIXE = {'4e':{'course-orientation':6}};
+// Nombre de séances fixé (prime sur semaines × séances/semaine) : 4e CO = 9 séances,
+// les 6 dernières étant : 4 au parc de Montreynaud + 2 à Méons (découverte puis évaluation).
+const SEANCES_TOTAL_FIXE = {'4e':{'course-orientation':9}};
 // Lieu imposé pour certaines séances (index 0 = 1re séance) : sinon lieu du sport.
-const LIEU_SEANCE_FIXE = {'4e':{'course-orientation':{4:'siteCO',5:'siteCO'}}};
+const LIEU_SEANCE_FIXE = {'4e':{'course-orientation':{0:'paganini',1:'paganini',2:'paganini',7:'siteCO',8:'siteCO'}}};
 function getThemeSeance(cl, sportId, i){
   const arr = THEMES_SEANCES[cl] && THEMES_SEANCES[cl][sportId];
   return (arr && arr[i]) || null;
