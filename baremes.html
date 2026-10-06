@@ -397,7 +397,7 @@ const SPORTS = [
     },
     c4:{
       seances:'10–12',
-      ca_texte:"S'organiser collectivement pour créer des déséquilibres et marquer. Faire des choix tactiques. Assumer les rôles joueur, arbitre, observateur.",
+      ca_texte:"S'organiser collectivement pour créer des déséquilibres et marquer. Défendre collectivement. Assumer les rôles joueur, arbitre, observateur.",
       criteres:[
         { id:'perf', label:'⚡ Performance', max:5, hint:'Tournoi 4v4 — 3 matchs de 6 min',
           sous:null,
@@ -408,9 +408,9 @@ const SPORTS = [
         { id:'arb', label:'⚖️ Arbitrage', max:4, hint:'Match entier : annonce, règles, litiges',
           sous:null,
           table:[['Score + marcher + contacts + litiges','4'],['Score + marcher + contacts','3'],['Score seulement','2'],['Arbitrage absent','1']] },
-        { id:'tact', label:'🧠 Choix tactiques', max:3, hint:'2 matchs observés — choix de jeu (passe, tir, dribble) adapté à la défense',
+        { id:'def', label:'🛡️ Défense collective', max:3, hint:'2 matchs observés — défense sur le porteur, replacement, aide aux partenaires',
           sous:null,
-          table:[['Choix adaptés et variés, exploite les espaces libres','3'],['Souvent adaptés, quelques choix précipités','2'],['Choix peu adaptés (tir ou dribble systématique)','1'],['Aucun choix lisible','0']] }
+          table:[['Défend dès la perte de balle, gêne le porteur, aide ses partenaires','3'],['Défend sur son joueur, replacement correct','2'],['Défend de façon intermittente','1'],['Ne défend pas','0']] }
       ]
     }
   },
