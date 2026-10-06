@@ -208,9 +208,9 @@ const SPORTS = [
         { id:'passage', label:'🤝 Passages de témoin', max:6, hint:'3 passages notés 0–2 : zone respectée, continuité de course',
           sous:[{id:'p1',label:'Passage 1',max:2},{id:'p2',label:'Passage 2',max:2},{id:'p3',label:'Passage 3',max:2}],
           table:[['Passage sans ralentissement, zone OK','2'],['Léger ralentissement ou zone limite','1'],['Arrêt ou hors-zone','0']] },
-        { id:'chrono', label:'📋 Chronométreur', max:4, hint:'Relève les temps de son équipe avec précision',
+        { id:'regles', label:'📖 Respect des règles', max:4, hint:'Reste dans son couloir, respecte la zone de transmission, conduite correcte (sécurité, fair-play)',
           sous:null,
-          table:[['3 temps exacts + fiche lisible','4'],['2 temps exacts','2'],['1 temps ou fiche illisible','1'],['Absent','0']] },
+          table:[['Couloir et zone respectés, conduite exemplaire','4'],['1 écart (couloir ou zone), conduite correcte','3'],['2 écarts ou conduite à reprendre','2'],['Écarts répétés ou conduite dangereuse','1']] },
         { id:'regul', label:'📊 Régularité', max:4, hint:'Écart entre meilleur et moins bon essai',
           sous:null,
           table:[['Écart < 6s','4'],['Écart 6–9s','3'],['Écart 9–12s','2'],['Écart > 12s','1']] }
@@ -226,9 +226,9 @@ const SPORTS = [
         { id:'passage', label:'🤝 Passages de témoin', max:6, hint:'Passage en aveugle, zone réglementaire, vitesse maintenue',
           sous:[{id:'p1',label:'Passage 1',max:2},{id:'p2',label:'Passage 2',max:2},{id:'p3',label:'Passage 3',max:2}],
           table:[['Aveugle, zone OK, vitesse maintenue','2'],['Aveugle tenté mais ralentissement','1'],['Avec regard ou hors-zone','0']] },
-        { id:'analyse', label:'📋 Analyse collective', max:4, hint:'Fiche avec temps + identification des passages à corriger',
+        { id:'regles', label:'📖 Respect des règles', max:4, hint:'Reste dans son couloir, respecte la zone de transmission, conduite correcte (sécurité, fair-play)',
           sous:null,
-          table:[['3 temps + analyse ciblée + proposition','4'],['3 temps + identification problème','3'],['Temps seulement','2'],['Fiche absente','0']] },
+          table:[['Couloir et zone respectés, conduite exemplaire','4'],['1 écart (couloir ou zone), conduite correcte','3'],['2 écarts ou conduite à reprendre','2'],['Écarts répétés ou conduite dangereuse','1']] },
         { id:'regul', label:'📊 Régularité', max:4, hint:'Constance sur les 3 essais',
           sous:null,
           table:[['Écart < 2,5s','4'],['Écart 2,5–5s','3'],['Écart 5–7s','2'],['Écart > 7s','1']] }
