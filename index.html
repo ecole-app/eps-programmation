@@ -2030,7 +2030,7 @@ function showPage(id,btn){
   if(id==='cycles')renderCycles();
   if(id==='seances')renderSeances();
   if(id==='aujourdhui')renderAujourdhui();
-  if(id==='baremes'){const f=document.getElementById('baremesFrame');if(f&&!f.getAttribute('src'))f.setAttribute('src','baremes.html');}
+  if(id==='baremes'){const f=document.getElementById('baremesFrame');if(f&&!f.getAttribute('src'))f.setAttribute('src','baremes.html?v='+Date.now());}
 }
 
 // ═══ SIDEBAR ═══
