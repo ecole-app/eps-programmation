@@ -161,8 +161,10 @@ tr:last-child td{border-bottom:none}
 <div class="cycle-bar">
   <span class="cycle-label">Cycle</span>
   <div class="cycle-btns">
-    <button class="cyc-btn c3 active" id="btn-c3" onclick="setCycle('c3')">3 — 6e</button>
-    <button class="cyc-btn c4" id="btn-c4" onclick="setCycle('c4')">4 — 5e / 4e / 3e</button>
+    <button class="cyc-btn c3 active" id="btn-6e" onclick="setClasse('6e')">6e</button>
+    <button class="cyc-btn c4" id="btn-5e" onclick="setClasse('5e')">5e</button>
+    <button class="cyc-btn c4" id="btn-4e" onclick="setClasse('4e')">4e</button>
+    <button class="cyc-btn c4" id="btn-3e" onclick="setClasse('3e')">3e</button>
   </div>
 </div>
 
@@ -188,6 +190,18 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<div id="papier-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:14px;padding:18px;width:100%;max-width:380px;font-family:'DM Sans',sans-serif">
+    <h3 style="margin:0 0 10px;font-size:1rem">📄 Fiche papier</h3>
+    <label style="font-size:.8rem;color:#666">Classe</label>
+    <select id="papier-classe" onchange="papierInfo()" style="width:100%;padding:10px;font-size:1rem;border:1px solid #ccc;border-radius:8px;margin:4px 0 8px"></select>
+    <p id="papier-info" style="margin:0 0 10px;font-size:.8rem;color:#666"></p>
+    <div style="display:flex;gap:8px">
+      <button onclick="document.getElementById('papier-modal').style.display='none'" style="flex:1;padding:10px;border:1px solid #ccc;background:#fff;border-radius:9px;cursor:pointer">Annuler</button>
+      <button onclick="papierImprimer()" style="flex:2;padding:10px;border:none;background:#0e7c7b;color:#fff;border-radius:9px;font-weight:700;cursor:pointer">🖨 Imprimer</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -798,6 +812,15 @@ const SPORTS = [
 // STATE & HELPERS
 // ═══════════════════════════════════════════════════════
 let currentCycle = 'c3';
+let currentClasse = '6e';
+const elevesCl = {'5e':{},'4e':{},'3e':{}};
+function setClasse(cl){
+  if(currentCycle==='c4') SPORTS.forEach(function(sp){ elevesCl[currentClasse][sp.id]=state[sp.id].c4.eleves; });
+  currentClasse = cl;
+  if(cl!=='6e') SPORTS.forEach(function(sp){ state[sp.id].c4.eleves = elevesCl[cl][sp.id] || (elevesCl[cl][sp.id]=[]); renderListe(sp.id,'c4'); });
+  setCycle(cl==='6e'?'c3':'c4');
+  remplirNoms();
+}
 const state = {};
 SPORTS.forEach(s => { state[s.id] = { c3:{ eleves:[], scores:{} }, c4:{ eleves:[], scores:{} } }; });
 let editIdx = null, editSportId = null, editCycle = null;
@@ -833,10 +856,9 @@ function caColor(ca) { return {CA1:'#e85d04',CA2:'#2d6a4f',CA3:'#7209b7',CA4:'#0
 // ═══════════════════════════════════════════════════════
 function setCycle(c) {
   currentCycle = c;
-  document.getElementById('btn-c3').classList.toggle('active', c==='c3');
-  document.getElementById('btn-c4').classList.toggle('active', c==='c4');
+  ['6e','5e','4e','3e'].forEach(function(k){ document.getElementById('btn-'+k).classList.toggle('active', k===currentClasse); });
   document.getElementById('home-sub').textContent =
-    c==='c3' ? '15 APSA · Cycle 3 — 6e' : '15 APSA · Cycle 4 — 5e / 4e / 3e';
+    '15 APSA · ' + (c==='c3' ? 'Cycle 3' : 'Cycle 4') + ' — ' + currentClasse;
   document.querySelectorAll('.cycle-block').forEach(function(el) {
     el.classList.toggle('active', el.dataset.cycle === c);
   });
@@ -847,7 +869,7 @@ function setCycle(c) {
     var sp = SPORTS.find(function(s){ return s.id===sid; });
     if(sp) {
       var sub = document.getElementById(sid+'-sub');
-      if(sub) sub.textContent = sp[c].seances + ' séances · Cycle ' + (c==='c3'?'3 — 6e':'4 — 5e/4e/3e');
+      if(sub) sub.textContent = sp[c].seances + ' séances · ' + currentClasse;
     }
   }
   buildHome();
@@ -1029,8 +1051,9 @@ function buildPanelHTML(s) {
         <div class="card">
           <label class="field-lbl" for="${s.id}-${cyc}-prenom">Prénom de l'élève</label>
           <input class="prenom-input" type="text" id="${s.id}-${cyc}-prenom"
-            placeholder="ex : Karim" autocomplete="off"
+            placeholder="ex : Karim" autocomplete="off" list="${s.id}-${cyc}-noms"
             oninput="checkReady('${s.id}','${cyc}')"/>
+          <datalist id="${s.id}-${cyc}-noms" data-cyc="${cyc}"></datalist>
           ${saisieCriteres}
           <div class="divider"></div>
           <div class="total-row">
@@ -1044,6 +1067,7 @@ function buildPanelHTML(s) {
             <div id="${s.id}-${cyc}-liste"></div>
           </div>
         </div>
+        <button class="btn-export" style="display:${PAPIER_SPORTS.includes(s.id)?'block':'none'};background:var(--teal)" onclick="openFichePapier('${s.id}','${cyc}')">📄 Fiche papier à imprimer</button>
         <button class="btn-export" id="${s.id}-${cyc}-export" onclick="imprimer('${s.id}','${cyc}')">🖨 Imprimer</button>
       </div>
       <div id="${s.id}-${cyc}-criteres" style="display:none">${detailHTML}</div>
@@ -1261,7 +1285,7 @@ function showPanel(id) {
     const sport=SPORTS.find(s=>s.id===id);
     const cd=sport[currentCycle];
     const sub=document.getElementById(id+'-sub');
-    if(sub) sub.textContent=`${cd.seances} séances · Cycle ${currentCycle==='c3'?'3 — 6e':'4 — 5e/4e/3e'}`;
+    if(sub) sub.textContent=`${cd.seances} séances · ${currentClasse}`;
     // Reset tabs to saisie
     document.querySelectorAll(`#panel-${id} .tab`).forEach((t,i)=>t.classList.toggle('active',i===0));
     ['c3','c4'].forEach(cyc=>{
@@ -1307,7 +1331,7 @@ function imprimer(sid, cyc) {
   const sport=SPORTS.find(s=>s.id===sid);
   const eleves=state[sid][cyc].eleves;
   const keys=allKeys(sport[cyc].criteres);
-  const cycLabel=cyc==='c3'?'Cycle 3 — 6e':'Cycle 4 — 5e/4e/3e';
+  const cycLabel=(cyc==='c3'?'Cycle 3':'Cycle 4')+' — '+currentClasse;
   let html=`<html><head><meta charset="UTF-8"><title>${sport.nom} ${cycLabel}</title>
   <style>body{font-family:sans-serif;padding:20px}h2{color:#0e7c7b;margin-bottom:14px;font-size:16px}
   table{width:100%;border-collapse:collapse}th{background:#0e7c7b;color:white;padding:7px 9px;text-align:left;font-size:11px}
@@ -1328,6 +1352,100 @@ function imprimer(sid, cyc) {
   html+=`</table></body></html>`;
   const w=window.open('','_blank');
   w.document.write(html); w.document.close(); w.print();
+}
+
+// ═══════════════════════════════════════════════════════
+// FICHE PAPIER (grille vierge à remplir pendant l'évaluation)
+// ═══════════════════════════════════════════════════════
+// Sports dont les critères ont été vérifiés : seuls ceux-là ont la fiche papier.
+const PAPIER_SPORTS=['basket'];
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function anneeCourante(){
+  try{const d=JSON.parse(localStorage.getItem('eps-v2')||'null');if(d&&d.currentYear)return d.currentYear;}catch(e){}
+  return null;
+}
+function getListeEleves(cl){
+  try{const y=anneeCourante();if(!y)return [];return (JSON.parse(localStorage.getItem('eleves-'+y)||'{}')[cl])||[];}catch(e){return [];}
+}
+const CLASSES_CYC={c3:['6e'],c4:['5e','4e','3e']};
+function openFichePapier(sid, cyc){
+  const m=document.getElementById('papier-modal');
+  m.dataset.sid=sid; m.dataset.cyc=cyc;
+  document.getElementById('papier-classe').innerHTML=CLASSES_CYC[cyc].map(c=>'<option value="'+c+'"'+(c===currentClasse?' selected':'')+'>'+c+'</option>').join('');
+  papierInfo();
+  m.style.display='flex';
+}
+function papierInfo(){
+  const cl=document.getElementById('papier-classe').value, n=getListeEleves(cl).length;
+  document.getElementById('papier-info').textContent = n
+    ? n+' élèves enregistrés en '+cl+' ('+anneeCourante()+')'
+    : 'Aucun élève enregistré en '+cl+' : fiche à remplir à la main. Ajoute-les dans « Élèves » (barre latérale de l’app).';
+}
+function papierImprimer(){
+  const m=document.getElementById('papier-modal');
+  const cl=document.getElementById('papier-classe').value;
+  m.style.display='none';
+  fichePapier(m.dataset.sid,m.dataset.cyc,cl);
+}
+// Suggestions de prénoms (liste « Élèves » de l'app) pour la saisie des notes.
+function remplirNoms(){
+  document.querySelectorAll('datalist[data-cyc]').forEach(dl=>{
+    const cyc=dl.dataset.cyc; let h='';
+    (cyc==='c3'?['6e']:[currentClasse]).forEach(cl=>getListeEleves(cl).forEach(n=>{h+='<option value="'+n.replace(/"/g,'&quot;')+'" label="'+cl+'">';}));
+    dl.innerHTML=h;
+  });
+}
+function fichePapier(sid, cyc, cl) {
+  const sport=SPORTS.find(s=>s.id===sid);
+  const crits=sport[cyc].criteres;
+  const cycLabel=(cyc==='c3'?'Cycle 3':'Cycle 4')+' — '+currentClasse;
+  const clean=l=>l.replace(/^[^\wÀ-ÿ]*/,'');
+  const nums=max=>{let h='';for(let i=0;i<=max;i++)h+='<span class="n">'+i+'</span>';return h;};
+  // Colonnes : un bloc par critère, une sous-colonne par sous-critère
+  let head1='<th rowspan="2" class="nom">Nom Prénom</th>', head2='';
+  const cols=[];
+  crits.forEach(c=>{
+    if(c.sous){
+      head1+='<th colspan="'+c.sous.length+'">'+clean(c.label)+' /'+c.max+'</th>';
+      c.sous.forEach(sc=>{head2+='<th class="sub">'+sc.label+' /'+sc.max+'</th>';cols.push(sc.max);});
+    } else {
+      head1+='<th rowspan="2">'+clean(c.label)+' /'+c.max+'</th>';
+      cols.push(c.max);
+    }
+  });
+  head1+='<th rowspan="2" class="tot">Total /'+maxTotal(crits)+'</th><th rowspan="2" class="rem">Remarques</th>';
+  let rows='';
+  const noms=getListeEleves(cl);
+  for(let i=1;i<=25;i++){
+    rows+='<tr><td class="nom"><span class="idx">'+i+'</span> '+esc(noms[i-1]||'')+'</td>';
+    cols.forEach(m=>{rows+='<td class="sc">'+nums(m)+'</td>';});
+    rows+='<td class="tot"></td><td></td></tr>';
+  }
+  // Rappel des barèmes (2e page)
+  let rappel='';
+  crits.forEach(c=>{
+    rappel+='<div class="rc"><b>'+clean(c.label)+' — /'+c.max+'</b> <i>'+c.hint+'</i><table>';
+    c.table.forEach(r=>{rappel+='<tr><td>'+r[0]+'</td><td class="p">'+r[1]+'</td></tr>';});
+    rappel+='</table></div>';
+  });
+  const html='<html><head><meta charset="UTF-8"><title>Fiche '+sport.nom+' '+cycLabel+'</title><style>'
+   +'@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;margin:0;color:#111}'
+   +'h2{margin:0 0 4px;font-size:14px;color:#0e7c7b}.meta{font-size:11px;margin-bottom:6px}.meta span{display:inline-block;border-bottom:1px solid #333;min-width:90px;margin:0 10px 0 3px}'
+   +'table.g{width:100%;border-collapse:collapse;table-layout:fixed}'
+   +'.g th{background:#0e7c7b;color:#fff;font-size:8px;padding:2px;border:1px solid #fff}.g th.sub{background:#3a9d9c;font-weight:normal}'
+   +'.g td{border:1px solid #888;height:5.6mm;padding:0;font-size:8px}.g td.sc{text-align:center;white-space:nowrap}'
+   +'.n{display:inline-block;width:3.6mm;height:3.6mm;line-height:3.6mm;border:.5px solid #aaa;border-radius:50%;margin:0 .3px;font-size:7px;text-align:center}'
+   +'.g .nom{width:34mm;text-align:left}.g .tot{width:10mm}.g .rem{width:26mm}.idx{color:#999;font-size:7px;padding-left:2px}'
+   +'.rap{page-break-before:always}.rc{margin-bottom:8px;font-size:10px;break-inside:avoid}.rc i{color:#555}'
+   +'.rc table{border-collapse:collapse;margin-top:2px}.rc td{border:1px solid #bbb;padding:2px 6px}.rc td.p{text-align:center;font-weight:700;width:40px}'
+   +'</style></head><body>'
+   +'<h2>'+sport.emoji+' '+sport.nom+' — '+cycLabel+'</h2>'
+   +'<div class="meta">Classe <span>'+(cl||'')+'</span> Date <span></span> Groupe / terrain <span></span> Match <span></span></div>'
+   +'<table class="g"><tr>'+head1+'</tr>'+(head2?'<tr>'+head2+'</tr>':'')+rows+'</table>'
+   +'<div class="rap"><h2>Rappel du barème — '+sport.nom+' '+cycLabel+'</h2>'+rappel+'</div>'
+   +'</body></html>';
+  const w=window.open('','_blank');
+  w.document.write(html); w.document.close(); w.focus(); setTimeout(()=>w.print(),300);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1382,6 +1500,7 @@ function coUpdateBareme(cyc) {
 buildNav();
 buildPanels();
 buildHome();
+remplirNoms();
 </script>
 </body>
 </html>

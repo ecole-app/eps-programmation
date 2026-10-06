@@ -779,6 +779,17 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     </div>
   </div>
 
+  <!-- Élèves -->
+  <div>
+    <button class="s-toggle" onclick="toggleSidebar('eleves')">
+      <span class="s-title" style="margin:0">Élèves</span><span class="s-chev" id="chev-eleves">▼</span>
+    </button>
+    <div class="s-body" id="sb-eleves">
+      <div class="creneau-list" id="elevesList"></div>
+      <button onclick="openElevesModal()" style="margin-top:6px;width:100%;background:var(--teal-g);border:1.5px solid var(--teal);color:var(--teal);border-radius:7px;padding:6px;font-size:0.72rem;font-weight:700;cursor:pointer">👥 Gérer les élèves</button>
+    </div>
+  </div>
+
   <!-- Contraintes -->
   <div>
     <button class="s-toggle" onclick="toggleSidebar('contraintes')">
@@ -1333,7 +1344,7 @@ function loadSaved(){
 // ═══ RENDER ALL ═══
 function renderAll(){
   renderYearButtons();
-  renderCreneauList();
+  renderCreneauList();renderElevesList();
   renderGrid();
   renderHeures();
   renderBilan();
@@ -1957,6 +1968,73 @@ function saveCreneauxModal(){
   showToast('✅ Créneaux sauvegardés !');
 }
 
+
+// ═══ ÉLÈVES (prénoms par classe, par année) ═══
+// Stockage : eleves-{année} = {'6e':['Amine',...], ...}. Lu aussi par l'onglet
+// Barèmes (même origine) pour la saisie et la fiche papier.
+function getEleves(y){
+  try{ return JSON.parse(localStorage.getItem('eleves-'+y)||'{}'); }
+  catch(e){ return {}; }
+}
+function saveEleves(y, obj){
+  localStorage.setItem('eleves-'+y, JSON.stringify(obj));
+  scheduleCloudSync();
+}
+function escHtml(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function renderElevesList(){
+  const list=document.getElementById('elevesList');
+  if(!list)return;
+  const el=getEleves(currentYear);
+  list.innerHTML=classes.map(cl=>{const n=(el[cl]||[]).length;
+    return `<div class="creneau-item"><div class="creneau-classe">${cl}</div><div class="creneau-detail"><span class="ctag">${n?n+' élève'+(n>1?'s':''):'à saisir'}</span></div></div>`;}).join('');
+}
+// Bascule : 6e→5e, 5e→4e, 4e→3e ; les 3e quittent le collège, la 6e est à saisir.
+function previousYearWithEleves(){
+  const years=Object.keys(periodesData).sort();
+  const idx=years.indexOf(currentYear);
+  for(let i=idx-1;i>=0;i--){ const e=getEleves(years[i]); if(classes.some(c=>(e[c]||[]).length)) return years[i]; }
+  return null;
+}
+function elevesBascule(){
+  const py=previousYearWithEleves();
+  if(!py){showToast('Aucune année précédente avec des élèves');return;}
+  const prev=getEleves(py);
+  const filled=classes.some(cl=>(document.getElementById('el_'+cl)?.value||'').trim());
+  if(filled && !confirm('Remplacer les listes actuelles par celles de '+py+' (bascule) ?')) return;
+  const map={'6e':null,'5e':'6e','4e':'5e','3e':'4e'};
+  classes.forEach(cl=>{
+    const src=map[cl];
+    document.getElementById('el_'+cl).value = src ? (prev[src]||[]).join('\n') : '';
+    updateElevesCount(cl);
+  });
+  showToast('Bascule depuis '+py+' : retire les partants, ajoute les nouveaux, puis Sauvegarde');
+}
+function updateElevesCount(cl){
+  const v=(document.getElementById('el_'+cl)?.value||'').split('\n').map(x=>x.trim()).filter(Boolean);
+  const c=document.getElementById('elc_'+cl); if(c) c.textContent=v.length+' élève'+(v.length>1?'s':'');
+}
+function openElevesModal(){
+  const el=getEleves(currentYear);
+  const py=previousYearWithEleves();
+  document.getElementById('elevesModalBody').innerHTML=`<p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Un prénom par ligne — année <strong>${currentYear}</strong>. Utilisés dans les barèmes et les fiches papier.</p>
+  ${py?`<button class="btn btn-outline" style="margin-bottom:10px" onclick="elevesBascule()">⬆️ Bascule depuis ${py} (6e→5e, 5e→4e, 4e→3e)</button>`:''}`+
+  classes.map(cl=>`<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:var(--teal-d);margin-bottom:6px"><span>${cl}</span><span id="elc_${cl}" style="font-weight:600;color:var(--muted)"></span></div>
+      <textarea class="form-input" id="el_${cl}" rows="6" style="width:100%;box-sizing:border-box;resize:vertical" oninput="updateElevesCount('${cl}')" placeholder="Amine&#10;Sarah&#10;...">${escHtml((el[cl]||[]).join('\n'))}</textarea>
+    </div>`).join('');
+  classes.forEach(updateElevesCount);
+  document.getElementById('modalEleves').classList.add('open');hideSidebarBtn();
+}
+function saveElevesModal(){
+  const obj={};
+  classes.forEach(cl=>{
+    obj[cl]=(document.getElementById('el_'+cl)?.value||'').split('\n').map(x=>x.trim()).filter(Boolean);
+  });
+  saveEleves(currentYear,obj);
+  closeModal('modalEleves');renderElevesList();
+  showToast('✅ Élèves sauvegardés !');
+}
+
 // ═══ PARAMETRES CYCLES ═══
 function renderParamsSection(){
   const container=document.getElementById('paramsSection');
@@ -2053,7 +2131,7 @@ function closeModal(id){
   document.getElementById(id)?.classList.remove('open');
   if(id==='modalFiche')ficheTarget=null;
   if(id==='modalConfirm')deleteTarget=null;
-  const anyOpen=['modalAdd','modalFiche','modalConfirm','modalCreneaux'].some(mid=>document.getElementById(mid)?.classList.contains('open'));
+  const anyOpen=['modalAdd','modalFiche','modalConfirm','modalCreneaux','modalEleves'].some(mid=>document.getElementById(mid)?.classList.contains('open'));
   if(!anyOpen)showSidebarBtn();
 }
 function hideSidebarBtn(){document.body.classList.add('modal-open');}
@@ -2148,7 +2226,7 @@ function installPWA(){
 // (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
 // jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
 function isEpsKey(k){
-  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs)-/.test(k);
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves)-/.test(k);
 }
 function exportAllData(){
   const data = {};
@@ -2791,7 +2869,7 @@ function openSeanceFiche(key){
   const {item,p,cl,s,sd,total} = d;
   const saved = JSON.parse(localStorage.getItem('fiche-seance-'+key)||'{}');
   const g=(f,def)=>saved[f]!==undefined&&saved[f]!==''?saved[f]:def;
-  const effectifClasse = getEffectifs(currentYear)[cl];
+  const effectifClasse = getEffectifs(currentYear)[cl] || (getEleves(currentYear)[cl]||[]).length || undefined;
   const effectifDefaut = suggestGroupement(effectifClasse, sd&&sd.effectif) || (sd&&sd.effectif) || '';
   const semLabel = s.partie ? `Semaine ${s.semaine} (séance ${s.partie}/${s.totalPart} de la semaine)` : `Semaine ${s.semaine}`;
   const horaire = getHoraireSeance(cl, s);
@@ -2870,7 +2948,7 @@ pullFromCloudThenInit();
 
 // Close modals on outside click
 document.addEventListener('click',e=>{
-  ['modalAdd','modalFiche','modalConfirm','modalCreneaux'].forEach(id=>{
+  ['modalAdd','modalFiche','modalConfirm','modalCreneaux','modalEleves'].forEach(id=>{
     const el=document.getElementById(id);
     if(el?.classList.contains('open')&&e.target===el)closeModal(id);
   });
@@ -2906,6 +2984,21 @@ document.addEventListener('click',e=>{
   </div>
 </div>
 
+
+<!-- MODALE ÉLÈVES -->
+<div class="modal-overlay" id="modalEleves">
+  <div class="modal modal-lg">
+    <div class="modal-hd">
+      <div class="modal-title">Élèves par classe</div>
+      <button class="icon-btn" onclick="closeModal('modalEleves')">✕</button>
+    </div>
+    <div class="modal-body" id="elevesModalBody"></div>
+    <div class="modal-ft">
+      <button class="btn btn-outline" onclick="closeModal('modalEleves')">Annuler</button>
+      <button class="btn btn-teal" onclick="saveElevesModal()">Sauvegarder</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODALE CRENEAUX -->
 <div class="modal-overlay" id="modalCreneaux">
