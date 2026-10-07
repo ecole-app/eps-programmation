@@ -1201,7 +1201,7 @@ function valider(sid, cyc) {
   const scoresCopy={...sc};
   const total=computeTotal(sport[cyc].criteres, scoresCopy);
   const mxT=maxTotal(sport[cyc].criteres);
-  state[sid][cyc].eleves.unshift({prenom, scores:scoresCopy, total, max:mxT});
+  state[sid][cyc].eleves.push({prenom, scores:scoresCopy, total, max:mxT});
   renderListe(sid, cyc);
   saveNotes();
   showToast(prenom+' enregistré ✓');
