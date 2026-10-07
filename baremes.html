@@ -819,10 +819,52 @@ const SPORTS = [
 let currentCycle = 'c3';
 let currentClasse = '6e';
 const elevesCl = {'5e':{},'4e':{},'3e':{}};
+// ── Sauvegarde des notes (localStorage 'notes-<année>', synchronisée avec le cloud par l'app) ──
+function notesKey(){ var y=anneeCourante(); return y ? 'notes-'+y : null; }
+function saveNotes(){
+  try{
+    var k=notesKey(); if(!k) return;
+    var out={};
+    SPORTS.forEach(function(sp){
+      var o={};
+      if(state[sp.id].c3.eleves.length) o['6e']=state[sp.id].c3.eleves;
+      ['5e','4e','3e'].forEach(function(cl){
+        var arr = (currentClasse===cl) ? state[sp.id].c4.eleves : elevesCl[cl][sp.id];
+        if(arr && arr.length) o[cl]=arr;
+      });
+      if(Object.keys(o).length) out[sp.id]=o;
+    });
+    localStorage.setItem(k, JSON.stringify(out));
+    if(window.parent && window.parent!==window && typeof window.parent.scheduleCloudSync==='function') window.parent.scheduleCloudSync();
+  }catch(e){}
+}
+function loadNotes(){
+  try{
+    var k=notesKey(); if(!k) return;
+    var d=JSON.parse(localStorage.getItem(k)||'{}');
+    SPORTS.forEach(function(sp){
+      var o=d[sp.id]||{};
+      state[sp.id].c3.eleves = o['6e']||[];
+      ['5e','4e','3e'].forEach(function(cl){ elevesCl[cl][sp.id]=o[cl]||[]; });
+    });
+  }catch(e){}
+}
+// Ouvre le barème d'un sport pour une classe (appelé depuis l'app ou via #sport=…&cl=…)
+function ouvrirBareme(sid, cl){
+  if(!SPORTS.some(function(x){return x.id===sid;})) return;
+  if(['6e','5e','4e','3e'].indexOf(cl)<0) cl=currentClasse;
+  setClasse(cl);
+  showPanel(sid);
+}
+window.addEventListener('message', function(e){
+  if(e.origin!==location.origin) return;
+  var d=e.data; if(d && d.type==='openBareme') ouvrirBareme(d.sid, d.cl);
+});
 function setClasse(cl){
   if(currentCycle==='c4') SPORTS.forEach(function(sp){ elevesCl[currentClasse][sp.id]=state[sp.id].c4.eleves; });
   currentClasse = cl;
   if(cl!=='6e') SPORTS.forEach(function(sp){ state[sp.id].c4.eleves = elevesCl[cl][sp.id] || (elevesCl[cl][sp.id]=[]); renderListe(sp.id,'c4'); });
+  else SPORTS.forEach(function(sp){ renderListe(sp.id,'c3'); });
   setCycle(cl==='6e'?'c3':'c4');
   remplirNoms();
 }
@@ -1161,6 +1203,7 @@ function valider(sid, cyc) {
   const mxT=maxTotal(sport[cyc].criteres);
   state[sid][cyc].eleves.unshift({prenom, scores:scoresCopy, total, max:mxT});
   renderListe(sid, cyc);
+  saveNotes();
   showToast(prenom+' enregistré ✓');
   resetSport(sid, cyc);
   refreshHomeCard(sid);
@@ -1209,6 +1252,7 @@ function supprimerEleve(sid, cyc, idx) {
   const prenom=state[sid][cyc].eleves[idx].prenom;
   state[sid][cyc].eleves.splice(idx,1);
   renderListe(sid,cyc);
+  saveNotes();
   refreshHomeCard(sid);
   showToast(prenom+' supprimé');
 }
@@ -1269,6 +1313,7 @@ function saveEdit(){
   Object.assign(e.scores, modalState);
   e.total=computeTotal(sport[editCycle].criteres, e.scores);
   renderListe(editSportId, editCycle);
+  saveNotes();
   showToast(e.prenom+' mis à jour');
   closeModal();
 }
@@ -1507,8 +1552,14 @@ function coUpdateBareme(cyc) {
 
 buildNav();
 buildPanels();
+loadNotes();
+SPORTS.forEach(function(sp){ renderListe(sp.id,'c3'); });
 buildHome();
 remplirNoms();
+(function(){
+  var m=location.hash.match(/sport=([\w-]+)(?:&cl=(\w+))?/);
+  if(m) ouvrirBareme(m[1], m[2]||'6e');
+})();
 </script>
 </body>
 </html>
