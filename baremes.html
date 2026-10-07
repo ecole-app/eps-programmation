@@ -812,6 +812,32 @@ const SPORTS = [
     }
   }
 ];
+// ── TEMPORAIRE (oct. 2026) : CO 4e, évaluation 45 min (balises + heure de découverte notée).
+//    Placé avant la CO habituelle, qui reste inchangée juste en dessous.
+//    Pour le retirer : supprimer ce bloc.
+(function(){
+  var co=SPORTS.find(function(x){return x.id==='course-orientation';});
+  SPORTS.splice(SPORTS.indexOf(co),0,{
+    id:'co-temp', nom:"CO temporaire · 45 min", emoji:'⏱️', ca:'CA2', famille:'Plein air',
+    c3:co.c3,
+    c4:{
+      seances:'1 (temporaire)',
+      ca_texte:"Barème temporaire : 45 min pour trouver un maximum de balises, en notant l'heure de découverte de chacune.",
+      criteres:[
+        { id:'bal', label:'📍 Balises trouvées', max:12, hint:'12 × (balises trouvées ÷ balises posées), arrondi — une balise sans heure notée ne compte pas',
+          sous:null,
+          table:[['≥ 90 % des balises','11–12'],['70–89 %','9–10'],['50–69 %','6–8'],['30–49 %','4–5'],['10–29 %','2–3'],['< 10 %','0–1']] },
+        { id:'tps', label:'⏱ Respect du temps', max:4, hint:'Retour dans les 45 min',
+          sous:null,
+          table:[['Retour dans les 45 min','4'],['Jusqu\'à 2 min de retard','3'],['De 2 à 5 min de retard','2'],['Plus de 5 min ou pas rentré','0']] },
+        { id:'fia', label:'📝 Fiabilité des heures notées', max:4, hint:'Heure de découverte notée pour chaque balise',
+          sous:null,
+          table:[['Toutes les heures notées et cohérentes','4'],['Quelques oublis','3'],['La moitié notée','2'],['Presque rien noté','1'],['Rien','0']] }
+      ]
+    }
+  });
+})();
+
 
 // ═══════════════════════════════════════════════════════
 // STATE & HELPERS
