@@ -2108,6 +2108,7 @@ function ouvrirBareme(sportId, cl){
   if(!f) return;
   const dejaCharge=!!f.getAttribute('src');
   if(!dejaCharge){
+    f.addEventListener('load',()=>setTimeout(scheduleCloudSync,1500),{once:true});
     f.setAttribute('src','baremes.html?v='+Date.now()+'#sport='+encodeURIComponent(sportId)+'&cl='+encodeURIComponent(cl));
   }
   showPage('baremes',btn);
@@ -2130,7 +2131,7 @@ function showPage(id,btn){
   if(id==='cycles')renderCycles();
   if(id==='seances')renderSeances();
   if(id==='aujourdhui')renderAujourdhui();
-  if(id==='baremes'){const f=document.getElementById('baremesFrame');if(f&&!f.getAttribute('src'))f.setAttribute('src','baremes.html?v='+Date.now());}
+  if(id==='baremes'){const f=document.getElementById('baremesFrame');if(f&&!f.getAttribute('src')){f.addEventListener('load',()=>setTimeout(scheduleCloudSync,1500),{once:true});f.setAttribute('src','baremes.html?v='+Date.now());}}
 }
 
 // ═══ SIDEBAR ═══
