@@ -88,9 +88,9 @@ hr{border:none;border-top:1px solid var(--b);margin:12px 0}
 </div>
 <div id="api-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:12px;padding:24px;width:90%;max-width:400px">
-    <h2 style="font-size:16px;font-weight:600;margin-bottom:8px;color:#145f55">🔑 Clé API Anthropic</h2>
-    <p style="font-size:13px;color:#5a7570;margin-bottom:14px;line-height:1.5">Saisis ta clé API Anthropic (commence par sk-ant-).</p>
-    <input type="password" id="api-key-input" placeholder="sk-ant-api03-…" style="margin-bottom:10px">
+    <h2 style="font-size:16px;font-weight:600;margin-bottom:8px;color:#145f55">🔑 Clé API</h2>
+    <p style="font-size:13px;color:#5a7570;margin-bottom:14px;line-height:1.5">Clé OpenRouter gratuite (sk-or-…) ou clé Anthropic (sk-ant-…). Elle reste uniquement dans ton navigateur.</p>
+    <input type="password" id="api-key-input" placeholder="sk-or-v1-… (gratuite)" style="margin-bottom:10px">
     <div id="api-err" style="color:#A32D2D;font-size:12px;display:none;margin-bottom:8px">Clé invalide.</div>
     <div style="display:flex;gap:8px">
       <button type="button" class="a p" style="flex:1" onclick="saveApiKey()">Enregistrer</button>
@@ -681,12 +681,38 @@ async function genererIA(){
   document.getElementById("rl").textContent=prenomCur?"Phrase pour "+prenomCur:"Phrase générée";
   document.getElementById("rt").value="Génération en cours…";document.getElementById("char-count").textContent="…";
   try{
-    var resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:300,messages:[{role:"user",content:prompt}]})});
-    if(!resp.ok){var err=await resp.json();if(err.error&&err.error.type==="authentication_error"){openApiModal();return;}throw new Error((err.error&&err.error.message)||resp.status);}
-    var data=await resp.json();phrase=data.content[0].text.trim();
+    if(apiKey.indexOf("sk-or-")===0){
+      phrase=await genererOpenRouter(apiKey,prompt);
+    } else {
+      var resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:300,messages:[{role:"user",content:prompt}]})});
+      if(!resp.ok){var err=await resp.json();if(err.error&&err.error.type==="authentication_error"){openApiModal();return;}throw new Error((err.error&&err.error.message)||resp.status);}
+      var data=await resp.json();phrase=data.content[0].text.trim();
+    }
   }catch(e){phrase="Erreur : "+e.message;}
   document.getElementById("rt").value=phrase;document.getElementById("char-count").textContent=phrase.length;
   document.getElementById("rt").oninput=function(){phrase=this.value;document.getElementById("char-count").textContent=this.value.length;};
+}
+// OpenRouter (gratuit) : on prend dynamiquement les modèles ":free" disponibles et on essaie les meilleurs pour le français.
+async function genererOpenRouter(apiKey,prompt){
+  var pref=[/gemini/i,/llama-3\.3/i,/mistral/i,/qwen/i,/deepseek/i,/gemma/i];
+  var ids=[];
+  try{
+    var r=await fetch("https://openrouter.ai/api/v1/models");var d=await r.json();
+    ids=d.data.map(function(m){return m.id;}).filter(function(id){return /:free$/.test(id);});
+  }catch(e){}
+  ids.sort(function(a,b){var ra=pref.findIndex(function(p){return p.test(a);}),rb=pref.findIndex(function(p){return p.test(b);});return (ra<0?99:ra)-(rb<0?99:rb);});
+  if(!ids.length) ids=["google/gemini-2.0-flash-exp:free","meta-llama/llama-3.3-70b-instruct:free","mistralai/mistral-small-3.2-24b-instruct:free"];
+  var lastErr="aucun modèle gratuit disponible";
+  for(var i=0;i<Math.min(ids.length,5);i++){
+    try{
+      var resp=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey,"HTTP-Referer":location.origin,"X-Title":"Appreciations College"},body:JSON.stringify({model:ids[i],max_tokens:300,messages:[{role:"user",content:prompt}]})});
+      if(resp.status===401){openApiModal();throw new Error("clé OpenRouter refusée");}
+      if(!resp.ok){var e2=await resp.json().catch(function(){return {};});lastErr=(e2.error&&e2.error.message)||resp.status;continue;}
+      var data=await resp.json();var txt=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+      if(txt&&txt.trim()) return txt.trim().replace(/^["«\s]+|["»\s]+$/g,"");
+    }catch(e){ if(/refusée/.test(e.message)) throw e; lastErr=e.message; }
+  }
+  throw new Error(lastErr);
 }
 function regenererIA(){ri++;genererIA();}
 
