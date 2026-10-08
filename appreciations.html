@@ -92,7 +92,7 @@ hr{border:none;border-top:1px solid var(--b);margin:12px 0}
 <!-- ═══ GÉNÉRER ═══ -->
 <div id="gen" class="sec on"><div class="card">
   <div class="g2">
-    <div><label>Prénom</label><input type="text" id="prenom" placeholder="Ex: Lucas"></div>
+    <div><label>Prénom</label><input type="text" id="prenom" placeholder="Ex: Lucas" list="prenoms-list" autocomplete="off"><datalist id="prenoms-list"></datalist></div>
     <div><label>Classe</label><select id="classe" onchange="onClasse()"><option>6e</option><option>5e</option><option>4e</option><option>3e</option></select></div>
   </div>
   <div class="g2">
@@ -428,7 +428,17 @@ function getConclu(isGood,ri,tonOverride){
 }
 
 // ── UI ──
-function onClasse(){var cl=document.getElementById("classe").value;var liste=cl==="6e"?M6:M5;var s=document.getElementById("matiere");var cur=s.value;s.innerHTML=liste.map(function(m){return "<option"+(m===cur?" selected":"")+">"+m+"</option>";}).join("");onMatiere();}
+// Prénoms enregistrés dans l'app EPS (section « Élèves »), proposés selon la classe choisie.
+function elevesDeClasse(cl){
+  try{var d=JSON.parse(localStorage.getItem("eps-v2")||"null");var y=d&&d.currentYear;if(!y)return [];
+    return (JSON.parse(localStorage.getItem("eleves-"+y)||"{}")[cl])||[];}catch(e){return [];}
+}
+function majPrenoms(){
+  var dl=document.getElementById("prenoms-list");if(!dl)return;
+  var cl=document.getElementById("classe").value;
+  dl.innerHTML=elevesDeClasse(cl).map(function(n){return '<option value="'+String(n).replace(/"/g,"&quot;")+'">';}).join("");
+}
+function onClasse(){majPrenoms();var cl=document.getElementById("classe").value;var liste=cl==="6e"?M6:M5;var s=document.getElementById("matiere");var cur=s.value;s.innerHTML=liste.map(function(m){return "<option"+(m===cur?" selected":"")+">"+m+"</option>";}).join("");onMatiere();}
 function onMatiere(){
   var mat=document.getElementById("matiere").value;matCur=mat;
   var data=MAT[mat]||MAT["EPS"];
@@ -741,7 +751,7 @@ function setTab(id){
   if(b1) b1.addEventListener("click",function(e){e.stopPropagation();setTone(map[x]);});
   if(b2) b2.addEventListener("click",function(e){e.stopPropagation();setPPTone(map[x]);});
 });
-onMatiere();badge();renderPPList();
+onMatiere();badge();majPrenoms();renderPPList();
 </script>
 </body>
 </html>
