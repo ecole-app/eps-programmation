@@ -696,7 +696,7 @@ const SPORTS = [
   },
 
   // ── RENFO ──────────────────────────────────────────
-  { id:'renfo', nom:'Renfo musculaire', emoji:'💪', ca:'CA1', famille:'Gym / Renfo',
+  { id:'renfo', nom:'Renfo musculaire', emoji:'💪', ca:'CA1', famille:'Gym / Renfo', classes:['3e'],
     c3:{
       seances:'10',
       ca_texte:"Réaliser des exercices au poids de corps en respectant les consignes de posture. Connaître les groupes musculaires sollicités.",
@@ -895,6 +895,7 @@ function setClasse(cl){
   if(cl!=='6e') SPORTS.forEach(function(sp){ state[sp.id].c4.eleves = elevesCl[cl][sp.id] || (elevesCl[cl][sp.id]=[]); renderListe(sp.id,'c4'); });
   else SPORTS.forEach(function(sp){ renderListe(sp.id,'c3'); });
   setCycle(cl==='6e'?'c3':'c4');
+  majNav();
   remplirNoms();
 }
 const state = {};
@@ -954,6 +955,16 @@ function setCycle(c) {
 // ═══════════════════════════════════════════════════════
 // BUILD NAV
 // ═══════════════════════════════════════════════════════
+// Un sport peut être limité à certaines classes (propriété `classes`).
+function sportVisible(s){ return !s.classes || s.classes.indexOf(currentClasse)>=0; }
+function majNav(){
+  SPORTS.forEach(function(s){ var b=document.getElementById('nav-'+s.id); if(b) b.style.display = sportVisible(s)?'':'none'; });
+  var ap=document.querySelector('.sport-panel.active');
+  if(ap && ap.id!=='panel-home'){
+    var sp=SPORTS.find(function(x){return 'panel-'+x.id===ap.id;});
+    if(sp && !sportVisible(sp)) showPanel('home');
+  }
+}
 function buildNav() {
   const nav = document.getElementById('sportNav');
   const h = document.createElement('button');
@@ -973,7 +984,7 @@ function buildNav() {
 // ═══════════════════════════════════════════════════════
 function buildHome() {
   const familles = {};
-  SPORTS.forEach(s => { if(!familles[s.famille]) familles[s.famille]=[]; familles[s.famille].push(s); });
+  SPORTS.forEach(s => { if(!sportVisible(s)) return; if(!familles[s.famille]) familles[s.famille]=[]; familles[s.famille].push(s); });
   const cnt = document.getElementById('homeContent');
   cnt.innerHTML='';
   Object.entries(familles).forEach(([fam,sports]) => {
@@ -1626,6 +1637,7 @@ loadNotes();
   }catch(e){}
 })();
 SPORTS.forEach(function(sp){ renderListe(sp.id,'c3'); });
+majNav();
 buildHome();
 remplirNoms();
 (function(){
