@@ -2002,8 +2002,8 @@ function seedEleves5e(){
     if(localStorage.getItem('seed-5e-v1')) return;
     const y=currentYear; const el=getEleves(y);
     if((el['5e']||[]).length){ localStorage.setItem('seed-5e-v1','1'); return; }
-    const F='Romaissa,Yasmine,Neyla,Jennah,Khadija,Hanae,Rayhana,Sarah JC,Amina,Daina,Sara,Jouwayriah,Zineb,Soumeya'.split(',');
-    const M='Zitouni,Rayane,Fahed,Naim,Youssef,Youssouf,Mohamed jaber'.split(',');
+    const F='Romaissa,Yasmine,Rayane,Neyla,Jennah,Khadija,Hanae,Rayhana,Sarah JC,Amina,Daina,Sara,Jouwayriah,Zineb,Soumeya'.split(',');
+    const M='Zitouni,Fahed,Naim,Youssef,Youssouf,Mohamed jaber'.split(',');
     const ordre=['Romaissa','Yasmine','Zitouni','Neyla','Jennah','Khadija','Rayane','Fahed','Hanae','Naim','Rayhana','Youssef','Sarah JC','Amina','Youssouf','Daina','Sara','Jouwayriah','Zineb','Mohamed jaber','Soumeya'];
     el['5e']=ordre; saveEleves(y,el);
     const g=getGenres(y); g['5e']=g['5e']||{};
