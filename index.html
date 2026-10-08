@@ -1992,6 +1992,26 @@ function saveEleves(y, obj){
   localStorage.setItem('eleves-'+y, JSON.stringify(obj));
   scheduleCloudSync();
 }
+function getGenres(y){
+  try{ return JSON.parse(localStorage.getItem('genres-'+y)||'{}'); }
+  catch(e){ return {}; }
+}
+// Pré-remplissage unique de la liste de 5e (basket) avec le genre ; ne touche rien si la 5e est déjà remplie.
+function seedEleves5e(){
+  try{
+    if(localStorage.getItem('seed-5e-v1')) return;
+    const y=currentYear; const el=getEleves(y);
+    if((el['5e']||[]).length){ localStorage.setItem('seed-5e-v1','1'); return; }
+    const F='Romaissa,Yasmine,Neyla,Jennah,Khadija,Hanae,Rayhana,Sarah JC,Amina,Daina,Sara,Jouwayriah,Zineb,Soumeya'.split(',');
+    const M='Zitouni,Rayane,Fahed,Naim,Youssef,Youssouf,Mohamed jaber'.split(',');
+    const ordre=['Romaissa','Yasmine','Zitouni','Neyla','Jennah','Khadija','Rayane','Fahed','Hanae','Naim','Rayhana','Youssef','Sarah JC','Amina','Youssouf','Daina','Sara','Jouwayriah','Zineb','Mohamed jaber','Soumeya'];
+    el['5e']=ordre; saveEleves(y,el);
+    const g=getGenres(y); g['5e']=g['5e']||{};
+    ordre.forEach(n=>{ g['5e'][n]=F.includes(n)?'F':'M'; });
+    localStorage.setItem('genres-'+y,JSON.stringify(g)); scheduleCloudSync();
+    localStorage.setItem('seed-5e-v1','1');
+  }catch(e){}
+}
 function escHtml(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 function renderElevesList(){
   const list=document.getElementById('elevesList');
@@ -2026,22 +2046,29 @@ function updateElevesCount(cl){
   const c=document.getElementById('elc_'+cl); if(c) c.textContent=v.length+' élève'+(v.length>1?'s':'');
 }
 function openElevesModal(){
-  const el=getEleves(currentYear);
+  const el=getEleves(currentYear); const gen=getGenres(currentYear);
   const py=previousYearWithEleves();
-  document.getElementById('elevesModalBody').innerHTML=`<p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Un prénom par ligne — année <strong>${currentYear}</strong>. Utilisés dans les barèmes et les fiches papier.</p>
+  document.getElementById('elevesModalBody').innerHTML=`<p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">Un prénom par ligne, avec le genre après une virgule (<strong>, F</strong> fille ou <strong>, G</strong> garçon) — année <strong>${currentYear}</strong>. Utilisés dans les barèmes et les fiches papier.</p>
   ${py?`<button class="btn btn-outline" style="margin-bottom:10px" onclick="elevesBascule()">⬆️ Bascule depuis ${py} (6e→5e, 5e→4e, 4e→3e)</button>`:''}`+
   classes.map(cl=>`<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:var(--teal-d);margin-bottom:6px"><span>${cl}</span><span id="elc_${cl}" style="font-weight:600;color:var(--muted)"></span></div>
-      <textarea class="form-input" id="el_${cl}" rows="6" style="width:100%;box-sizing:border-box;resize:vertical" oninput="updateElevesCount('${cl}')" placeholder="Amine&#10;Sarah&#10;...">${escHtml((el[cl]||[]).join('\n'))}</textarea>
+      <textarea class="form-input" id="el_${cl}" rows="6" style="width:100%;box-sizing:border-box;resize:vertical" oninput="updateElevesCount('${cl}')" placeholder="Amine, G&#10;Sarah, F&#10;...">${escHtml((el[cl]||[]).map(n=>{const g=(gen[cl]||{})[n];return g?n+', '+g:n;}).join('\n'))}</textarea>
     </div>`).join('');
   classes.forEach(updateElevesCount);
   document.getElementById('modalEleves').classList.add('open');hideSidebarBtn();
 }
 function saveElevesModal(){
-  const obj={};
+  const obj={}, gen={};
   classes.forEach(cl=>{
-    obj[cl]=(document.getElementById('el_'+cl)?.value||'').split('\n').map(x=>x.trim()).filter(Boolean);
+    obj[cl]=[]; gen[cl]={};
+    (document.getElementById('el_'+cl)?.value||'').split('\n').map(x=>x.trim()).filter(Boolean).forEach(l=>{
+      const m=l.match(/^(.*?)\s*[,;]\s*([FfGgMm])$/);
+      const nom=m?m[1].trim():l; if(!nom) return;
+      obj[cl].push(nom);
+      if(m) gen[cl][nom]=/[Ff]/.test(m[2])?'F':'M';
+    });
   });
+  localStorage.setItem('genres-'+currentYear,JSON.stringify(gen));
   saveEleves(currentYear,obj);
   closeModal('modalEleves');renderElevesList();
   showToast('✅ Élèves sauvegardés !');
@@ -2268,7 +2295,7 @@ function installPWA(){
 // (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
 // jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
 function isEpsKey(k){
-  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos)-/.test(k);
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres)-/.test(k);
 }
 function exportAllData(){
   const data = {};
@@ -3059,6 +3086,7 @@ function printSeanceFiche(){
 // ═══ INIT ═══
 function initApp(){
   loadSaved();
+  seedEleves5e();
   renderContraintes();
   filterSports();
   renderAll();
