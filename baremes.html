@@ -1579,6 +1579,26 @@ function coUpdateBareme(cyc) {
 buildNav();
 buildPanels();
 loadNotes();
+// Import de notes via #import=<base64url(JSON)> : {sport, cl, eleves:[{prenom, scores}]} — fusionné sans doublons.
+(function(){
+  var m=location.hash.match(/import=([\w-]+)/); if(!m) return;
+  try{
+    var b64=m[1].replace(/-/g,'+').replace(/_/g,'/'); while(b64.length%4) b64+='=';
+    var d=JSON.parse(decodeURIComponent(escape(atob(b64))));
+    var sp=SPORTS.find(function(x){return x.id===d.sport;}); if(!sp) return;
+    var cyc = d.cl==='6e' ? 'c3' : 'c4';
+    var arr = cyc==='c3' ? state[sp.id].c3.eleves : (elevesCl[d.cl][sp.id] || (elevesCl[d.cl][sp.id]=[]));
+    var n=0;
+    d.eleves.forEach(function(e){
+      if(arr.some(function(x){return x.prenom===e.prenom;})) return;
+      arr.push({prenom:e.prenom, scores:e.scores, total:computeTotal(sp[cyc].criteres,e.scores), max:maxTotal(sp[cyc].criteres)});
+      n++;
+    });
+    saveNotes();
+    history.replaceState(null,'',location.pathname+'#sport='+d.sport+'&cl='+d.cl);
+    setTimeout(function(){ showToast(n+' élèves importés ✓'); },400);
+  }catch(e){}
+})();
 SPORTS.forEach(function(sp){ renderListe(sp.id,'c3'); });
 buildHome();
 remplirNoms();
