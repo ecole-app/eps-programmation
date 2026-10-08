@@ -2012,6 +2012,26 @@ function seedEleves5e(){
     localStorage.setItem('seed-5e-v1','1');
   }catch(e){}
 }
+// Genre pré-rempli (une seule fois) pour les listes déjà saisies ; ne remplace jamais un genre déjà défini.
+function seedGenres(){
+  try{
+    if(localStorage.getItem('seed-genres-v1')) return;
+    const y=currentYear; const el=getEleves(y); const g=getGenres(y);
+    const T={
+      '6e':{F:'Yousra,Zayneb,Maryam,Soundous,Mariya,Miray,Hawa,Tasnim,Lina,Assya',M:'Zakarya,Aaroun,Youssef,Idriss,Marwane,Souhail,Haroune,Imrane,Nahyl,Salman,Jihad'},
+      '4e':{F:'Nousseyba,Asmaa,Assia,Insaaf,Mina,Serine,Lyna,Yasmin,Besmala',M:'Seyfdine,Adel,Bilel B,Ibrahim,Hamza,Bilel M,Amir,Souheyl'},
+      '3e':{F:'Fatima,Oumaima,Mariam,Amina,Oumaya,Mina',M:'Younes,Yassin,Sidi,Abdeljalil'}
+    };
+    Object.keys(T).forEach(cl=>{
+      g[cl]=g[cl]||{};
+      ['F','M'].forEach(sx=>T[cl][sx].split(',').forEach(n=>{
+        if((el[cl]||[]).includes(n) && !g[cl][n]) g[cl][n]=sx;
+      }));
+    });
+    localStorage.setItem('genres-'+y,JSON.stringify(g)); scheduleCloudSync();
+    localStorage.setItem('seed-genres-v1','1');
+  }catch(e){}
+}
 function escHtml(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 function renderElevesList(){
   const list=document.getElementById('elevesList');
@@ -3087,6 +3107,7 @@ function printSeanceFiche(){
 function initApp(){
   loadSaved();
   seedEleves5e();
+  seedGenres();
   renderContraintes();
   filterSports();
   renderAll();
