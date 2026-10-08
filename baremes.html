@@ -91,6 +91,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-valider{width:100%;padding:13px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:1.5px;cursor:pointer;transition:background .2s,transform .1s}
 .btn-valider:hover{background:var(--teal-d)}
 .btn-valider:active{transform:scale(.98)}
+.btn-statut{flex:1;padding:9px;background:#fff;color:var(--muted);border:1.5px solid var(--gray);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer}
+.btn-statut:hover:not(:disabled){border-color:var(--teal);color:var(--teal)}
+.btn-statut:disabled{opacity:.45;cursor:not-allowed}
 .btn-valider:disabled{background:var(--gray);color:var(--muted);cursor:not-allowed}
 
 /* LISTE */
@@ -1135,6 +1138,10 @@ function buildPanelHTML(s) {
           </div>
           <button class="btn-valider" id="${s.id}-${cyc}-valider" disabled
             onclick="valider('${s.id}','${cyc}')">✓ Valider et passer au suivant</button>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn-statut" id="${s.id}-${cyc}-abs" disabled onclick="marquerStatut('${s.id}','${cyc}','abs')">🚫 Absent(e)</button>
+            <button class="btn-statut" id="${s.id}-${cyc}-nn" disabled onclick="marquerStatut('${s.id}','${cyc}','nn')">➖ Non noté(e)</button>
+          </div>
           <div id="${s.id}-${cyc}-liste-section" style="display:none">
             <p class="liste-title">Élèves saisis — <span id="${s.id}-${cyc}-nb">0</span></p>
             <div id="${s.id}-${cyc}-liste"></div>
@@ -1215,6 +1222,19 @@ function checkReady(sid, cyc) {
   });
   const btn=document.getElementById(`${sid}-${cyc}-valider`);
   if(btn) btn.disabled=!(prenomOk&&allFilled);
+  ['abs','nn'].forEach(function(k){ var b=document.getElementById(sid+'-'+cyc+'-'+k); if(b) b.disabled=!prenomOk; });
+}
+var STATUT_LBL={abs:'ABS',nn:'NN'};
+function marquerStatut(sid, cyc, statut){
+  var sport=SPORTS.find(function(x){return x.id===sid;});
+  var prenom=document.getElementById(sid+'-'+cyc+'-prenom').value.trim();
+  if(!prenom) return;
+  state[sid][cyc].eleves.push({prenom:prenom, scores:{}, total:null, max:maxTotal(sport[cyc].criteres), statut:statut});
+  renderListe(sid, cyc);
+  saveNotes();
+  showToast(prenom+(statut==='abs'?' marqué(e) absent(e)':' marqué(e) non noté(e)'));
+  resetSport(sid, cyc);
+  refreshHomeCard(sid);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1257,15 +1277,16 @@ function renderListe(sid, cyc) {
     }).join(' · ');
     const item=document.createElement('div');
     item.className='eleve-item';
+    const stLbl=e.statut?STATUT_LBL[e.statut]:null;
     item.innerHTML=`
       <div style="flex:1;min-width:0">
         <div class="eleve-prenom">${e.prenom}</div>
-        <div class="eleve-detail">${detail}</div>
+        <div class="eleve-detail">${stLbl?(e.statut==='abs'?'Absent(e)':'Non noté(e)'):detail}</div>
       </div>
       <div style="display:flex;align-items:center">
         <button class="btn-ic btn-edit" onclick="openModal('${sid}','${cyc}',${i})">✏️</button>
         <button class="btn-ic btn-del" onclick="supprimerEleve('${sid}','${cyc}',${i})">🗑</button>
-        <div class="eleve-note" style="margin-left:6px">${e.total}<span>/${e.max}</span></div>
+        <div class="eleve-note" style="margin-left:6px">${stLbl?stLbl:e.total+'<span>/'+e.max+'</span>'}</div>
       </div>`;
     liste.appendChild(item);
   });
@@ -1300,6 +1321,7 @@ function resetSport(sid, cyc) {
   const inp=document.getElementById(`${sid}-${cyc}-prenom`);
   if(inp){inp.value='';inp.focus();}
   document.getElementById(`${sid}-${cyc}-valider`).disabled=true;
+  ['abs','nn'].forEach(function(k){ var b=document.getElementById(sid+'-'+cyc+'-'+k); if(b) b.disabled=true; });
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1309,6 +1331,7 @@ function openModal(sid, cyc, idx) {
   const sport=SPORTS.find(s=>s.id===sid);
   const e=state[sid][cyc].eleves[idx];
   editIdx=idx; editSportId=sid; editCycle=cyc;
+  Object.keys(modalState).forEach(function(k){ delete modalState[k]; });
   Object.assign(modalState, e.scores);
   document.getElementById('modal-titre').textContent='Modifier — '+e.prenom;
   const mc=document.getElementById('modal-criteres'); mc.innerHTML='';
@@ -1338,6 +1361,7 @@ function saveEdit(){
   const e=state[editSportId][editCycle].eleves[editIdx];
   Object.assign(e.scores, modalState);
   e.total=computeTotal(sport[editCycle].criteres, e.scores);
+  delete e.statut;
   renderListe(editSportId, editCycle);
   saveNotes();
   showToast(e.prenom+' mis à jour');
@@ -1425,8 +1449,8 @@ function imprimer(sid, cyc) {
   html+=`<th>Total /${maxTotal(sport[cyc].criteres)}</th></tr>`;
   eleves.forEach(e=>{
     html+=`<tr><td>${e.prenom}</td>`;
-    keys.forEach(k=>{ html+=`<td>${e.scores[k.key]!==null&&e.scores[k.key]!==undefined?e.scores[k.key]:'—'}</td>`; });
-    html+=`<td class="t">${e.total}</td></tr>`;
+    keys.forEach(k=>{ html+=`<td>${e.statut?'':(e.scores[k.key]!==null&&e.scores[k.key]!==undefined?e.scores[k.key]:'—')}</td>`; });
+    html+=`<td class="t">${e.statut?STATUT_LBL[e.statut]:e.total}</td></tr>`;
   });
   html+=`</table></body></html>`;
   const w=window.open('','_blank');
