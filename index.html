@@ -446,7 +446,8 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
   .alert-panel { width: calc(100vw - 24px); right: 12px; left: 12px; top: auto; bottom: 70px; }
 
   /* ── Sidebar toggle ── */
-  .sidebar-toggle-btn { display: flex !important; }
+  .sidebar-toggle-btn { display: flex !important; z-index: 100000 !important; top: 7px !important; bottom: auto !important; left: 8px !important; width: 44px !important; height: 44px !important; font-size: 1.2rem !important; box-shadow: none !important; background: rgba(255,255,255,0.16); }
+  header { padding-left: 60px !important; }
 }
 
 @media (max-width: 768px), (max-device-width: 768px) {
@@ -468,17 +469,18 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     background: var(--surface) !important;
   }
   .sidebar.mobile-open {
+    padding-top: 60px !important;
     transform: translateX(0) !important;
   }
   .sidebar-backdrop.open { display: block !important; }
 
   /* ── Modaux mobile ── */
-  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal-overlay { align-items: flex-start; padding: 10px 8px 0; }
   .modal, .modal-lg {
     width: 100% !important;
     max-width: 100% !important;
-    border-radius: 20px 20px 0 0 !important;
-    max-height: 92vh !important;
+    border-radius: 16px !important;
+    max-height: calc(100vh - 20px) !important;
     display: flex !important;
     flex-direction: column !important;
     margin: 0 !important;
@@ -2590,6 +2592,7 @@ function openSeanceAction(kind, itemKey, slotKey, label){
   document.getElementById('saDetail').value='';
   document.getElementById('saOk').textContent = rep ? 'Reporter' : 'Clôturer';
   document.getElementById('modalSeanceAction').classList.add('open');
+  hideSidebarBtn();
 }
 function confirmSeanceAction(){
   const c=seanceActionCtx; if(!c) return;
