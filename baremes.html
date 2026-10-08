@@ -39,7 +39,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .container{max-width:540px;margin:0 auto;padding:20px 16px 60px}
 @media(min-width:900px){
   .container.wide{max-width:1100px}
-  .container.wide .tabs{display:none}
   .container.wide .cycle-block.active{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:20px;align-items:start}
   .container.wide .cycle-block.active>div[id$='-criteres']{position:sticky;top:118px;max-height:calc(100vh - 130px);overflow-y:auto}
 }
@@ -1407,30 +1406,9 @@ function showPanel(id) {
       if(cr) cr.style.display='none';
     });
     document.querySelector('.container').classList.remove('wide');
-    appliquerSplit();
   }
   window.scrollTo(0,0);
 }
-
-const PC_MQ=window.matchMedia('(min-width:900px)');
-function appliquerSplit(){
-  // Sur PC : saisie + critères toujours côte à côte (onglets masqués par CSS)
-  const c=document.querySelector('.container');
-  const actif=document.querySelector('.sport-panel.active');
-  const sport=actif&&actif.id!=='panel-home';
-  c.classList.toggle('wide', !!sport&&PC_MQ.matches);
-  if(!sport) return;
-  const sid=actif.id.replace('panel-','');
-  const critTab=document.querySelector(`#${sid}-tabs .tab.active`);
-  const surCrit=critTab&&/rit/.test(critTab.textContent);
-  ['c3','c4'].forEach(cyc=>{
-    const s=document.getElementById(`${sid}-${cyc}-saisie`);
-    const cr=document.getElementById(`${sid}-${cyc}-criteres`);
-    if(s) s.style.display=(PC_MQ.matches||!surCrit)?'block':'none';
-    if(cr) cr.style.display=(PC_MQ.matches||surCrit)?'block':'none';
-  });
-}
-PC_MQ.addEventListener('change',appliquerSplit);
 
 function switchTab(sid, name, btn) {
   ['c3','c4'].forEach(cyc=>{
@@ -1440,9 +1418,9 @@ function switchTab(sid, name, btn) {
     if(s) s.style.display=(name==='saisie'||split)?'block':'none';
     if(cr) cr.style.display=name==='criteres'?'block':'none';
   });
+  document.querySelector('.container').classList.toggle('wide', name==='criteres'&&window.matchMedia('(min-width:900px)').matches);
   document.querySelectorAll(`#${sid}-tabs .tab`).forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  appliquerSplit();
 }
 
 // ═══════════════════════════════════════════════════════
