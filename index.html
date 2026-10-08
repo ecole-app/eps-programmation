@@ -744,6 +744,7 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
     <button class="nav-tab" onclick="showPage('programmations',this)">📚 Programmations</button>
     <button class="nav-tab" onclick="showPage('seances',this)">🗓️ Séances</button>
     <button class="nav-tab" onclick="showPage('baremes',this)">🎯 Barèmes</button>
+    <button class="nav-tab" onclick="showPage('appreciations',this)">💬 Appréciations</button>
   </div>
   <div class="h-actions">
     <button class="alert-btn" id="alertBtn" onclick="toggleAlertPanel()">⚠️ <span class="alert-count" id="alertCount">0</span></button>
@@ -881,6 +882,15 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
   <!-- ══ PAGE BARÈMES (outil de notation, isolé dans une iframe : baremes.html) ══ -->
   <div class="page" id="page-baremes">
     <iframe id="baremesFrame" title="Barèmes EPS" style="width:100%;height:calc(100vh - 110px);min-height:520px;border:0;border-radius:12px;background:#fff"></iframe>
+  </div>
+
+  <!-- ══ PAGE APPRÉCIATIONS (outil isolé dans une iframe : appreciations.html / appreciations-ia.html, mêmes données) ══ -->
+  <div class="page" id="page-appreciations">
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <button class="btn btn-teal" id="apprBtnStd" onclick="setApprVersion('std')" style="padding:6px 14px;font-size:0.78rem">Classique</button>
+      <button class="btn btn-outline" id="apprBtnIa" onclick="setApprVersion('ia')" style="padding:6px 14px;font-size:0.78rem">✨ Avec IA</button>
+    </div>
+    <iframe id="apprFrame" title="Appréciations" style="width:100%;height:calc(100vh - 150px);min-height:520px;border:0;border-radius:12px;background:#fff"></iframe>
   </div>
 
   <div class="page" id="page-planning">
@@ -2121,6 +2131,14 @@ function boutonBareme(sd, cl, col, grand){
     : `flex-shrink:0;background:#fff;border:1.5px solid ${col};color:${col};border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center`;
   return `<button onclick="ouvrirBareme('${sd.id}','${cl}')" title="Ouvrir le barème (${cl})" style="${st}">${grand?'🎯 Barème '+cl:'🎯'}</button>`;
 }
+let apprVersion='std';
+function setApprVersion(v){
+  apprVersion=v;
+  const f=document.getElementById('apprFrame');
+  if(f) f.setAttribute('src',(v==='ia'?'appreciations-ia.html':'appreciations.html')+'?v='+Date.now());
+  document.getElementById('apprBtnStd').className='btn '+(v==='std'?'btn-teal':'btn-outline');
+  document.getElementById('apprBtnIa').className='btn '+(v==='ia'?'btn-teal':'btn-outline');
+}
 function showPage(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+id)?.classList.add('active');
@@ -2131,6 +2149,7 @@ function showPage(id,btn){
   if(id==='cycles')renderCycles();
   if(id==='seances')renderSeances();
   if(id==='aujourdhui')renderAujourdhui();
+  if(id==='appreciations'){const f=document.getElementById('apprFrame');if(f&&!f.getAttribute('src'))setApprVersion(apprVersion);}
   if(id==='baremes'){const f=document.getElementById('baremesFrame');if(f&&!f.getAttribute('src')){f.addEventListener('load',()=>setTimeout(scheduleCloudSync,1500),{once:true});f.setAttribute('src','baremes.html?v='+Date.now());}}
 }
 
