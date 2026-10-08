@@ -1560,6 +1560,8 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'),2100);
 }
 
+document.getElementById('papier-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.style.display='none'; });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ document.getElementById('papier-modal').style.display='none'; closeModal(); } });
 document.getElementById('modal-overlay').addEventListener('click',e=>{
   if(e.target===document.getElementById('modal-overlay')) closeModal();
 });
