@@ -922,7 +922,7 @@ async function genererOpenRouter(apiKey,prompt){
   if(ids.length<4) ids=ids.concat(["google/gemini-2.0-flash-exp:free","meta-llama/llama-3.3-70b-instruct:free","mistralai/mistral-small-3.2-24b-instruct:free"]);
   var lastErr="aucun modèle gratuit disponible",essais=0;
   for(var i=0;i<Math.min(ids.length,12);i++){
-    var ctl=new AbortController(),to=setTimeout(function(){ctl.abort();},25000);
+    var ctl=new AbortController(),to=setTimeout(function(){ctl.abort();},8000);
     try{
       essais++;
       var resp=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey,"HTTP-Referer":location.origin,"X-Title":"Appreciations College"},body:JSON.stringify({model:ids[i],max_tokens:300,temperature:0.9,messages:[{role:"user",content:prompt}]})});
