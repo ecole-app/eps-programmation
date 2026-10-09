@@ -914,24 +914,25 @@ async function genererOpenRouter(apiKey,prompt){
   var ids=[];
   try{
     var r=await fetch("https://openrouter.ai/api/v1/models");var d=await r.json();
-    ids=d.data.map(function(m){return m.id;}).filter(function(id){return /:free$/.test(id)&&!/embed|image|lyria|audio|vision|guard|moderation/i.test(id);});
+    ids=d.data.map(function(m){return m.id;}).filter(function(id){return /:free$/.test(id)&&!/embed|image|lyria|audio|vision|guard|moderation|r1|reason|think|qwq|gpt-oss|thinking|o1|o3/i.test(id);});
   }catch(e){}
   ids.sort(function(a,b){var ra=pref.findIndex(function(p){return p.test(a);}),rb=pref.findIndex(function(p){return p.test(b);});return (ra<0?99:ra)-(rb<0?99:rb);});
   // « openrouter/free » choisit tout seul un modèle gratuit disponible ; les autres servent de secours
-  ids=["openrouter/free"].concat(ids);
+  ids=ids.slice(0,6).concat(["openrouter/free"],ids.slice(6));
   if(ids.length<4) ids=ids.concat(["google/gemini-2.0-flash-exp:free","meta-llama/llama-3.3-70b-instruct:free","mistralai/mistral-small-3.2-24b-instruct:free"]);
   var lastErr="aucun modèle gratuit disponible",essais=0;
   for(var i=0;i<Math.min(ids.length,12);i++){
     var ctl=new AbortController(),to=setTimeout(function(){ctl.abort();},8000);
     try{
       essais++;
-      var resp=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey,"HTTP-Referer":location.origin,"X-Title":"Appreciations College"},body:JSON.stringify({model:ids[i],max_tokens:300,temperature:0.9,messages:[{role:"user",content:prompt}]})});
+      var resp=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",signal:ctl.signal,headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey,"HTTP-Referer":location.origin,"X-Title":"Appreciations College"},body:JSON.stringify({model:ids[i],max_tokens:1500,temperature:0.9,reasoning:{exclude:true,effort:"low"},messages:[{role:"user",content:prompt}]})});
       if(resp.status===401){openApiModal();throw new Error("clé OpenRouter refusée");}
       var data=await resp.json().catch(function(){return {};});
       if(!resp.ok||data.error){lastErr=(data.error&&data.error.message)||("erreur "+resp.status);continue;}
-      var txt=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
-      if(txt&&txt.trim()) return txt.trim().replace(/^["«\s]+|["»\s]+$/g,"");
-      lastErr="réponse vide";
+      var ch=data.choices&&data.choices[0],txt=ch&&ch.message&&ch.message.content;
+      if(Array.isArray(txt)) txt=txt.map(function(p){return (p&&p.text)||"";}).join("");
+      if(typeof txt==="string"&&txt.trim()) return txt.trim().replace(/^["«\s]+|["»\s]+$/g,"");
+      lastErr="réponse vide ("+(ch&&(ch.finish_reason||ch.native_finish_reason)||"?")+", "+ids[i]+")";
     }catch(e){ if(/refusée/.test(e.message)) throw e; lastErr=(e.name==="AbortError")?"délai dépassé":e.message; }
     finally{clearTimeout(to);}
   }
