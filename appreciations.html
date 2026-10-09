@@ -286,7 +286,7 @@ function genreDe(cl,prenom){
   try{var d=JSON.parse(localStorage.getItem("eps-v2")||"null");var y=d&&d.currentYear;if(!y)return null;
     var g=(JSON.parse(localStorage.getItem("genres-"+y)||"{}")[cl]||{})[prenom];return g||null;}catch(e){return null;}
 }
-function choisirEleve(n){if(!n)return;document.getElementById("prenom").value=n;onPrenomChoisi();}
+function choisirEleve(n){if(!n)return;if(n==="__autre__"){var i=document.getElementById("prenom");i.style.display="";i.value="";i.focus();return;}document.getElementById("prenom").value=n;onPrenomChoisi();}
 function onPrenomChoisi(){
   var g=genreDe(document.getElementById("classe").value,document.getElementById("prenom").value.trim());
   if(g)setG(g);
@@ -460,7 +460,9 @@ function majPrenoms(){
   var sel=document.getElementById("prenom-select");
   if(sel){var L=elevesDeClasse(cl);
     sel.innerHTML='<option value="">👥 Choisir un élève de la classe…</option>'+L.map(function(n){return '<option value="'+String(n).replace(/"/g,"&quot;")+'">'+n+'</option>';}).join("");
-    sel.style.display=L.length?"":"none";sel.value="";}
+    if(L.length)sel.innerHTML+='<option value="__autre__">✏️ Autre prénom…</option>';
+    sel.style.display=L.length?"":"none";sel.value="";
+    var inp=document.getElementById("prenom");if(inp){inp.style.display=L.length?"none":"";inp.value="";}}
   dl.innerHTML=elevesDeClasse(cl).map(function(n){return '<option value="'+String(n).replace(/"/g,"&quot;")+'">';}).join("");
 }
 function onClasse(){majPrenoms();var cl=document.getElementById("classe").value;var liste=cl==="6e"?M6:M5;var s=document.getElementById("matiere");var cur=s.value;s.innerHTML=liste.map(function(m){return "<option"+(m===cur?" selected":"")+">"+m+"</option>";}).join("");onMatiere();}
