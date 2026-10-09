@@ -112,11 +112,7 @@ hr{border:none;border-top:1px solid var(--b);margin:12px 0}
     <div><label>Classe</label><select id="classe" onchange="onClasse()"><option>6e</option><option>5e</option><option>4e</option><option>3e</option></select></div>
   </div>
   <div class="g2">
-    <div><label>Matière</label><select id="matiere" onchange="onMatiere()">
-      <option>Français</option><option>Maths</option><option>Anglais</option><option>Arabe</option>
-      <option>Histoire-Géo/EMC</option><option>SVT</option><option>Physique-Chimie</option>
-      <option>Arts Plastiques</option><option>Éducation Musicale</option><option>EPS</option>
-    </select></div>
+    <div><label>Matière</label><select id="matiere" onchange="onMatiere()"><option selected>EPS</option></select></div>
     <div><label>Genre</label><div class="gr"><button class="grb on" id="gm" onclick="setG('M')">Garçon</button><button class="grb" id="gf" onclick="setG('F')">Fille</button></div></div>
   </div>
   <div class="g2">
@@ -230,7 +226,7 @@ EPS : Très investie…" rows="7" style="margin-bottom:0"></textarea>
     <span class="cnt" id="cnt"></span>
   </div>
   <div class="fr">
-    <select class="fs" id="fm" onchange="renderListe()"><option value="t">Toutes matières</option><option>Français</option><option>Maths</option><option>Anglais</option><option>Arabe</option><option>Espagnol</option><option>Histoire-Géo/EMC</option><option>SVT</option><option>Physique-Chimie</option><option>Technologie</option><option>Arts Plastiques</option><option>Éducation Musicale</option><option>EPS</option><option>Prof principal</option></select>
+    <select class="fs" id="fm" onchange="renderListe()"><option value="t">Toutes matières</option><option>EPS</option></select>
     <select class="fs" id="ft" onchange="renderListe()"><option value="t">Tous trimestres</option><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select>
     <select class="fs" id="fa" onchange="renderListe()"><option value="t">Toutes années</option></select>
   </div>
@@ -241,7 +237,7 @@ EPS : Très investie…" rows="7" style="margin-bottom:0"></textarea>
 <div id="exp" class="sec">
   <div class="fr">
     <select class="fs" id="ecl" onchange="renderExp()"><option value="t">Toutes classes</option><option>6e</option><option>5e</option><option>4e</option><option>3e</option></select>
-    <select class="fs" id="emat" onchange="renderExp()"><option value="t">Toutes matières</option><option>Français</option><option>Maths</option><option>Anglais</option><option>Arabe</option><option>Espagnol</option><option>Histoire-Géo/EMC</option><option>SVT</option><option>Physique-Chimie</option><option>Technologie</option><option>Arts Plastiques</option><option>Éducation Musicale</option><option>EPS</option><option>Prof principal</option></select>
+    <select class="fs" id="emat" onchange="renderExp()"><option value="t">Toutes matières</option><option>EPS</option></select>
     <select class="fs" id="etr" onchange="renderExp()"><option value="t">Tous trimestres</option><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select>
     <select class="fs" id="ean" onchange="renderExp()"><option value="t">Toutes années</option></select>
     <button class="a" style="margin-left:auto" onclick="copierExp()">⎘ Copier</button>
@@ -251,8 +247,8 @@ EPS : Très investie…" rows="7" style="margin-bottom:0"></textarea>
 </div>
 
 <script>
-var M6=["Français","Maths","Anglais","Arabe","Histoire-Géo/EMC","SVT","Physique-Chimie","Arts Plastiques","Éducation Musicale","EPS"];
-var M5=["Français","Maths","Anglais","Arabe","Espagnol","Histoire-Géo/EMC","SVT","Physique-Chimie","Technologie","Arts Plastiques","Éducation Musicale","EPS"];
+var M6=["EPS"];
+var M5=["EPS"];
 var GEN=[{k:"curieux",l:"curiosité"},{k:"rigoureux",l:"rigueur"},{k:"oral_g",l:"participation à l'oral"},{k:"ecrit_g",l:"travail écrit soigné"},{k:"methode_g",l:"bonne méthode"},{k:"efforts_g",l:"efforts constants"},{k:"auto_g",l:"autonomie"},{k:"respect_g",l:"respect des consignes"},{k:"entraide",l:"entraide"},{k:"creativ_g",l:"créativité"},{k:"persev",l:"persévérance"},{k:"assidu_g",l:"assiduité"},{k:"crit_g",l:"esprit critique"}];
 var COMP=[{k:"attitude",l:"attitude positive"},{k:"respect_c",l:"respectueux/euse"},{k:"agreable",l:"agréable en cours"},{k:"compneg",l:"comportement à améliorer"},{k:"ponctuel",l:"ponctuel(le)"},{k:"assidu_c",l:"assidu(e)"},{k:"absences",l:"absences fréquentes"},{k:"retards",l:"retards à corriger"},{k:"tenue_ok",l:"tenue correcte"},{k:"tenue_nok",l:"tenue inadaptée"}];
 var PROG=[{k:"prog",l:"en progrès"},{k:"progression",l:"progression constante"},{k:"potentiel",l:"potentiel à exploiter"},{k:"encour",l:"résultats encourageants"},{k:"hausse",l:"trimestre en hausse"},{k:"acquis",l:"acquis solides"}];
