@@ -2090,7 +2090,7 @@ function saveElevesModal(){
   });
   localStorage.setItem('genres-'+currentYear,JSON.stringify(gen));
   saveEleves(currentYear,obj);
-  closeModal('modalEleves');renderElevesList();
+  closeModal('modalEleves');renderElevesList();rafraichirIframesEleves();
   showToast('✅ Élèves sauvegardés !');
 }
 
@@ -2178,6 +2178,12 @@ function boutonBareme(sd, cl, col, grand){
     : `flex-shrink:0;background:#fff;border:1.5px solid ${col};color:${col};border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center`;
   return `<button onclick="ouvrirBareme('${sd.id}','${cl}')" title="Ouvrir le barème (${cl})" style="${st}">${grand?'🎯 Barème '+cl:'🎯'}</button>`;
 }
+// Les onglets Appréciations / Barèmes (iframes) relisent la liste d'élèves de l'année en cours.
+function rafraichirIframesEleves(){
+  ['apprFrame','baremesFrame'].forEach(id=>{
+    try{ const w=document.getElementById(id)?.contentWindow; if(w&&w.rafraichirEleves) w.rafraichirEleves(); }catch(e){}
+  });
+}
 let apprVersion='std';
 function setApprVersion(v){
   apprVersion=v;
@@ -2197,6 +2203,7 @@ function showPage(id,btn){
   if(id==='seances')renderSeances();
   if(id==='aujourdhui')renderAujourdhui();
   if(id==='appreciations'){const f=document.getElementById('apprFrame');if(f&&!f.getAttribute('src'))setApprVersion(apprVersion);}
+  if(id==='appreciations'||id==='baremes') rafraichirIframesEleves();
   if(id==='baremes'){const f=document.getElementById('baremesFrame');if(f&&!f.getAttribute('src')){f.addEventListener('load',()=>setTimeout(scheduleCloudSync,1500),{once:true});f.setAttribute('src','baremes.html?v='+Date.now());}}
 }
 

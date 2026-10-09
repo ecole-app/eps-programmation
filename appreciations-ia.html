@@ -290,6 +290,15 @@ function genreDe(cl,prenom){
   try{var d=JSON.parse(localStorage.getItem("eps-v2")||"null");var y=d&&d.currentYear;if(!y)return null;
     var g=(JSON.parse(localStorage.getItem("genres-"+y)||"{}")[cl]||{})[prenom];return g||null;}catch(e){return null;}
 }
+// Relit la liste d'élèves (appelé par l'app quand les élèves ou l'année changent) sans perdre la saisie en cours.
+function rafraichirEleves(){
+  var s=document.getElementById("prenom-select"),i=document.getElementById("prenom");
+  var v=i?i.value:"",autre=i&&i.style.display!=="none"&&s&&s.value==="__autre__";
+  majPrenoms();
+  if(!i||!v)return;
+  var L=elevesDeClasse(document.getElementById("classe").value);
+  if(L.indexOf(v)>=0){s.value=v;i.value=v;}else if(L.length){s.value="__autre__";i.style.display="";i.value=v;}else{i.value=v;}
+}
 function choisirEleve(n){if(!n)return;if(n==="__autre__"){var i=document.getElementById("prenom");i.style.display="";i.value="";i.focus();return;}document.getElementById("prenom").value=n;onPrenomChoisi();}
 function onPrenomChoisi(){
   var g=genreDe(document.getElementById("classe").value,document.getElementById("prenom").value.trim());

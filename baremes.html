@@ -1502,6 +1502,7 @@ function papierImprimer(){
   fichePapier(m.dataset.sid,m.dataset.cyc,cl);
 }
 // Suggestions de prénoms (liste « Élèves » de l'app) pour la saisie des notes.
+function rafraichirEleves(){ remplirNoms(); const m=document.getElementById('papier-modal'); if(m&&m.style.display==='flex') papierInfo(); }
 function remplirNoms(){
   document.querySelectorAll('datalist[data-cyc]').forEach(dl=>{
     const cyc=dl.dataset.cyc; let h='';
