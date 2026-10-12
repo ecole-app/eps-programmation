@@ -175,3 +175,29 @@ describe("Course longue 6e", () => {
     assert.deepEqual(r, { pages: 2, lignes: 10, nom: "Zakarya", emoji: false });
   });
 });
+
+describe("Fiche de suivi : réglages", () => {
+  it("choix de la classe et du nombre de séances (mémorisé)", async () => {
+    const p = await env.page("baremes.html", { stockage: { ["eleves-" + ANNEE]: { "6e": ["Zakarya"], "4e": ["Mina", "Adel", "Assia"] } } });
+    await p.evaluate(() => { setClasse("6e"); showPanel("course-longue"); });
+    await p.click("#course-longue-c3-block button:has-text('Fiche de suivi élève')");
+    assert.equal(await p.isVisible("#papier-seances"), true);
+    await p.selectOption("#papier-classe", "4e");
+    await p.fill("#papier-seances", "6");
+    const [w] = await Promise.all([p.context().waitForEvent("page"), p.click("#papier-modal button:has-text('Imprimer')")]);
+    await w.waitForLoadState();
+    const r = await w.evaluate(() => ({
+      pages: document.querySelectorAll("section").length,
+      lignes: document.querySelector("section .t").querySelectorAll("tr").length - 1,
+      colonnesGraph: document.querySelector("section .g tr").querySelectorAll("th").length - 1,
+      classe: document.querySelectorAll("section .id b")[1].textContent,
+    }));
+    assert.deepEqual(r, { pages: 3, lignes: 6, colonnesGraph: 6, classe: "4e" });
+    assert.equal(await p.evaluate(() => localStorage.getItem("fiche-suivi-seances")), "6");
+  });
+  it("le bouton Fiche papier (barème) n'affiche pas le nombre de séances", async () => {
+    const p = await env.page("baremes.html");
+    await p.evaluate(() => { setClasse("5e"); showPanel("basket"); openFichePapier("basket", "c4"); });
+    assert.equal(await p.isVisible("#papier-seances"), false);
+  });
+});

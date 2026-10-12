@@ -201,9 +201,13 @@ tr:last-child td{border-bottom:none}
 
 <div id="papier-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center;padding:16px">
   <div style="background:#fff;border-radius:14px;padding:18px;width:100%;max-width:380px;font-family:'DM Sans',sans-serif">
-    <h3 style="margin:0 0 10px;font-size:1rem">📄 Fiche papier</h3>
+    <h3 id="papier-titre" style="margin:0 0 10px;font-size:1rem">📄 Fiche papier</h3>
     <label style="font-size:.8rem;color:#666">Classe</label>
     <select id="papier-classe" onchange="papierInfo()" style="width:100%;padding:10px;font-size:1rem;border:1px solid #ccc;border-radius:8px;margin:4px 0 8px"></select>
+    <div id="papier-seances-row" style="display:none">
+      <label style="font-size:.8rem;color:#666">Nombre de séances du cycle</label>
+      <input type="number" id="papier-seances" min="3" max="20" value="10" style="width:100%;padding:10px;font-size:1rem;border:1px solid #ccc;border-radius:8px;margin:4px 0 8px;box-sizing:border-box">
+    </div>
     <p id="papier-info" style="margin:0 0 10px;font-size:.8rem;color:#666"></p>
     <div style="display:flex;gap:8px">
       <button onclick="document.getElementById('papier-modal').style.display='none'" style="flex:1;padding:10px;border:1px solid #ccc;background:#fff;border-radius:9px;cursor:pointer">Annuler</button>
@@ -1173,7 +1177,7 @@ function buildPanelHTML(s) {
           </div>
         </div>
         <button class="btn-export" style="display:${PAPIER_SPORTS.includes(s.id)?'block':'none'};background:var(--teal)" onclick="openFichePapier('${s.id}','${cyc}')">📄 Fiche papier à imprimer</button>
-        <button class="btn-export" style="display:${s.id==='course-longue'?'block':'none'};background:var(--teal)" onclick="ficheSuivi('${s.id}')">📄 Fiche de suivi élève (10 séances)</button>
+        <button class="btn-export" style="display:${s.id==='course-longue'?'block':'none'};background:var(--teal)" onclick="openFicheSuivi('${s.id}')">📄 Fiche de suivi élève</button>
         <button class="btn-export" id="${s.id}-${cyc}-export" onclick="imprimer('${s.id}','${cyc}')">🖨 Imprimer</button>
       </div>
       <div id="${s.id}-${cyc}-criteres" style="display:none">${detailHTML}</div>
@@ -1500,25 +1504,42 @@ function imprimer(sid, cyc) {
 // Sports dont les critères ont été vérifiés : seuls ceux-là ont la fiche papier.
 const PAPIER_SPORTS=['basket'];
 // Fiche de suivi individuelle (course longue) : une page A4 par élève de la classe, 10 séances.
-function ficheSuivi(sid){
+function openFicheSuivi(sid){
+  const m=document.getElementById('papier-modal');
+  m.dataset.sid=sid; m.dataset.cyc=currentCycle; m.dataset.mode='suivi';
+  document.getElementById('papier-titre').textContent='📄 Fiche de suivi élève';
+  document.getElementById('papier-seances-row').style.display='';
+  let n=10; try{ n=parseInt(localStorage.getItem('fiche-suivi-seances'),10)||10; }catch(e){}
+  document.getElementById('papier-seances').value=n;
+  document.getElementById('papier-classe').innerHTML=['6e','5e','4e','3e'].map(c=>'<option value="'+c+'"'+(c===currentClasse?' selected':'')+'>'+c+'</option>').join('');
+  papierInfo();
+  m.style.display='flex';
+}
+function ficheSuivi(sid, cl, nb){
+  cl=cl||currentClasse; nb=nb||10;
   const sport=SPORTS.find(s=>s.id===sid);
-  const noms=getListeEleves(currentClasse);
+  const noms=getListeEleves(cl);
+  const compact=nb>10;
+  const hLigne=compact?Math.max(26,Math.floor(560/nb)):46;
+  const ressenti=compact?'Facile – Ça va<br>Dur – Très dur':'Facile<br>Ça va<br>Dur<br>Très dur';
+  const essouf=compact?'Je parle – Avec difficulté<br>Je ne peux pas parler':'Je parle<br>Avec difficulté<br>Je ne peux pas parler';
+  const hGraph=compact?11:15;
   const liste=noms.length?noms:[''];
-  const lignes=n=>{let h='';for(let i=1;i<=n;i++)h+=`<tr><td class="c">${i}</td><td></td><td></td><td></td><td></td>
-    <td class="choix">Facile<br>Ça va<br>Dur<br>Très dur</td><td class="choix">Je parle<br>Avec difficulté<br>Je ne peux pas parler</td><td></td></tr>`;return h;};
+  const lignes=n=>{let h='';for(let i=1;i<=n;i++)h+=`<tr style="height:${hLigne}px"><td class="c">${i}</td><td></td><td></td><td></td><td></td>
+    <td class="choix">${ressenti}</td><td class="choix">${essouf}</td><td></td></tr>`;return h;};
   let graph='<table class="g"><tr><th></th>';
-  for(let i=1;i<=10;i++) graph+='<th>S'+i+'</th>';
+  for(let i=1;i<=nb;i++) graph+='<th>S'+i+'</th>';
   graph+='</tr>';
-  for(let m=15;m>=1;m--){ graph+='<tr><th>'+m+' min</th>'; for(let i=1;i<=10;i++) graph+='<td></td>'; graph+='</tr>'; }
+  for(let m=15;m>=1;m--){ graph+='<tr><th>'+m+' min</th>'; for(let i=1;i<=nb;i++) graph+='<td></td>'; graph+='</tr>'; }
   graph+='</table>';
   const page=nom=>`<section>
     <h1>${sport.nom} — Fiche de suivi</h1>
-    <div class="id"><span>Nom Prénom : <b>${nom||''}</b>${nom?'':'<i class="ligne"></i>'}</span><span>Classe : <b>${currentClasse}</b></span><span>Mon objectif de durée au départ : <i class="ligne court"></i> min</span></div>
-    <table class="t"><colgroup><col style="width:38px"><col style="width:62px"><col style="width:62px"><col style="width:62px"><col style="width:58px"><col style="width:72px"><col style="width:100px"><col></colgroup><tr><th>Séance</th><th>Date</th><th>Durée annoncée</th><th>Durée courue</th><th>Pouls après<br><small>(15 s × 4)</small></th><th>Ressenti<br><small>(entourer)</small></th><th>Essoufflement<br><small>(entourer)</small></th><th>Ce que je change la prochaine fois</th></tr>${lignes(10)}</table>
+    <div class="id"><span>Nom Prénom : <b>${nom||''}</b>${nom?'':'<i class="ligne"></i>'}</span><span>Classe : <b>${cl}</b></span><span>Mon objectif de durée au départ : <i class="ligne court"></i> min</span></div>
+    <table class="t"><colgroup><col style="width:38px"><col style="width:62px"><col style="width:62px"><col style="width:62px"><col style="width:58px"><col style="width:${compact?84:72}px"><col style="width:${compact?120:100}px"><col></colgroup><tr><th>Séance</th><th>Date</th><th>Durée annoncée</th><th>Durée courue</th><th>Pouls après<br><small>(15 s × 4)</small></th><th>Ressenti<br><small>(entourer)</small></th><th>Essoufflement<br><small>(entourer)</small></th><th>Ce que je change la prochaine fois</th></tr>${lignes(nb)}</table>
     <h2>Ma progression : je colorie la durée courue à chaque séance</h2>${graph}
     <p class="pied">Le binôme remplit la fiche de celui qui court. À rendre à la fin du cycle.</p>
   </section>`;
-  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Fiche de suivi — ${sport.nom} ${currentClasse}</title><style>
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Fiche de suivi — ${sport.nom} ${cl}</title><style>
     @page{size:A4 portrait;margin:10mm}
     body{font-family:Arial,sans-serif;color:#111;margin:0}
     section{page-break-after:always}
@@ -1531,10 +1552,10 @@ function ficheSuivi(sid){
     table{border-collapse:collapse;width:100%}
     .t th,.t td{border:1px solid #333;font-size:10px;padding:2px 3px;vertical-align:middle}
     .t th{background:#eee}
-    .t td{height:46px}
+    .t td{height:auto}
     .t td.c{text-align:center;font-weight:bold;width:34px}
     .t td.choix{font-size:8.5px;line-height:1.35}
-    .g th,.g td{border:1px solid #888;font-size:8px;height:15px;padding:0 2px}
+    .g th,.g td{border:1px solid #888;font-size:8px;height:${hGraph}px;padding:0 2px}
     .g th{background:#f4f4f4;width:34px}
     .pied{font-size:9px;color:#555;margin-top:6px}
   </style></head><body>${liste.map(page).join('')}</body></html>`;
@@ -1552,7 +1573,9 @@ function getListeEleves(cl){
 const CLASSES_CYC={c3:['6e'],c4:['5e','4e','3e']};
 function openFichePapier(sid, cyc){
   const m=document.getElementById('papier-modal');
-  m.dataset.sid=sid; m.dataset.cyc=cyc;
+  m.dataset.sid=sid; m.dataset.cyc=cyc; m.dataset.mode='bareme';
+  document.getElementById('papier-titre').textContent='📄 Fiche papier';
+  document.getElementById('papier-seances-row').style.display='none';
   document.getElementById('papier-classe').innerHTML=CLASSES_CYC[cyc].map(c=>'<option value="'+c+'"'+(c===currentClasse?' selected':'')+'>'+c+'</option>').join('');
   papierInfo();
   m.style.display='flex';
@@ -1567,6 +1590,11 @@ function papierImprimer(){
   const m=document.getElementById('papier-modal');
   const cl=document.getElementById('papier-classe').value;
   m.style.display='none';
+  if(m.dataset.mode==='suivi'){
+    let n=parseInt(document.getElementById('papier-seances').value,10); if(!(n>=3&&n<=20)) n=10;
+    try{ localStorage.setItem('fiche-suivi-seances',String(n)); }catch(e){}
+    return ficheSuivi(m.dataset.sid, cl, n);
+  }
   fichePapier(m.dataset.sid,m.dataset.cyc,cl);
 }
 // Suggestions de prénoms (liste « Élèves » de l'app) pour la saisie des notes.
