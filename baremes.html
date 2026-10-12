@@ -265,12 +265,12 @@ const SPORTS = [
       seances:'10–12',
       ca_texte:"Courir à allure régulière sans s'arrêter. Connaître sa fréquence cardiaque et ses sensations. Commencer à se fixer un objectif de durée.",
       criteres:[
-        { id:'duree', label:'⏱ Durée de course', max:6, hint:'Courir sans interruption — durée atteinte',
+        { id:'duree', label:'⏱ Durée de course', max:6, hint:'Courir sans interruption — durée atteinte (15 min maximum)',
           sous:null,
-          table:[['≥ 16 min','6'],['14–16 min','5'],['12–14 min','4'],['10–12 min','3'],['8–10 min','2'],['< 8 min','1']] },
-        { id:'regul', label:'📊 Régularité d\'allure', max:6, hint:'Variation entre tours chronométrés',
+          table:[['15 min','6'],['12 à 14 min','5'],['9 à 11 min','4'],['6 à 8 min','3'],['4 à 5 min','2'],['0 à 3 min','1']] },
+        { id:'allure', label:'📊 Gestion de l\'allure', max:6, hint:'Observée pendant la course : régularité du début à la fin',
           sous:null,
-          table:[['Variation < 8%','6'],['Variation 8–12%','4–5'],['Variation 12–18%','2–3'],['Variation > 18%','1']] },
+          table:[['Allure régulière du début à la fin','5–6'],['Quelques ralentissements, repart','3–4'],['Part trop vite puis ralentit fortement ou s\'arrête','1–2']] },
         { id:'projet', label:'🎯 Projet tenu', max:5, hint:'L\'élève annonce une durée cible — écart réel/prévu',
           sous:null,
           table:[['Écart ≤ 1 min','5'],['Écart 1–2 min','4'],['Écart 2–3 min','3'],['Écart 3–4 min','2'],['Écart > 4 min','1']] },
@@ -1173,6 +1173,7 @@ function buildPanelHTML(s) {
           </div>
         </div>
         <button class="btn-export" style="display:${PAPIER_SPORTS.includes(s.id)?'block':'none'};background:var(--teal)" onclick="openFichePapier('${s.id}','${cyc}')">📄 Fiche papier à imprimer</button>
+        <button class="btn-export" style="display:${s.id==='course-longue'?'block':'none'};background:var(--teal)" onclick="ficheSuivi('${s.id}')">📄 Fiche de suivi élève (10 séances)</button>
         <button class="btn-export" id="${s.id}-${cyc}-export" onclick="imprimer('${s.id}','${cyc}')">🖨 Imprimer</button>
       </div>
       <div id="${s.id}-${cyc}-criteres" style="display:none">${detailHTML}</div>
@@ -1498,6 +1499,48 @@ function imprimer(sid, cyc) {
 // ═══════════════════════════════════════════════════════
 // Sports dont les critères ont été vérifiés : seuls ceux-là ont la fiche papier.
 const PAPIER_SPORTS=['basket'];
+// Fiche de suivi individuelle (course longue) : une page A4 par élève de la classe, 10 séances.
+function ficheSuivi(sid){
+  const sport=SPORTS.find(s=>s.id===sid);
+  const noms=getListeEleves(currentClasse);
+  const liste=noms.length?noms:[''];
+  const lignes=n=>{let h='';for(let i=1;i<=n;i++)h+=`<tr><td class="c">${i}</td><td></td><td></td><td></td><td></td>
+    <td class="choix">Facile<br>Ça va<br>Dur<br>Très dur</td><td class="choix">Je parle<br>Avec difficulté<br>Je ne peux pas parler</td><td></td></tr>`;return h;};
+  let graph='<table class="g"><tr><th></th>';
+  for(let i=1;i<=10;i++) graph+='<th>S'+i+'</th>';
+  graph+='</tr>';
+  for(let m=15;m>=1;m--){ graph+='<tr><th>'+m+' min</th>'; for(let i=1;i<=10;i++) graph+='<td></td>'; graph+='</tr>'; }
+  graph+='</table>';
+  const page=nom=>`<section>
+    <h1>${sport.nom} — Fiche de suivi</h1>
+    <div class="id"><span>Nom Prénom : <b>${nom||''}</b>${nom?'':'<i class="ligne"></i>'}</span><span>Classe : <b>${currentClasse}</b></span><span>Mon objectif de durée au départ : <i class="ligne court"></i> min</span></div>
+    <table class="t"><colgroup><col style="width:38px"><col style="width:62px"><col style="width:62px"><col style="width:62px"><col style="width:58px"><col style="width:72px"><col style="width:100px"><col></colgroup><tr><th>Séance</th><th>Date</th><th>Durée annoncée</th><th>Durée courue</th><th>Pouls après<br><small>(15 s × 4)</small></th><th>Ressenti<br><small>(entourer)</small></th><th>Essoufflement<br><small>(entourer)</small></th><th>Ce que je change la prochaine fois</th></tr>${lignes(10)}</table>
+    <h2>Ma progression : je colorie la durée courue à chaque séance</h2>${graph}
+    <p class="pied">Le binôme remplit la fiche de celui qui court. À rendre à la fin du cycle.</p>
+  </section>`;
+  const html=`<!doctype html><html><head><meta charset="utf-8"><title>Fiche de suivi — ${sport.nom} ${currentClasse}</title><style>
+    @page{size:A4 portrait;margin:10mm}
+    body{font-family:Arial,sans-serif;color:#111;margin:0}
+    section{page-break-after:always}
+    section:last-child{page-break-after:auto}
+    h1{font-size:17px;margin:0 0 6px}
+    h2{font-size:12px;margin:10px 0 4px}
+    .id{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:12px;margin-bottom:8px}
+    .ligne{display:inline-block;border-bottom:1px solid #333;width:150px;height:12px}
+    .ligne.court{width:40px}
+    table{border-collapse:collapse;width:100%}
+    .t th,.t td{border:1px solid #333;font-size:10px;padding:2px 3px;vertical-align:middle}
+    .t th{background:#eee}
+    .t td{height:46px}
+    .t td.c{text-align:center;font-weight:bold;width:34px}
+    .t td.choix{font-size:8.5px;line-height:1.35}
+    .g th,.g td{border:1px solid #888;font-size:8px;height:15px;padding:0 2px}
+    .g th{background:#f4f4f4;width:34px}
+    .pied{font-size:9px;color:#555;margin-top:6px}
+  </style></head><body>${liste.map(page).join('')}</body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html); w.document.close(); w.focus(); setTimeout(()=>w.print(),300);
+}
 function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
 function anneeCourante(){
   try{const d=JSON.parse(localStorage.getItem('eps-v2')||'null');if(d&&d.currentYear)return d.currentYear;}catch(e){}

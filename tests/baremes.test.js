@@ -152,3 +152,26 @@ describe("Classes et sports", () => {
     assert.equal(await p.isVisible("#badminton-c4-saisie"), true);
   });
 });
+
+describe("Course longue 6e", () => {
+  it("barème durée sur 15 min et gestion de l'allure (plus de variation en %)", async () => {
+    const p = await env.page("baremes.html");
+    const c = await p.evaluate(() => SPORTS.find((s) => s.id === "course-longue").c3.criteres.map((x) => x.id + ":" + x.max));
+    assert.deepEqual(c, ["duree:6", "allure:6", "projet:5", "fiche:3"]);
+    const t = await p.evaluate(() => SPORTS.find((s) => s.id === "course-longue").c3.criteres[0].table[0][0]);
+    assert.equal(t, "15 min");
+  });
+  it("fiche de suivi : une page par élève, 10 séances, nom pré-rempli, sans emoji", async () => {
+    const p = await env.page("baremes.html", { stockage: { ["eleves-" + ANNEE]: { "6e": ["Zakarya", "Aaroun"] } } });
+    await p.evaluate(() => { setClasse("6e"); showPanel("course-longue"); });
+    const [w] = await Promise.all([p.context().waitForEvent("page"), p.evaluate(() => ficheSuivi("course-longue"))]);
+    await w.waitForLoadState();
+    const r = await w.evaluate(() => ({
+      pages: document.querySelectorAll("section").length,
+      lignes: document.querySelector("section .t").querySelectorAll("tr").length - 1,
+      nom: document.querySelector("section .id b").textContent,
+      emoji: /\p{Extended_Pictographic}/u.test(document.body.innerText),
+    }));
+    assert.deepEqual(r, { pages: 2, lignes: 10, nom: "Zakarya", emoji: false });
+  });
+});
