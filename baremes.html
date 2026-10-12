@@ -80,6 +80,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .pts-row{display:flex;flex-wrap:wrap;gap:6px}
 .pts-btn{width:36px;height:36px;border-radius:8px;border:2px solid var(--gray);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .13s}
 .pts-btn:hover{border-color:var(--teal);color:var(--teal)}
+.pts-na{width:auto;padding:0 9px;font-size:.72rem;margin-left:6px;border-style:dashed}
 .pts-btn.sel{background:var(--teal);border-color:var(--teal);color:#fff;transform:scale(1.08)}
 
 /* TOTAL */
@@ -916,13 +917,26 @@ function allKeys(criteres) {
   return keys;
 }
 
+// Valeur 'na' = critère non évalué (ex. élève blessé qui n'a pas fait un passage) : il est retiré du calcul
+// et le total est ramené proportionnellement à ce qui a été évalué (arrondi au demi-point).
+function nombre(v){ return typeof v==='number'?v:0; }
+function fmtSc(v){ return v==='na'?'NE':(v!==null&&v!==undefined?v:'—'); }
 function computeTotal(criteres, scores) {
-  let t = 0;
+  let t=0, mxEval=0, mxAll=0;
   criteres.forEach(c => {
-    if(c.sous) c.sous.forEach(sc => { t += (scores[c.id+'_'+sc.id]||0); });
-    else t += (scores[c.id]||0);
+    mxAll+=c.max;
+    let got=0, mx=0, full=c.max;
+    if(c.sous){
+      full=c.sous.reduce((a,x)=>a+x.max,0);
+      c.sous.forEach(sc=>{ const v=scores[c.id+'_'+sc.id]; if(v==='na') return; mx+=sc.max; got+=nombre(v); });
+    } else { const v=scores[c.id]; if(v!=='na'){ mx=c.max; got=nombre(v); } }
+    if(mx===0) return;
+    mxEval+=c.max;
+    t+= (c.sous && mx<full) ? got/mx*full : got;
   });
-  return t;
+  if(mxEval===0) return 0;
+  if(mxEval<mxAll) t=t/mxEval*mxAll;
+  return Math.round(t*2)/2;
 }
 
 function maxTotal(criteres) { return criteres.reduce((s,c)=>s+c.max,0); }
@@ -1197,6 +1211,13 @@ function mkBtns(cid, max, key, scObj, cb) {
     };
     c.appendChild(b);
   }
+  const na=document.createElement('button');
+  na.className='pts-btn pts-na'; na.textContent='NE'; na.title='Non évalué (retiré du calcul)';
+  na.onclick=()=>{
+    c.querySelectorAll('.pts-btn').forEach(x=>x.classList.remove('sel'));
+    na.classList.add('sel'); scObj[key]='na'; if(cb)cb();
+  };
+  c.appendChild(na);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1206,7 +1227,7 @@ function updateTotal(sport, cyc) {
   const sc=state[sport.id][cyc].scores;
   sport[cyc].criteres.forEach(c => {
     if(c.sous){
-      let sub=0; c.sous.forEach(s=>{sub+=(sc[c.id+'_'+s.id]||0);});
+      let sub=0; c.sous.forEach(s=>{sub+=nombre(sc[c.id+'_'+s.id]);});
       const el=document.getElementById(`${sport.id}-${cyc}-run-${c.id}`);
       if(el) el.textContent=sub;
     }
@@ -1284,7 +1305,7 @@ function renderListe(sid, cyc) {
   eleves.forEach((e,i)=>{
     const detail=keys.slice(0,4).map(k=>{
       const lbl=k.label.replace(/^[^\wÀ-ÿ]*/,'').split(' ').slice(0,2).join(' ');
-      return lbl+' '+(e.scores[k.key]!==null&&e.scores[k.key]!==undefined?e.scores[k.key]:'—')+'/'+k.max;
+      return lbl+' '+fmtSc(e.scores[k.key])+'/'+k.max;
     }).join(' · ');
     const item=document.createElement('div');
     item.className='eleve-item';
@@ -1357,6 +1378,10 @@ function openModal(sid, cyc, idx) {
       b.onclick=()=>{ cont.querySelectorAll('.pts-btn').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); modalState[k.key]=i; };
       cont.appendChild(b);
     }
+    const na=document.createElement('button');
+    na.className='pts-btn pts-na'+(e.scores[k.key]==='na'?' sel':''); na.textContent='NE'; na.title='Non évalué (retiré du calcul)';
+    na.onclick=()=>{ cont.querySelectorAll('.pts-btn').forEach(x=>x.classList.remove('sel')); na.classList.add('sel'); modalState[k.key]='na'; };
+    cont.appendChild(na);
   });
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -1460,7 +1485,7 @@ function imprimer(sid, cyc) {
   html+=`<th>Total /${maxTotal(sport[cyc].criteres)}</th></tr>`;
   eleves.forEach(e=>{
     html+=`<tr><td>${e.prenom}</td>`;
-    keys.forEach(k=>{ html+=`<td>${e.statut?'':(e.scores[k.key]!==null&&e.scores[k.key]!==undefined?e.scores[k.key]:'—')}</td>`; });
+    keys.forEach(k=>{ html+=`<td>${e.statut?'':fmtSc(e.scores[k.key])}</td>`; });
     html+=`<td class="t">${e.statut?STATUT_LBL[e.statut]:e.total}</td></tr>`;
   });
   html+=`</table></body></html>`;
