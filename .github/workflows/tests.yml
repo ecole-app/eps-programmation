@@ -1,0 +1,36 @@
+name: Tests automatiques
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tests
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Tests du site
+        run: set -o pipefail; npm run test:ci 2>&1 | tee sortie.log
+        shell: bash
+        env:
+          TITRE_TESTS: Tests du site
+      - name: Résumé en cas d'échec
+        if: failure()
+        shell: bash
+        run: |
+          [ -f sortie.log ] || exit 0
+          msg=$(grep -v '^::' sortie.log | tail -n 60 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+          echo "::error title=Fin du journal::$msg"
