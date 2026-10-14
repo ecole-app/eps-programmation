@@ -7,7 +7,6 @@
 <meta name="theme-color" content="#095958">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="EPS Collège">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 
 :root {
@@ -727,7 +726,142 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
   .fiche-saved-badge{font-size:0.72rem;color:var(--teal);font-weight:600;opacity:0;transition:opacity 0.3s}
   .fiche-saved-badge.show{opacity:1}
 
+/* ══════════════════════════════════════════════════════════
+   APPLE DESIGN — surcouche visuelle (skill emilkowalski/apple-design)
+   CSS pur : aucun HTML ni JS modifié. Impression non touchée.
+   Principes : réponse instantanée au toucher, matières translucides,
+   courbes type iOS, typo système, respect des préférences d'accessibilité.
+══════════════════════════════════════════════════════════ */
+@media screen {
 
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter","Segoe UI",system-ui,sans-serif;
+  --bg:#f5f5f7;--text:#1d1d1f;--muted:#6e6e73;--border:rgba(0,0,0,0.09);
+  --ease-out:cubic-bezier(.22,1,.36,1);
+  --ease-sheet:cubic-bezier(.32,.72,0,1);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.04);
+  --shadow-md:0 2px 6px rgba(0,0,0,.05),0 12px 32px rgba(0,0,0,.09);
+  --shadow-lg:0 8px 24px rgba(0,0,0,.12),0 32px 80px rgba(0,0,0,.2);
+}
+
+/* ── Typo : police système, tracking adapté à la taille ── */
+body,body *{font-family:var(--font) !important}
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-optical-sizing:auto;-webkit-tap-highlight-color:transparent}
+.page-title,.logo{font-weight:700;letter-spacing:-0.022em;line-height:1.1}
+.fiche-modal-titre,.modal-title,.section-title,.bilan-title,.comp-hd,.alert-panel-hd,
+.fiche-section-title,.prog-card-nom,.creneau-classe,.p-name,.h-classe,.gh-cell{font-weight:600;letter-spacing:-0.01em}
+.stat-v,.h-val,.bs-val{font-weight:700;letter-spacing:-0.03em;font-variant-numeric:tabular-nums}
+.prog-pct,.a-sem,.a-h,.stat-l,.h-lbl{font-variant-numeric:tabular-nums}
+
+/* ── Réponse : zéro latence au toucher, retour instantané à l'appui ── */
+button,.apsa-tag,.prog-card,.famille-item,.sport-btn{touch-action:manipulation}
+.btn,.nav-tab,.alert-btn,.e-btn,.c-add-btn,.cycle-save,.prog-filter-btn,.sport-btn,.add-btn,
+.icon-btn,.fiche-modal-close,.sidebar-toggle-btn{
+  transition:transform .14s var(--ease-out),background-color .2s var(--ease-out),color .2s var(--ease-out),border-color .2s var(--ease-out),box-shadow .2s var(--ease-out)}
+.btn:active,.nav-tab:active,.alert-btn:active,.e-btn:active,.c-add-btn:active,.cycle-save:active,
+.prog-filter-btn:active,.sport-btn:active,.add-btn:active,.icon-btn:active,.fiche-modal-close:active,
+.sidebar-toggle-btn:active{transform:scale(.96);transition-duration:.06s}
+.btn{border-radius:10px;font-weight:600;letter-spacing:-0.005em}
+.btn-outline{border:1px solid rgba(0,0,0,.14)}
+.apsa-tag{border-radius:9px;transition:transform .3s var(--ease-out),box-shadow .3s var(--ease-out)}
+.apsa-tag:active,.prog-card:active{transform:scale(.98);transition-duration:.06s}
+.prog-card{transition:transform .3s var(--ease-out),box-shadow .3s var(--ease-out)}
+@media (hover:hover){
+  .apsa-tag:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+  .prog-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+}
+
+/* ── Matières : en-tête translucide, le contenu défile dessous ── */
+header{
+  background:rgba(9,89,88,.78);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid rgba(255,255,255,.14);box-shadow:none}
+.nav-tabs{background:rgba(255,255,255,.12);border-radius:10px}
+.nav-tab{border-radius:8px}
+.nav-tab.active{background:#fff;color:var(--teal-d);box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.sidebar{border-right:.5px solid rgba(0,0,0,.1)}
+
+/* ── Cartes : coins généreux, bord fin, ombre douce ── */
+.section-card,.bilan-card,.h-card,.comp-col,.cycle-card,.prog-card,.fiche-section,.grid-wrap{
+  border:.5px solid rgba(0,0,0,.09);border-radius:14px;box-shadow:var(--shadow-sm)}
+.stat-card,.bs-card,.creneau-item,.fiche-info-item,.fiche-cond-item{border-radius:10px}
+
+/* ── Champs : fond gris système, anneau de focus doux ── */
+.form-select,.form-input,.form-textarea,.cycle-input,.comp-select,.c-add-input,.note-area,
+.fiche-edit-input,.fiche-edit-ta,.sport-search input{
+  border:1px solid rgba(0,0,0,.12);border-radius:10px;background:rgba(120,120,128,.08);
+  transition:border-color .2s var(--ease-out),background-color .2s var(--ease-out),box-shadow .2s var(--ease-out)}
+.form-select:focus,.form-input:focus,.form-textarea:focus,.cycle-input:focus,.comp-select:focus,
+.c-add-input:focus,.note-area:focus,.fiche-edit-input:focus,.fiche-edit-ta:focus,.sport-search input:focus{
+  border-color:var(--teal);background:#fff;box-shadow:0 0 0 4px rgba(14,124,123,.16)}
+:focus-visible{outline:3px solid rgba(14,124,123,.45);outline-offset:2px}
+header :focus-visible{outline-color:rgba(255,255,255,.75)}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
+
+/* ── Mouvement : courbes type iOS, les surfaces « se matérialisent » ── */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px) scale(.96);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes pageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.modal-overlay,.fiche-modal-overlay{
+  background:rgba(0,0,0,.32);
+  -webkit-backdrop-filter:blur(8px) saturate(120%);backdrop-filter:blur(8px) saturate(120%)}
+.modal-overlay.open,.fiche-modal-overlay.open,.sidebar-backdrop.open{animation:fadeIn .25s ease both}
+.modal,.confirm-modal,.fiche-modal{border-radius:20px;box-shadow:var(--shadow-lg);animation:slideUp .4s var(--ease-sheet) both}
+.alert-panel{border-radius:14px;border:.5px solid rgba(0,0,0,.1);box-shadow:var(--shadow-md);
+  transform-origin:top right;animation:slideDown .28s var(--ease-sheet) both}
+.page.active{animation:pageIn .35s var(--ease-out) both}
+.prog-fill{transition:width .6s var(--ease-sheet)}
+.s-body{transition:max-height .35s var(--ease-sheet)}
+.s-chev{transition:transform .3s var(--ease-sheet)}
+.toast{
+  background:rgba(29,29,31,.82);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+  border-radius:99px;padding:10px 18px;box-shadow:var(--shadow-md);
+  transition:transform .45s var(--ease-sheet),opacity .25s ease}
+
+/* ── Ordinateur : fenêtres plus arrondies ── */
+@media (min-width:769px){
+  .fiche-modal-hd{border-radius:20px 20px 0 0}
+  .fiche-modal-ft{border-radius:0 0 20px 20px}
+}
+
+/* ── Mobile : tiroir latéral en verre, fiche en feuille qui monte du bas ── */
+@media (max-width:768px),(max-device-width:768px){
+  .sidebar{
+    transition:transform .45s var(--ease-sheet) !important;
+    background:rgba(255,255,255,.82) !important;
+    -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%)}
+  .fiche-modal{animation-name:sheetUp;animation-duration:.45s}
+  .alert-panel{transform-origin:bottom center}
+}
+
+/* ── Accessibilité : mouvement réduit = fondu doux, sans glissement ni rebond ── */
+@media (prefers-reduced-motion:reduce){
+  .modal,.confirm-modal,.fiche-modal,.alert-panel,.page.active{animation-name:fadeIn !important;animation-duration:.2s !important}
+  .sidebar{transition-duration:.01ms !important}
+  .toast{transition:opacity .2s ease !important}
+  .btn:active,.nav-tab:active,.alert-btn:active,.e-btn:active,.c-add-btn:active,.cycle-save:active,
+  .prog-filter-btn:active,.sport-btn:active,.add-btn:active,.icon-btn:active,.fiche-modal-close:active,
+  .sidebar-toggle-btn:active,.apsa-tag:active,.prog-card:active,.apsa-tag:hover,.prog-card:hover{transform:none}
+  .prog-fill,.s-body,.s-chev{transition-duration:.01ms}
+}
+/* ── Accessibilité : transparence réduite = surfaces pleines, sans flou ── */
+@media (prefers-reduced-transparency:reduce){
+  header{background:var(--teal-d);-webkit-backdrop-filter:none;backdrop-filter:none}
+  .modal-overlay,.fiche-modal-overlay,.sidebar-backdrop{background:rgba(0,0,0,.5);-webkit-backdrop-filter:none;backdrop-filter:none}
+  .toast{background:#1d1d1f;-webkit-backdrop-filter:none;backdrop-filter:none}
+  .sidebar{background:var(--surface) !important;-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+/* ── Accessibilité : contraste renforcé = bords nets ── */
+@media (prefers-contrast:more){
+  header{background:var(--teal-d);-webkit-backdrop-filter:none;backdrop-filter:none}
+  .section-card,.bilan-card,.h-card,.comp-col,.cycle-card,.prog-card,.fiche-section,.grid-wrap{border:1px solid #1d1d1f}
+}
+
+}
 </style>
 </head>
 <body>
