@@ -229,36 +229,36 @@ const SPORTS = [
       seances:'10–12',
       ca_texte:'Courir vite sur sa fraction de course, réussir le passage de témoin. Tenir le rôle de chronométreur de son équipe.',
       criteres:[
-        { id:'temps', label:'⏱ Temps collectif', max:6, hint:'Course 4×120m (1 tour de piste 40×20 m chacun) — 3 tentatives, meilleur temps retenu',
+        { id:'temps', label:'⏱ Temps collectif', max:6, hint:'Course 4×120m (1 tour de piste 40×20 m chacun) — 3 tentatives, meilleur temps parmi les essais valides (essai disqualifié = non compté ; aucun essai valide = 0)',
           sous:null,
-          table:[['< 106s','6'],['106–114s','5'],['114–122s','4'],['122–131s','3'],['131–140s','2'],['> 140s','1']] },
+          table:[['< 106s','6'],['106–114s','5'],['114–122s','4'],['122–131s','3'],['131–140s','2'],['> 140s','1'],['Aucun essai valide','0']] },
         { id:'passage', label:'🤝 Passages de témoin', max:6, hint:'3 passages notés 0–2 : zone respectée, continuité de course',
           sous:[{id:'p1',label:'Passage 1',max:2},{id:'p2',label:'Passage 2',max:2},{id:'p3',label:'Passage 3',max:2}],
           table:[['Passage sans ralentissement, zone OK','2'],['Léger ralentissement ou zone limite','1'],['Arrêt ou hors-zone','0']] },
         { id:'engage', label:'🔥 Engagement et effort', max:4, hint:'Court à fond sur sa fraction, sans ralentir ni se désintéresser, encourage son équipe',
           sous:null,
           table:[['Engagement maximal sur toute sa fraction, encourage','4'],['Bon engagement, léger relâchement','3'],['Engagement inégal, ralentit avant la fin','2'],['Peu engagé ou se désintéresse','1']] },
-        { id:'regul', label:'📊 Régularité', max:4, hint:'Écart entre meilleur et moins bon essai',
+        { id:'regul', label:'📊 Régularité et respect des règles', max:4, hint:'Écart entre meilleur et moins bon essai valide. Une disqualification (zone ratée, témoin tombé, hors couloir…) compte comme un essai raté, pour toute l\'équipe',
           sous:null,
-          table:[['Écart < 6s','4'],['Écart 6–9s','3'],['Écart 9–12s','2'],['Écart > 12s','1']] }
+          table:[['3 essais valides, écart < 6s','4'],['3 essais valides, écart 6–9s','3'],['3 essais valides, écart > 9s, ou 1 disqualification','2'],['2 disqualifications','1'],['3 disqualifications (aucun temps valide)','0']] }
       ]
     },
     c4:{
       seances:'10–12',
       ca_texte:'Optimiser le passage de témoin en aveugle. Comprendre que la performance collective dépasse la somme des performances individuelles. Analyser et proposer des ajustements.',
       criteres:[
-        { id:'temps', label:'⏱ Temps collectif', max:6, hint:'Course 4×120m (1 tour de piste 40×20 m chacun) — 3 tentatives, meilleur temps retenu',
+        { id:'temps', label:'⏱ Temps collectif', max:6, hint:'Course 4×120m (1 tour de piste 40×20 m chacun) — 3 tentatives, meilleur temps parmi les essais valides (essai disqualifié = non compté ; aucun essai valide = 0)',
           sous:null,
-          table:[['< 72s','6'],['72–77s','5'],['77–82s','4'],['82–86s','3'],['86–94s','2'],['> 94s','1']] },
+          table:[['< 72s','6'],['72–77s','5'],['77–82s','4'],['82–86s','3'],['86–94s','2'],['> 94s','1'],['Aucun essai valide','0']] },
         { id:'passage', label:'🤝 Passages de témoin', max:6, hint:'Passage en aveugle, zone réglementaire, vitesse maintenue',
           sous:[{id:'p1',label:'Passage 1',max:2},{id:'p2',label:'Passage 2',max:2},{id:'p3',label:'Passage 3',max:2}],
           table:[['Aveugle, zone OK, vitesse maintenue','2'],['Aveugle tenté mais ralentissement','1'],['Avec regard ou hors-zone','0']] },
         { id:'engage', label:'🔥 Engagement et effort', max:4, hint:'Court à fond sur sa fraction, sans ralentir ni se désintéresser, encourage son équipe',
           sous:null,
           table:[['Engagement maximal sur toute sa fraction, encourage','4'],['Bon engagement, léger relâchement','3'],['Engagement inégal, ralentit avant la fin','2'],['Peu engagé ou se désintéresse','1']] },
-        { id:'regul', label:'📊 Régularité', max:4, hint:'Constance sur les 3 essais',
+        { id:'regul', label:'📊 Régularité et respect des règles', max:4, hint:'Constance sur les 3 essais valides. Une disqualification (zone ratée, témoin tombé, hors couloir…) compte comme un essai raté, pour toute l\'équipe',
           sous:null,
-          table:[['Écart < 2,5s','4'],['Écart 2,5–5s','3'],['Écart 5–7s','2'],['Écart > 7s','1']] }
+          table:[['3 essais valides, écart < 2,5s','4'],['3 essais valides, écart 2,5–5s','3'],['3 essais valides, écart > 5s, ou 1 disqualification','2'],['2 disqualifications','1'],['3 disqualifications (aucun temps valide)','0']] }
       ]
     }
   },

@@ -201,3 +201,25 @@ describe("Fiche de suivi : réglages", () => {
     assert.equal(await p.isVisible("#papier-seances"), false);
   });
 });
+
+describe("Relais : disqualification", () => {
+  it("régularité = « et respect des règles » avec 0 possible, en 6e et en cycle 4", async () => {
+    const p = await env.page("baremes.html");
+    const r = await p.evaluate(() => ["c3", "c4"].map((c) => {
+      const cr = SPORTS.find((s) => s.id === "relais")[c].criteres;
+      const reg = cr.find((x) => x.id === "regul"), t = cr.find((x) => x.id === "temps");
+      return [reg.label, reg.max, reg.table[reg.table.length - 1], t.table[t.table.length - 1]];
+    }));
+    for (const x of r) {
+      assert.match(x[0], /respect des règles/);
+      assert.equal(x[1], 4);
+      assert.deepEqual(x[2], ["3 disqualifications (aucun temps valide)", "0"]);
+      assert.deepEqual(x[3], ["Aucun essai valide", "0"]);
+    }
+  });
+  it("les notes déjà saisies sont conservées (même clé 'regul')", async () => {
+    const p = await env.page("baremes.html");
+    assert.equal(await total(p, "relais", "c3", { temps: 3, passage_p1: 1, passage_p2: 2, passage_p3: 1, engage: 4, regul: 3 }), 14);
+    assert.equal(await total(p, "relais", "c3", { temps: 0, passage_p1: 1, passage_p2: 1, passage_p3: 1, engage: 2, regul: 0 }), 5);
+  });
+});
