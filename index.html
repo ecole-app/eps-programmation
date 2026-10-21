@@ -879,6 +879,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
     <button class="nav-tab" onclick="showPage('seances',this)">🗓️ Séances</button>
     <button class="nav-tab" onclick="showPage('baremes',this)">🎯 Barèmes</button>
     <button class="nav-tab" onclick="showPage('appreciations',this)">💬 Appréciations</button>
+    <button class="nav-tab" onclick="showPage('documents',this)">📁 Documents</button>
   </div>
   <div class="h-actions">
     <button class="alert-btn" id="alertBtn" onclick="toggleAlertPanel()">⚠️ <span class="alert-count" id="alertCount">0</span></button>
@@ -1019,6 +1020,30 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
   </div>
 
   <!-- ══ PAGE APPRÉCIATIONS (outil isolé dans une iframe : appreciations.html / appreciations-ia.html, mêmes données) ══ -->
+  <div class="page" id="page-documents">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Mes documents</div>
+        <div class="page-sub">Tes fiches et documents perso, rangés par catégorie. Gardés dans ce navigateur, jamais envoyés sur internet.</div>
+      </div>
+    </div>
+    <div id="docDrop" style="border:2px dashed var(--border);border-radius:14px;padding:16px;background:var(--surface);margin-bottom:12px;text-align:center">
+      <div style="font-size:0.85rem;margin-bottom:8px">Glisse tes fichiers ici, ou</div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center">
+        <select id="docCatAjout" class="form-input" style="width:auto;min-width:160px" onchange="docCatChange(this)"></select>
+        <button class="btn btn-teal" onclick="document.getElementById('docInput').click()">+ Ajouter des documents</button>
+        <input type="file" id="docInput" multiple style="display:none" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.csv,.png,.jpg,.jpeg,.gif,.webp" onchange="docAjouter(this.files);this.value=''">
+      </div>
+      <div style="font-size:0.7rem;color:var(--muted);margin-top:8px">La catégorie choisie s'applique à tous les fichiers ajoutés. PDF, Word, Excel, PowerPoint, images, texte.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+      <input type="search" id="docRecherche" class="form-input" placeholder="Rechercher un document…" oninput="docRender()" style="flex:1;min-width:180px">
+      <select id="docFiltreCat" class="form-input" style="width:auto" onchange="docRender()"></select>
+    </div>
+    <div id="docListe"></div>
+    <div id="docEspace" style="font-size:0.7rem;color:var(--muted);margin-top:12px"></div>
+  </div>
+
   <div class="page" id="page-appreciations">
     <div style="display:flex;gap:6px;margin-bottom:8px">
       <button class="btn btn-teal" id="apprBtnStd" onclick="setApprVersion('std')" style="padding:6px 14px;font-size:0.78rem">Classique</button>
@@ -2228,6 +2253,137 @@ function saveElevesModal(){
   showToast('✅ Élèves sauvegardés !');
 }
 
+// ═══ DOCUMENTS PERSO ═══
+// Fichiers rangés dans IndexedDB (ce navigateur uniquement). Le dépôt du site est public :
+// rien de perso n'est jamais envoyé sur internet.
+const DOC_CATS_DEFAUT=['CAPEPS','Cours EPS','Administratif','Autre'];
+let docCache=[];
+function docDB(){
+  return new Promise((ok,ko)=>{
+    const r=indexedDB.open('eps-docs',1);
+    r.onupgradeneeded=()=>{ r.result.createObjectStore('docs',{keyPath:'id'}); };
+    r.onsuccess=()=>ok(r.result); r.onerror=()=>ko(r.error);
+  });
+}
+async function docTout(){
+  const db=await docDB();
+  return new Promise((ok,ko)=>{ const q=db.transaction('docs').objectStore('docs').getAll(); q.onsuccess=()=>ok(q.result||[]); q.onerror=()=>ko(q.error); });
+}
+async function docEcrire(d){
+  const db=await docDB();
+  return new Promise((ok,ko)=>{ const t=db.transaction('docs','readwrite'); t.objectStore('docs').put(d); t.oncomplete=ok; t.onerror=()=>ko(t.error); });
+}
+async function docSupprimerDB(id){
+  const db=await docDB();
+  return new Promise((ok,ko)=>{ const t=db.transaction('docs','readwrite'); t.objectStore('docs').delete(id); t.oncomplete=ok; t.onerror=()=>ko(t.error); });
+}
+function docCategories(){
+  const set=new Set(DOC_CATS_DEFAUT); docCache.forEach(d=>set.add(d.cat||'Autre'));
+  return [...set];
+}
+function docTaille(n){ return n<1024?n+' o':n<1048576?Math.round(n/1024)+' Ko':(n/1048576).toFixed(1).replace('.',',')+' Mo'; }
+function docIcone(d){
+  const n=(d.name||'').toLowerCase();
+  if(n.endsWith('.pdf')) return '📕';
+  if(/\.(docx?|txt|md)$/.test(n)) return '📘';
+  if(/\.(xlsx?|csv)$/.test(n)) return '📗';
+  if(/\.(pptx?)$/.test(n)) return '📙';
+  if(/\.(png|jpe?g|gif|webp)$/.test(n)) return '🖼️';
+  return '📄';
+}
+function docCatChange(sel){
+  if(sel.value!=='__new__'){ try{localStorage.setItem('doc-derniere-cat',sel.value);}catch(e){} return; }
+  const nom=(prompt('Nom de la nouvelle catégorie :')||'').trim();
+  if(!nom){ docRemplirSelects(); return; }
+  try{localStorage.setItem('doc-derniere-cat',nom);}catch(e){}
+  docRemplirSelects(nom);
+}
+function docRemplirSelects(extra){
+  const cats=docCategories(); if(extra && !cats.includes(extra)) cats.push(extra);
+  let derniere=extra||'CAPEPS'; try{ derniere=extra||localStorage.getItem('doc-derniere-cat')||'CAPEPS'; }catch(e){}
+  if(!cats.includes(derniere)) derniere=cats[0];
+  const a=document.getElementById('docCatAjout');
+  if(a) a.innerHTML=cats.map(c=>`<option value="${escHtml(c)}"${c===derniere?' selected':''}>${escHtml(c)}</option>`).join('')+'<option value="__new__">+ Nouvelle catégorie…</option>';
+  const f=document.getElementById('docFiltreCat');
+  if(f){ const cur=f.value||'*'; f.innerHTML='<option value="*">Toutes les catégories</option>'+cats.map(c=>`<option value="${escHtml(c)}">${escHtml(c)}</option>`).join(''); f.value=[...f.options].some(o=>o.value===cur)?cur:'*'; }
+}
+async function docAjouter(files){
+  files=Array.from(files||[]); // copie : l'input est vidé juste après
+  const cat=document.getElementById('docCatAjout').value; if(!files||!files.length||cat==='__new__') return;
+  let n=0;
+  for(const f of files){
+    try{
+      await docEcrire({id:'d'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),name:f.name,cat,type:f.type||'',size:f.size,added:Date.now(),blob:f});
+      n++;
+    }catch(e){ showToast('❌ Impossible d\'enregistrer '+f.name+' (espace du navigateur plein ?)'); }
+  }
+  if(n) showToast('✅ '+n+' document'+(n>1?'s':'')+' ajouté'+(n>1?'s':'')+' dans '+cat);
+  docRender();
+}
+async function docOuvrir(id){
+  const d=docCache.find(x=>x.id===id); if(!d) return;
+  const url=URL.createObjectURL(d.blob);
+  if(/\.(pdf|png|jpe?g|gif|webp|txt)$/i.test(d.name)) window.open(url,'_blank');
+  else docTelecharger(id);
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+function docTelecharger(id){
+  const d=docCache.find(x=>x.id===id); if(!d) return;
+  const url=URL.createObjectURL(d.blob); const a=document.createElement('a');
+  a.href=url; a.download=d.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+}
+async function docRenommer(id){
+  const d=docCache.find(x=>x.id===id); if(!d) return;
+  const nom=prompt('Nom du document :',d.name); if(nom===null) return;
+  const cat=prompt('Catégorie :',d.cat||'Autre'); if(cat===null) return;
+  d.name=(nom.trim()||d.name); d.cat=(cat.trim()||d.cat||'Autre');
+  await docEcrire(d); docRender();
+}
+async function docSupprimer(id){
+  const d=docCache.find(x=>x.id===id); if(!d) return;
+  if(!confirm('Supprimer « '+d.name+' » ? Cette action est définitive.')) return;
+  await docSupprimerDB(id); showToast('Document supprimé'); docRender();
+}
+async function docRender(){
+  const box=document.getElementById('docListe'); if(!box) return;
+  try{ docCache=await docTout(); }
+  catch(e){ box.innerHTML='<div style="padding:20px;color:var(--muted)">Le stockage du navigateur est indisponible (navigation privée ?). Les documents ne peuvent pas être enregistrés ici.</div>'; return; }
+  docRemplirSelects();
+  const q=(document.getElementById('docRecherche').value||'').trim().toLowerCase();
+  const fc=document.getElementById('docFiltreCat').value;
+  const liste=docCache.filter(d=>(fc==='*'||(d.cat||'Autre')===fc)&&(!q||(d.name||'').toLowerCase().includes(q)||(d.cat||'').toLowerCase().includes(q)));
+  if(!docCache.length){ box.innerHTML='<div style="padding:28px;text-align:center;color:var(--muted);font-size:0.85rem">Aucun document pour l\'instant. Ajoute ton premier fichier ci-dessus.</div>'; }
+  else if(!liste.length){ box.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.85rem">Aucun résultat.</div>'; }
+  else{
+    const groupes={}; liste.forEach(d=>{ (groupes[d.cat||'Autre']=groupes[d.cat||'Autre']||[]).push(d); });
+    box.innerHTML=Object.keys(groupes).sort((a,b)=>a.localeCompare(b,'fr')).map(c=>`
+      <div style="margin-bottom:14px">
+        <div style="font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;color:var(--teal-d);margin:0 2px 6px">${escHtml(c)} <span style="color:var(--muted);font-weight:600">(${groupes[c].length})</span></div>
+        ${groupes[c].sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(d=>`
+        <div class="doc-ligne" style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px">
+          <div style="font-size:1.4rem">${docIcone(d)}</div>
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="docOuvrir('${d.id}')">
+            <div style="font-size:0.85rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(d.name)}</div>
+            <div style="font-size:0.7rem;color:var(--muted)">${docTaille(d.size||0)} · ajouté le ${new Date(d.added).toLocaleDateString('fr-FR')}</div>
+          </div>
+          <button class="btn btn-outline" style="padding:5px 9px" title="Ouvrir" onclick="docOuvrir('${d.id}')">Ouvrir</button>
+          <button class="btn btn-outline" style="padding:5px 9px" title="Télécharger" onclick="docTelecharger('${d.id}')">⬇</button>
+          <button class="btn btn-outline" style="padding:5px 9px" title="Renommer / changer de catégorie" onclick="docRenommer('${d.id}')">✏️</button>
+          <button class="btn btn-outline" style="padding:5px 9px" title="Supprimer" onclick="docSupprimer('${d.id}')">🗑</button>
+        </div>`).join('')}
+      </div>`).join('');
+  }
+  const tot=docCache.reduce((a,d)=>a+(d.size||0),0);
+  document.getElementById('docEspace').textContent=docCache.length?docCache.length+' document'+(docCache.length>1?'s':'')+' · '+docTaille(tot)+' · rangés uniquement dans ce navigateur (autre appareil = liste vide).':'';
+}
+(function(){
+  const z=document.getElementById('docDrop'); if(!z) return;
+  ['dragenter','dragover'].forEach(ev=>z.addEventListener(ev,e=>{ e.preventDefault(); z.style.borderColor='var(--teal)'; }));
+  ['dragleave','drop'].forEach(ev=>z.addEventListener(ev,e=>{ e.preventDefault(); z.style.borderColor=''; }));
+  z.addEventListener('drop',e=>{ if(e.dataTransfer&&e.dataTransfer.files.length) docAjouter(e.dataTransfer.files); });
+})();
+
 // ═══ PARAMETRES CYCLES ═══
 function renderParamsSection(){
   const container=document.getElementById('paramsSection');
@@ -2338,6 +2494,7 @@ function showPage(id,btn){
   if(id==='aujourdhui')renderAujourdhui();
   if(id==='appreciations'){const f=document.getElementById('apprFrame');if(f&&!f.getAttribute('src'))setApprVersion(apprVersion);}
   if(id==='appreciations'||id==='baremes') rafraichirIframesEleves();
+  if(id==='documents') docRender();
   if(id==='baremes'){const f=document.getElementById('baremesFrame');if(f&&!f.getAttribute('src')){f.addEventListener('load',()=>setTimeout(scheduleCloudSync,1500),{once:true});f.setAttribute('src','baremes.html?v='+Date.now());}}
 }
 
