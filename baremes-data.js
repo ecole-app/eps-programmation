@@ -451,9 +451,12 @@ const SPORTS = [
         { id:'exec', label:'✅ Exécution', max:6, hint:'Tenue 3 secondes, corps aligné',
           sous:null,
           table:[['Toutes figures tenues 3s, corps droit','6'],['La plupart tenues, quelques écarts','4–5'],['Tenues partielles','2–3'],['Non tenues','1']] },
-        { id:'secu', label:'🛡 Sécurité', max:5, hint:'Parades respectées, posture du pareur',
+        { id:'secu', label:'🛡 Sécurité', max:3, hint:'Parades respectées, posture du pareur (passe à /5 si « Juge » est non évalué)',
           sous:null,
-          table:[['Parade active sur toutes les figures','5'],['Parade présente mais passive','3'],['Parade oubliée','1']] },
+          table:[['Parade active sur toutes les figures','3'],['Parade présente mais passive','2'],['Parade oubliée','0–1']] },
+        { id:'juge', label:'👀 Juge', max:2, reportSur:'secu', hint:'Observe un groupe avec la fiche de juge. Non évalué (NE) : les 2 points passent sur la sécurité',
+          sous:null,
+          table:[['Fiche de juge complète et juste','2'],['Fiche partielle ou quelques erreurs','1'],['Ne juge pas','0']] },
         { id:'compo', label:'🎭 Présentation', max:3, hint:'Début, fin marqués, fluidité entre les figures',
           sous:null,
           table:[['Début/fin + liaisons','3'],['Début/fin sans liaisons','2'],['Enchaînement non mémorisé','1']] }
@@ -463,18 +466,21 @@ const SPORTS = [
       seances:'10–12',
       ca_texte:"Créer et présenter un enchaînement acrobatique collectif maîtrisé et esthétique. Tenir les rôles de porteur, voltigeur, pareur avec exigence.",
       criteres:[
-        { id:'diff', label:'⭐ Difficulté', max:6, hint:'Niveau des figures (4 à 6 figures dans l\'enchaînement)',
+        { id:'diff', label:'⭐ Difficulté', max:5, hint:'Niveau des figures (4 à 6 figures dans l\'enchaînement)',
           sous:null,
-          table:[['Figures niveau 3 (renversements)','6'],['Figures niveau 2 (équilibre épaules)','4–5'],['Figures niveau 1 (pyramides simples)','2–3'],['Figures sans renversement','1']] },
-        { id:'exec', label:'✅ Exécution', max:6, hint:'Tenue 3s, alignements, amplitude',
+          table:[['Figures niveau 3 (renversements)','5'],['Figures niveau 2 (équilibre épaules)','3–4'],['Figures niveau 1 (pyramides simples)','2–3'],['Figures sans renversement','1']] },
+        { id:'exec', label:'✅ Exécution', max:5, hint:'Tenue 3s, alignements, amplitude',
           sous:null,
-          table:[['Toutes figures tenues 3s, corps tendu','6'],['La plupart tenues, quelques écarts','4–5'],['Tenues partielles, tremblements','2–3'],['Non tenues','1']] },
+          table:[['Toutes figures tenues 3s, corps tendu','5'],['La plupart tenues, quelques écarts','3–4'],['Tenues partielles, tremblements','2–3'],['Non tenues','1']] },
         { id:'compo', label:'🎭 Composition', max:5, hint:'Liaisons, artistique, mémorisation',
           sous:[{id:'liais',label:'Liaisons fluides',max:2},{id:'art',label:'Qualité artistique',max:2},{id:'mem',label:'Mémorisation (sans aide)',max:1}],
           table:[['Passages fluides entre toutes les figures','2/2'],['Expression, synchronisation du groupe (on part et on finit ensemble)','2/2'],['Enchaînement complet sans aide','1/1']] },
         { id:'secu', label:'🛡 Sécurité', max:3, hint:'Parades respectées, aucune mise en danger',
           sous:null,
-          table:[['Parade active, jamais de danger','3'],['Parade présente mais passive','2'],['Parade oubliée 1–2 fois','1'],['Sécurité non assurée','0']] }
+          table:[['Parade active, jamais de danger','3'],['Parade présente mais passive','2'],['Parade oubliée 1–2 fois','1'],['Sécurité non assurée','0']] },
+        { id:'juge', label:'👀 Juge', max:2, reportSur:'secu', hint:'Juge un groupe avec la fiche de juge. Non évalué (NE) : les 2 points passent sur la sécurité',
+          sous:null,
+          table:[['Fiche de juge complète et juste, avec justification','2'],['Fiche partielle ou quelques erreurs','1'],['Ne juge pas','0']] }
       ]
     }
   },
@@ -925,7 +931,7 @@ const NIVEAUX = {
       ca_texte: "Réaliser un enchaînement de figures acrobatiques à 3 ou 4, en sécurité, devant un jury d'élèves.",
       epreuve: "Enchaînement de 4 figures (dont 1 dynamique) noté par l'enseignant ; un groupe d'élèves juge en parallèle avec une fiche de juge.",
       crit: {
-        diff: { table: [['4 figures dont 2 de niveau 2','6'],['4 figures de niveau 1 et 2','4–5'],['Figures de niveau 1 uniquement','2–3'],['Moins de 4 figures','1']] },
+        diff: { table: [['4 figures dont 2 de niveau 2','5'],['4 figures de niveau 1 et 2','3–4'],['Figures de niveau 1 uniquement','2–3'],['Moins de 4 figures','1']] },
         compo: { table: [['Liaisons fluides entre les figures','2/2'],['Début et fin marqués, synchronisation','2/2'],['Enchaînement mémorisé','1/1']] }
       }
     },
@@ -933,7 +939,7 @@ const NIVEAUX = {
       ca_texte: "Composer un enchaînement acrobatique collectif plus difficile, synchronisé sans musique (au compte ou au signal). Juger un autre groupe.",
       epreuve: "Enchaînement de 5 figures synchronisé au compte, noté par l'enseignant ; un groupe d'élèves juge en parallèle avec une fiche de juge.",
       crit: {
-        diff: { table: [['5 figures dont 2 de niveau 3','6'],['5 figures de niveau 2','4–5'],['Figures de niveau 1 et 2','2–3'],['Moins de 5 figures','1']] }
+        diff: { table: [['5 figures dont 2 de niveau 3','5'],['5 figures de niveau 2','3–4'],['Figures de niveau 1 et 2','2–3'],['Moins de 5 figures','1']] }
       }
     },
     '3e': {

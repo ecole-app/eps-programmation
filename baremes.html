@@ -320,16 +320,19 @@ function nombre(v){ return typeof v==='number'?v:0; }
 function fmtSc(v){ return v==='na'?'NE':(v!==null&&v!==undefined?v:'—'); }
 function computeTotal(criteres, scores) {
   let t=0, mxEval=0, mxAll=0;
+  // Un critère « reportSur » non évalué (NE) donne ses points au critère indiqué (ex. Juge → Sécurité)
+  const extra={};
+  criteres.forEach(c => { if(c.reportSur && scores[c.id]==='na') extra[c.reportSur]=(extra[c.reportSur]||0)+c.max; });
   criteres.forEach(c => {
     mxAll+=c.max;
-    let got=0, mx=0, full=c.max;
+    let got=0, mx=0, full=c.max+(extra[c.id]||0);
     if(c.sous){
       full=c.sous.reduce((a,x)=>a+x.max,0);
       c.sous.forEach(sc=>{ const v=scores[c.id+'_'+sc.id]; if(v==='na') return; mx+=sc.max; got+=nombre(v); });
     } else { const v=scores[c.id]; if(v!=='na'){ mx=c.max; got=nombre(v); } }
     if(mx===0) return;
-    mxEval+=c.max;
-    t+= (c.sous && mx<full) ? got/mx*full : got;
+    mxEval+=c.max+(extra[c.id]||0);
+    if(extra[c.id]) t+=got/mx*full; else t+= (c.sous && mx<full) ? got/mx*full : got;
   });
   if(mxEval===0) return 0;
   if(mxEval<mxAll) t=t/mxEval*mxAll;
@@ -599,7 +602,7 @@ function majNiveau(){
   majTerrains();
 }
 // Tournois montante-descendante : barème calculé selon le nombre de terrains (ou tables) du jour.
-function nbTerrains(sid){ try{ return Math.max(1,Math.min(20,parseInt(localStorage.getItem('terrains-'+sid),10)||4)); }catch(e){ return 4; } }
+function nbTerrains(sid){ try{ return Math.max(1,Math.min(4,parseInt(localStorage.getItem('terrains-'+sid),10)||4)); }catch(e){ return 4; } }
 function ptsTerrain(rang, n, max, min){ if(n<=1) return max; return Math.round(max-(max-min)*(rang-1)/(n-1)); }
 function majTerrains(){
   document.querySelectorAll('.terrains').forEach(function(el){
@@ -612,7 +615,7 @@ function majTerrains(){
       +'<button type="button" onclick="adjTerrains(\''+s.id+'\',1)" aria-label="Plus">+</button></div><div class="terr-map">'+l.join('')+'</div>';
   });
 }
-function adjTerrains(sid,d){ try{ localStorage.setItem('terrains-'+sid, String(Math.max(1,Math.min(20,nbTerrains(sid)+d)))); }catch(e){} majTerrains(); }
+function adjTerrains(sid,d){ try{ localStorage.setItem('terrains-'+sid, String(Math.max(1,Math.min(4,nbTerrains(sid)+d)))); }catch(e){} majTerrains(); }
 
 // ═══════════════════════════════════════════════════════
 // INIT BUTTONS

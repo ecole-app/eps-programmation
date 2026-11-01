@@ -45,8 +45,11 @@ describe("Barèmes par classe", () => {
     await p.evaluate(() => { setClasse("4e"); showPanel("badminton"); });
     const zone = p.locator('.terrains[data-sid="badminton"][data-cyc="c4"]');
     assert.match(await zone.textContent(), /Terrain 4 \(bas\) : 2/);
-    await zone.locator("button").nth(1).click();
-    assert.match(await zone.textContent(), /Terrain 3 : 4.*Terrain 5 \(bas\) : 2/);
+    await zone.locator("button").nth(1).click();   // 4 terrains au maximum : le « + » ne fait rien
+    assert.doesNotMatch(await zone.textContent(), /Terrain 5/);
+    await zone.locator("button").nth(0).click();
+    assert.doesNotMatch(await zone.textContent(), /Terrain 4/);
+    assert.match(await zone.textContent(), /Terrain 3 \(bas\)/);
   });
   it("combiné athlétique 6e : 5 critères sur 20, le vortex peut être non évalué", async () => {
     const p = await env.page("baremes.html");
@@ -55,6 +58,19 @@ describe("Barèmes par classe", () => {
       return [maxTotal(c), computeTotal(c, { course: 4, saut: 4, lancer: "na", role: 3, fiche: 2 })];
     });
     assert.deepEqual(t, [20, 17.5]);
+  });
+});
+
+describe("Acrosport : critère Juge", () => {
+  it("juge non évalué : ses 2 points passent sur la sécurité, le total reste sur 20", async () => {
+    const p = await env.page("baremes.html");
+    const r = await p.evaluate(() => ["c3", "c4"].map((c) => {
+      const cr = SPORTS.find((s) => s.id === "acrosport")[c].criteres;
+      const fait = (juge, secu) => { const o = {}; cr.forEach((x) => { if (x.sous) x.sous.forEach((y) => { o[x.id + "_" + y.id] = y.max; }); else o[x.id] = x.id === "juge" ? juge : x.id === "secu" ? secu(x.max) : x.max; }); return o; };
+      return [maxTotal(cr), computeTotal(cr, fait(2, (m) => m)), computeTotal(cr, fait("na", (m) => m)), computeTotal(cr, fait("na", (m) => m / 2))];
+    }));
+    // sécurité 1,5/3 devient 2,5/5 : 15 + 2,5 = 17,5 dans les deux cycles
+    assert.deepEqual(r, [[20, 20, 20, 17.5], [20, 20, 20, 17.5]]);
   });
 });
 
