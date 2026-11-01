@@ -986,6 +986,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
 .plus-zoom{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border,#e2e8f0);border-radius:12px;background:#fff;font-size:.9rem}
 .plus-zoom span{flex:1;font-weight:600}
 .plus-zoom button{min-width:48px;min-height:44px;border-radius:10px;border:1.5px solid #0e7c7b;background:#f0fdfa;color:#0b5f5e;font-weight:700;font-size:1rem}
+a.da-card{text-decoration:none;color:inherit;margin-top:8px}
 </style>
 </head>
 <body>
@@ -1428,7 +1429,7 @@ let plannings = {
     P2:{'6e':[{apsa:'Course longue durée',famille:'ath',semaines:5,ca:'CA1',note:'',objectif:''}],'5e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Renfo musculaire',famille:'gym',semaines:5,ca:'CA1',note:'',objectif:''}]},
     P3:{'6e':[{apsa:'Acrosport',famille:'gym',semaines:6,ca:'CA3',note:'',objectif:''}],'5e':[{apsa:'Demi-fond',famille:'ath',semaines:6,ca:'CA1',note:'',objectif:''}],'4e':[{apsa:'Lutte',famille:'combat',semaines:6,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Relais',famille:'ath',semaines:6,ca:'CA1',note:'',objectif:''}]},
     P4:{'6e':[{apsa:'Ultimate',famille:'col',semaines:5,ca:'CA4',note:'',objectif:''}],'5e':[{apsa:'Relais',famille:'ath',semaines:5,ca:'CA1',note:'',objectif:''}],'4e':[{apsa:'Relais',famille:'ath',semaines:5,ca:'CA1',note:'',objectif:''}],'3e':[{apsa:'Tennis de table',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}]},
-    P5:{'6e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''},{apsa:'Combiné athlétique',famille:'ath',semaines:6,ca:'CA1',note:'',objectif:''}],'5e':[{apsa:'Ultimate',famille:'col',semaines:6,ca:'CA4',note:'',objectif:''},{apsa:'Ballon prisonnier',famille:'col',semaines:5,ca:'CA4',note:'Non évalué',objectif:''}],'4e':[{apsa:'Tennis de table',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''},{apsa:'Rugby à 7',famille:'col',semaines:6,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Ultimate',famille:'col',semaines:5,ca:'CA4',note:'',objectif:''},{apsa:'Course longue durée',famille:'ath',semaines:6,ca:'CA1',note:'',objectif:''}]},
+    P5:{'6e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''},{apsa:'Combiné athlétique',famille:'ath',semaines:6,ca:'CA1',note:'',objectif:''}],'5e':[{apsa:'Ultimate',famille:'col',semaines:6,ca:'CA4',note:'',objectif:''},{apsa:'Ballon prisonnier',famille:'col',semaines:5,ca:'CA4',note:'Non évalué',objectif:''}],'4e':[{apsa:'Tennis de table',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''},{apsa:'Rugby à 7',famille:'col',semaines:6,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Ultimate',famille:'col',semaines:5,ca:'CA4',note:'',objectif:''},{apsa:'Acrosport',famille:'gym',semaines:6,ca:'CA3',note:'',objectif:''}]},
   },
   '2025-26': {
     P1:{'6e':[{apsa:'Relais',famille:'ath',semaines:7,ca:'CA1',note:'',objectif:'Endurance collective'}],'5e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Badminton',famille:'raq',semaines:7,ca:'CA4',note:'',objectif:''}]},
@@ -1670,6 +1671,12 @@ function migrerProgrammation(){
       if(i===0 && c5.length>1){ c5.splice(0,1); c5.push(bp); ch=true; }
     }
     pr.migr=[...done,'2611']; saveParams(y,pr);
+  }
+  const pr2=Object.assign({}, getParams(y)); const done2=Array.isArray(pr2.migr)?pr2.migr:[];
+  if(pl && pl.P5 && !done2.includes('2611b')){
+    // 3e : la course longue de fin d'année laisse la place à l'acrosport (champ 3 au cycle 4)
+    (pl.P5['3e']||[]).forEach(a=>{ if(/course longue/i.test(a.apsa||'')){ a.apsa='Acrosport'; a.famille='gym'; a.ca='CA3'; ch=true; } });
+    pr2.migr=[...done2,'2611b']; saveParams(y,pr2);
   }
   return ch;
 }
@@ -2711,7 +2718,9 @@ const DOCS_APP = [
 ];
 function docAppRender(){
   const box=document.getElementById('docAppListe'); if(!box) return;
-  box.innerHTML=DOCS_APP.map(d=>`<button type="button" class="da-card" onclick="docAppOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('');
+  const RAPPORTS=[{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
+  box.innerHTML=DOCS_APP.map(d=>`<button type="button" class="da-card" onclick="docAppOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')
+  box.innerHTML+=RAPPORTS.map(r=>`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>Rapport Claude · s'ouvre dans un nouvel onglet</small></span><span class="da-go">›</span></a>`).join('');
 }
 function docAppOuvrir(id){
   const d=DOCS_APP.find(x=>x.id===id); if(!d) return;

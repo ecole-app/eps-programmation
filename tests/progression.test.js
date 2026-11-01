@@ -75,21 +75,21 @@ describe("Acrosport : critère Juge", () => {
 });
 
 describe("Programmation : corrections de champs", () => {
-  it("ancienne sauvegarde corrigée une seule fois (CA5, Renfo, sprint 6e, ballon prisonnier 5e)", async () => {
+  it("ancienne sauvegarde corrigée une seule fois (CA5, Renfo, sprint 6e, ballon prisonnier 5e, acrosport 3e)", async () => {
     const vieux = await (async () => {
       const p = await env.page("index.html");
       const v = await p.evaluate((a) => {
         currentYear = a; const pl = plannings[a];
         pl.P5["6e"][1] = { apsa: "Sprint", famille: "ath", semaines: 6, ca: "CA1", note: "", objectif: "" };
         pl.P5["5e"] = [{ apsa: "Ballon prisonnier", famille: "col", semaines: 5, ca: "CA4", note: "", objectif: "" }, { apsa: "Ultimate", famille: "col", semaines: 6, ca: "CA4", note: "", objectif: "" }];
-        pl.P5["3e"][1].ca = "CA5"; pl.P2["3e"][0].ca = "CA3"; saveAll();
+        pl.P5["3e"][1] = { apsa: "Course longue durée", famille: "ath", semaines: 6, ca: "CA5", note: "", objectif: "" }; pl.P2["3e"][0].ca = "CA3"; saveAll();
         return localStorage.getItem("eps-v2");
       }, ANNEE);
       await p.context().close(); return v;
     })();
     const p = await env.page("index.html", { stockage: { "eps-v2": vieux } });
     const r = await p.evaluate((a) => { const pl = plannings[a]; return [pl.P5["6e"][1].apsa, pl.P5["5e"].map((x) => x.apsa + "|" + x.note).join(), pl.P5["3e"][1].ca, pl.P2["3e"][0].ca]; }, ANNEE);
-    assert.deepEqual(r, ["Combiné athlétique", "Ultimate|,Ballon prisonnier|Non évalué", "CA1", "CA1"]);
+    assert.deepEqual(r, ["Combiné athlétique", "Ultimate|,Ballon prisonnier|Non évalué", "CA3", "CA1"]);
     await p.evaluate((a) => { plannings[a].P5["6e"][1].apsa = "Sprint"; saveAll(); }, ANNEE);
     await p.reload(); await p.waitForTimeout(300);
     assert.equal(await p.evaluate((a) => plannings[a].P5["6e"][1].apsa, ANNEE), "Sprint");
@@ -131,7 +131,7 @@ describe("Documents préparés", () => {
   it("la séance de tests 6e, les attendus 2027 et le mémo VMA s'ouvrent depuis Documents", async () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
     await p.click(".nav-tab[onclick*=\"'documents'\"]");
-    assert.equal(await p.locator(".da-card").count(), 3);
+    assert.equal(await p.locator("button.da-card").count(), 3);
     await p.locator(".da-card").first().click();
     assert.match(await p.locator("#docAppBody").textContent(), /navette Luc-Léger/);
     await p.evaluate(() => { docAppFermer(); docAppOuvrir("afc-2027"); });
