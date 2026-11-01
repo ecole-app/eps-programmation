@@ -667,6 +667,25 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
 }
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 
+  /* ── DOCUMENTS PRÉPARÉS ── */
+  .da-sec{margin-bottom:14px}
+  .da-sec-t{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 2px 6px}
+  .da-liste{display:grid;gap:8px}
+  .da-card{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:inherit;color:var(--text);min-height:58px}
+  .da-ic{font-size:1.5rem}
+  .da-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:0.86rem}
+  .da-tx small{color:var(--muted);font-size:0.72rem}
+  .da-go{font-size:1.4rem;color:var(--muted)}
+  .da-body{font-size:0.86rem;line-height:1.55}
+  .da-body h3{font-size:0.92rem;margin:16px 0 6px;color:var(--teal-d)}
+  .da-body ul,.da-body ol{margin:0 0 6px 20px;padding:0}
+  .da-body li{margin:3px 0}
+  .da-lead{background:var(--teal-g);border-radius:10px;padding:10px 12px;margin:0 0 6px}
+  .da-etat{display:inline-block;font-size:0.7rem;font-weight:700;color:#8f5a00;background:#fbefd2;border-radius:99px;padding:2px 10px;margin-bottom:8px}
+  .da-t{width:100%;border-collapse:collapse;font-size:0.78rem;margin:4px 0 8px;display:block;overflow-x:auto}
+  .da-t th{background:var(--teal-d);color:#fff;text-align:left;padding:6px 8px}
+  .da-t td{border-bottom:1px solid var(--border);padding:6px 8px;vertical-align:top}
+  .da-src{font-size:0.72rem;color:var(--muted);margin-top:12px}
   /* ── FICHE APSA : progression, attendus 2027 ── */
   .fp-tabs{display:flex;gap:6px;margin:6px 0 8px;flex-wrap:wrap}
   .fp-tab{border:1.5px solid var(--border);background:var(--surface,#fff);border-radius:8px;padding:5px 14px;font-weight:700;cursor:pointer;font-size:0.8rem}
@@ -1121,6 +1140,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
         <div class="page-sub">Tes fiches et documents perso, rangés par catégorie. Gardés dans ce navigateur, jamais envoyés sur internet.</div>
       </div>
     </div>
+    <div class="da-sec">
+      <div class="da-sec-t">Préparés pour toi</div>
+      <div id="docAppListe" class="da-liste"></div>
+    </div>
+    <div class="da-sec-t" style="margin-top:4px">Mes documents perso</div>
     <div id="docDrop" style="border:2px dashed var(--border);border-radius:14px;padding:16px;background:var(--surface);margin-bottom:12px;text-align:center">
       <div style="font-size:0.85rem;margin-bottom:8px">Glisse tes fichiers ici, ou</div>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center">
@@ -1416,7 +1440,7 @@ const SPORTS_DATA = [
   {id:"rugby",nom:"Rugby à 7",emoji:"🏉",ca:"CA4",famille:"Sports collectifs",seances:"10–12",fond:"Version courte du rugby où deux équipes s'affrontent sur un terrain complet.",pb:"Gérer la contradiction entre avancer collectivement TOUT EN conservant le ballon.",materiel:"Ballons ovales, plots, dossards",temporel:"10–12 séances",espace:"Terrain extérieur",effectif:"Équipes de 5–7",afc1:"Passer en arrière pour faire avancer l'équipe.",afc2:"Créer des surnombres en attaque.",afc3:"Respecter les règles. Arbitrer.",ciblage:"UTILISER LE SURNOMBRE POUR CRÉER DES ESPACES ET APLATIR.",epreuve:"Tournoi 5v5. Matchs 7 minutes. Toucher-plaquage.",axes:["Technique de passe","Soutien","Surnombres","Défense","Tournoi"],bareme:[{pts:"5 pts",label:"Performance",detail:"Essais"},{pts:"8 pts",label:"Jeu collectif",detail:"Passes, soutiens"},{pts:"4 pts",label:"Règles",detail:"Respect"},{pts:"3 pts",label:"Observation",detail:"Grille"}]},
   {id:"badminton",nom:"Badminton",emoji:"🏸",ca:"CA4",famille:"Raquettes",seances:"10–12",fond:"Sport de raquette où deux joueurs s'affrontent en envoyant le volant dans le camp adverse.",pb:"Gérer la contradiction entre placer le volant loin TOUT EN maintenant sa propre position optimale.",materiel:"Raquettes, volants, filet",temporel:"10–12 séances",espace:"Gymnase avec filets",effectif:"Simple et double",afc1:"Réaliser des frappes variées. Se replacer au centre.",afc2:"Exploiter les espaces adverses.",afc3:"Arbitrer en autonomie.",ciblage:"EXPLOITER LES ESPACES ADVERSES PAR LA VARIÉTÉ DES FRAPPES.",epreuve:"Tournoi simple et double. 15 points.",axes:["Frappes de base","Replacement","Construction échange","Double","Tournoi"],bareme:[{pts:"6 pts",label:"Performance",detail:"Résultats matchs"},{pts:"7 pts",label:"Technique",detail:"Variété, précision"},{pts:"4 pts",label:"Replacement",detail:"Retour centre"},{pts:"3 pts",label:"Arbitrage",detail:"Règles"}]},
   {id:"tennis-table",nom:"Tennis de table",emoji:"🏓",ca:"CA4",famille:"Raquettes",seances:"10",fond:"Sport de raquette rapide sur table séparée par un filet.",pb:"Gérer la contradiction entre frapper fort TOUT EN contrôlant la balle.",materiel:"Tables, raquettes, balles",temporel:"10 séances",espace:"Salle avec tables",effectif:"Duels",afc1:"Frappes coup droit et revers avec contrôle.",afc2:"Construire des échanges en variant effets.",afc3:"Arbitrer et gérer le score en autonomie.",ciblage:"CONSTRUIRE L'ÉCHANGE PAR LA RÉGULARITÉ ET LA VARIATION.",epreuve:"Tournoi simple 11 points, format suédois.",axes:["Coup droit et revers","Régularité","Effets","Construction","Tournoi"],bareme:[{pts:"6 pts",label:"Performance",detail:"Résultats"},{pts:"6 pts",label:"Régularité",detail:"Échanges construits"},{pts:"5 pts",label:"Variété",detail:"Effets"},{pts:"3 pts",label:"Arbitrage",detail:"Score"}]},
-  {id:"acrosport",nom:"Acrosport",emoji:"🤸",ca:"CA3",famille:"Gym / Renfo",seances:"10–12",fond:"Activité gymnique collective où des groupes créent des figures acrobatiques et chorégraphiques.",pb:"Gérer la contradiction entre prise de risque dans les figures TOUT EN garantissant la sécurité.",materiel:"Tapis de sol, tapis de réception, musique",temporel:"10–12 séances",espace:"Gymnase avec tapis",effectif:"Groupes de 3–4",afc1:"Réaliser des figures à 3 ou 4.",afc2:"Composer et mémoriser un enchaînement.",afc3:"Respecter les règles de sécurité.",ciblage:"CRÉER UNE PRESTATION ACROBATIQUE COLLECTIVE MAÎTRISÉE ET ESTHÉTIQUE.",epreuve:"Présentation devant la classe (2–3 minutes).",axes:["Sécurité et rôles","Figures de base","Construction enchaînement","Liaisons","Présentation"],bareme:[{pts:"6 pts",label:"Difficulté",detail:"Niveau figures"},{pts:"6 pts",label:"Exécution",detail:"Tenue 3s"},{pts:"5 pts",label:"Composition",detail:"Liaisons, artistique"},{pts:"3 pts",label:"Sécurité",detail:"Parades"}]},
+  {id:"acrosport",nom:"Acrosport",emoji:"🤸",ca:"CA3",famille:"Gym / Renfo",seances:"10–12",fond:"Activité gymnique collective où des groupes créent des figures acrobatiques et chorégraphiques.",pb:"Gérer la contradiction entre prise de risque dans les figures TOUT EN garantissant la sécurité.",materiel:"Tapis de sol, tapis de réception, fiches de juge, tablette pour filmer",temporel:"10–12 séances",espace:"Gymnase avec tapis",effectif:"Groupes de 3–4",afc1:"Réaliser des figures à 3 ou 4.",afc2:"Composer et mémoriser un enchaînement.",afc3:"Respecter les règles de sécurité.",ciblage:"CRÉER UNE PRESTATION ACROBATIQUE COLLECTIVE MAÎTRISÉE ET ESTHÉTIQUE.",epreuve:"Présentation devant la classe (2–3 minutes).",axes:["Sécurité et rôles","Figures de base","Construction enchaînement","Liaisons","Présentation"],bareme:[{pts:"6 pts",label:"Difficulté",detail:"Niveau figures"},{pts:"6 pts",label:"Exécution",detail:"Tenue 3s"},{pts:"5 pts",label:"Composition",detail:"Liaisons, artistique"},{pts:"3 pts",label:"Sécurité",detail:"Parades"}]},
   {id:"renfo",nom:"Renfo musculaire",emoji:"💪",ca:"CA1",famille:"Gym / Renfo",seances:"10",fond:"Le renforcement musculaire développe la conscience corporelle et les bases de l'entretien physique.",pb:"Gérer la contradiction entre se pousser TOUT EN respectant son intégrité physique.",materiel:"Tapis de sol, élastiques, fiches LitoBox (haut du corps #771, bas du corps #801, tout le corps #750 / #751)",temporel:"10 séances",espace:"Gymnase (poids de corps)",effectif:"Groupes de 2 ou plus",afc1:"Réaliser les exercices avec la bonne technique.",afc2:"Suivre et respecter le programme de sa fiche en groupe.",afc3:"Observer et corriger son camarade.",ciblage:"S'ENTRAÎNER EN SÉCURITÉ ; CONSTRUIRE UN PROGRAMME ET MESURER SES PROGRÈS.",epreuve:"Circuit de 10 exercices évalués (3 haut du corps, 3 bas du corps, 4 tout le corps) sur la fiche du groupe. Fiche de progression.",axes:["Échauffement","Apprentissage","Programme","Circuit","Bilan"],bareme:[{pts:"5 pts",label:"Technique",detail:"Qualité exécution"},{pts:"5 pts",label:"Réalisation fiche",detail:"Exercices du groupe respectés"},{pts:"5 pts",label:"Progrès",detail:"Amélioration"},{pts:"5 pts",label:"Échauffement",detail:"Autonome"}]},
   {id:"course-orientation",nom:"Course d'orientation",emoji:"🗺️",ca:"CA2",famille:"Plein air",seances:"8–10",fond:"La course d'orientation place l'élève dans un environnement inhabituel où il doit utiliser une carte.",pb:"Gérer la contradiction entre aller vite TOUT EN lisant correctement la carte.",materiel:"Cartes, balises, poinçonneurs, boussoles",temporel:"8–10 séances",espace:"Cour, parc ou espace vert",effectif:"Binômes puis individuel",afc1:"Se repérer sur la carte et dans l'espace réel.",afc2:"Planifier son parcours.",afc3:"Gérer sa sécurité.",ciblage:"LIRE UNE CARTE ET SE REPÉRER DANS L'ESPACE RÉEL ; DÉCISIONS AUTONOMES.",epreuve:"Parcours en score : maximum de balises en 15–20 minutes.",axes:["Lecture de carte","Carte/terrain","Itinéraires","Boussole","Parcours score"],bareme:[{pts:"7 pts",label:"Balises",detail:"Nombre et valeur"},{pts:"5 pts",label:"Stratégie",detail:"Itinéraire"},{pts:"5 pts",label:"Autonomie",detail:"Sans aide"},{pts:"3 pts",label:"Bilan",detail:"Tracé et analyse"}]},
   {id:"combine",nom:"Combiné athlétique",emoji:"🏅",ca:"CA1",famille:"Athlétisme",seances:"10–12",fond:"Le combiné athlétique regroupe une course, un saut et un lancer : la performance est la somme des points des trois épreuves, comme au décathlon ou à l'heptathlon.",pb:"Gérer la contradiction entre donner le maximum dans chaque épreuve TOUT EN répartissant ses efforts et en choisissant où gagner des points.",materiel:"Plots, chronos, décamètre, vortex, fiches de performances",temporel:"10–12 séances",espace:"Stade : ligne droite de 30 à 40 m, pelouse pour les bonds, zone de lancer balisée",effectif:"Groupes de 4 qui tournent sur les ateliers (1 athlète, 1 juge, 1 chronométreur, 1 secrétaire)",afc1:"Courir vite, enchaîner 5 bonds et lancer le vortex loin.",afc2:"Additionner ses points, comparer ses performances d'une séance à l'autre.",afc3:"Chronométrer, mesurer et noter les résultats des camarades.",ciblage:"COMBINER COURSE, SAUT ET LANCER ; CONNAÎTRE SES POINTS FORTS POUR GAGNER DES POINTS.",epreuve:"Combiné : course + 5 bonds sur herbe + lancer de vortex, 2 essais par épreuve.",axes:["Courir vite : départ et accélération","5 bonds : rythme et équilibre","Lancer de vortex : élan et trajectoire","Enchaîner les 3 épreuves","Juger, mesurer, chronométrer"],bareme:[]},
@@ -2575,7 +2599,126 @@ async function docSupprimer(id){
   if(!confirm('Supprimer « '+d.name+' » ? Cette action est définitive.')) return;
   await docSupprimerDB(id); showToast('Document supprimé'); docRender();
 }
+// ═══ DOCUMENTS PRÉPARÉS DANS L'APPLI (lecture, impression) ═══
+// Contrairement aux documents perso (rangés dans le navigateur), ceux-ci font partie du site :
+// ils sont identiques sur le PC et le téléphone.
+const DOCS_APP = [
+  { id:'tests-6e', icone:'🧪', titre:"Séance détaillée : tests d'aptitudes physiques en 6e", etat:"En préparation · pour 2027-28", html:()=>`
+    <p class="da-lead">Une séance de 1 h 50 pour faire passer les 3 tests nationaux (endurance, force, vitesse) à une classe de 6e. Les résultats ne sont pas notés : ils servent de repère de départ et de progrès.</p>
+    <h3>Cadre</h3>
+    <ul>
+      <li><b>Tests :</b> navette Luc-Léger (endurance), saut en longueur pieds joints sans élan (force des jambes), 30 m départ arrêté (vitesse).</li>
+      <li><b>Saisie nationale :</b> plateforme ASP de début septembre à mi-octobre, obligatoire seulement si le collège est tiré au sort par la DEPP. Hors de ces dates, les résultats servent en interne.</li>
+      <li><b>Résultat par aptitude :</b> « à besoins », « fragile » ou « satisfaisant ». On l'explique à chaque élève avec un moyen de progresser (EPS, association sportive, club).</li>
+      <li><b>Ce qu'on ne fait pas :</b> en faire une note.</li>
+    </ul>
+    <h3>Matériel</h3>
+    <ul>
+      <li>Navette : couloir de 20 m balisé par 2 lignes de plots, bande sonore Luc-Léger et enceinte.</li>
+      <li>30 m : 2 chronos, plots de départ et d'arrivée, un sifflet ou un claquoir.</li>
+      <li>Saut : décamètre ou bande graduée au sol, sur une surface plane et non glissante.</li>
+      <li>Fiche de relevé par élève (une ligne par test), crayons, liste de classe.</li>
+    </ul>
+    <h3>Déroulé (créneau 15 h 25 – 17 h 15, au stade)</h3>
+    <table class="da-t">
+      <tr><th>Heure</th><th>Ce qui se passe</th><th>Organisation</th></tr>
+      <tr><td>15 h 25</td><td>Appel, départ à pied vers le stade</td><td>Repérer les dispensés et les élèves asthmatiques (Ventoline à portée)</td></tr>
+      <tr><td>15 h 32 – 15 h 37</td><td>Arrivée, mise en tenue, installation</td><td>2 élèves aident à poser le couloir de 20 m et la ligne des 30 m</td></tr>
+      <tr><td>15 h 37 – 15 h 52</td><td>Échauffement progressif</td><td>Footing 5 min, mobilité, gammes (talons-fesses, montées de genoux), 3 petits sauts pieds joints, 2 accélérations sur 20 m</td></tr>
+      <tr><td>15 h 52 – 16 h 27</td><td>Ateliers tournants : 30 m et saut</td><td>Demi-classe sur chaque atelier, on change à 16 h 10. 2 essais par élève, meilleur résultat retenu. L'enseignant chronomètre ou mesure ; un élève note, un autre range les passages.</td></tr>
+      <tr><td>16 h 27 – 16 h 35</td><td>Récupération, explication de la navette</td><td>Écouter le début de la bande, montrer le demi-tour (pied derrière la ligne), former les binômes coureur / compteur</td></tr>
+      <tr><td>16 h 35 – 16 h 47</td><td>Navette, vague 1</td><td>La moitié des élèves court, le binôme compte les paliers. On s'arrête quand on n'atteint plus la ligne 2 fois de suite.</td></tr>
+      <tr><td>16 h 47 – 16 h 59</td><td>Navette, vague 2</td><td>On inverse les rôles</td></tr>
+      <tr><td>16 h 59 – 17 h 05</td><td>Retour au calme, bilan rapide</td><td>Marche, étirements doux. Chacun dit le test où il pense progresser.</td></tr>
+      <tr><td>17 h 05</td><td>Rangement, retour à pied au collège</td><td>Arrivée vers 17 h 12</td></tr>
+    </table>
+    <h3>Consignes de passage</h3>
+    <ul>
+      <li><b>30 m :</b> départ arrêté, pied avant derrière la ligne, le chrono part au premier mouvement. 2 essais séparés d'au moins 2 min.</li>
+      <li><b>Saut pieds joints :</b> départ pieds parallèles derrière la ligne, sans élan ; on mesure au talon le plus proche de la ligne. Un essai où l'élève tombe en arrière est à refaire.</li>
+      <li><b>Navette :</b> on note le dernier palier complet. Un élève qui a mal ou ne se sent pas bien s'arrête tout de suite.</li>
+    </ul>
+    <h3>Si ça coince</h3>
+    <ul>
+      <li><b>Pluie :</b> 30 m et saut sous le préau ou dans la salle ; la navette est reportée à la séance suivante.</li>
+      <li><b>Classe nombreuse :</b> la navette se fait en 3 vagues, le bilan est raccourci.</li>
+      <li><b>Élève absent :</b> rattrapage pendant l'échauffement de la séance suivante.</li>
+    </ul>
+    <h3>Après la séance</h3>
+    <ul>
+      <li>Rendre à chaque élève son profil (à besoins / fragile / satisfaisant) avec un conseil.</li>
+      <li>Reprendre les mêmes tests en fin d'année pour mesurer les progrès.</li>
+      <li>Utiliser les résultats pour les groupes de course (CLD, demi-fond) et l'échauffement.</li>
+    </ul>` },
+
+  { id:'afc-2027', icone:'📘', titre:"Attendus de fin de collège (programme 2027)", etat:"Projet de programme · à confirmer", html:()=>`
+    <p class="da-lead">Dans le futur programme, chaque champ a <b>3 attendus de fin de collège</b>, les mêmes de la 6e à la 3e. Chaque classe a ensuite ses propres objectifs pour y arriver : c'est ce que font tes barèmes par classe.</p>
+    <h3>Règles de programmation prévues</h3>
+    <ul>
+      <li>En 6e, les 4 champs sont obligatoires (programme publié au BO du 28/05/2026, en 6e à la rentrée 2027).</li>
+      <li>En 5e, 4e et 3e, au moins 3 champs différents par classe (projet).</li>
+      <li>Chaque champ est programmé au moins 2 fois sur les 4 années du collège (projet).</li>
+      <li>En fin de 6e, l'attestation du savoir nager doit être validée.</li>
+    </ul>
+    ${['CA1','CA2','CA3','CA4'].map(ca=>{const a=AFC_OFFICIELS[ca];return `<h3>${ca} — ${a.t2027}</h3><ol>${a.a2027.map(x=>`<li>${x}</li>`).join('')}</ol>`;}).join('')}
+    <h3>Comment travailler dessus</h3>
+    <ul>
+      <li>Pour chaque APSA, écris ce que l'élève doit savoir faire en 6e, 5e, 4e et 3e pour chacun des 3 attendus.</li>
+      <li>Le 1er attendu (habiletés) correspond à la motricité dans tes barèmes, le 2e (préparation, projet, tactique) au projet ou au jeu collectif, le 3e (culture) aux rôles, aux règles et à la connaissance de l'activité.</li>
+      <li>Les attendus actuels (programme 2015) restent en vigueur cette année : ils sont dans chaque fiche APSA, avec cet encadré 2027.</li>
+    </ul>
+    <p class="da-src">Sources : programme EPS cycle 3, BO n°22 du 28/05/2026 ; projet de programme EPS cycle 4 (juillet 2025), consultation de mai-juin 2026. Le texte définitif du cycle 4 n'était pas encore publié en novembre 2026.</p>` },
+
+  { id:'memo-vma', icone:'📐', titre:"Mémo VMA : la mesurer et s'en servir", etat:"Mémo", html:()=>{
+    const v=[9,10,11,12,13,14];
+    const tours=m=>{const t=Math.floor(m/120),r=m-t*120;return t+' tours'+(r?' + '+r+' m':'');};
+    return `
+    <p class="da-lead">La VMA (vitesse maximale aérobie) est la vitesse la plus rapide que l'élève peut tenir en utilisant au maximum son souffle, pendant environ 4 à 6 minutes. Elle sert surtout à <b>calculer ses allures</b>.</p>
+    <h3>La mesurer sans matériel : le demi-Cooper (6 minutes)</h3>
+    <ul>
+      <li>Binômes : un coureur, un observateur qui compte les tours et pose un plot au coup de sifflet final.</li>
+      <li>Sur ta piste de 120 m, avec des plots tous les 20 m, on lit facilement la distance.</li>
+      <li><b>VMA (km/h) = distance en mètres ÷ 100.</b> Exemple : 9 tours + 40 m = 1 120 m, soit une VMA de 11,2 km/h.</li>
+      <li>Le piège : partir trop vite. Annonce le temps toutes les minutes et refais le test si l'élève a marché.</li>
+    </ul>
+    <h3>S'en servir : distances à viser</h3>
+    <table class="da-t"><tr><th>VMA</th><th>3 min à 80 %</th><th>3 min à 90 %</th><th>3 min à 100 %</th><th>12 min à 80 %</th></tr>
+    ${v.map(x=>`<tr><td><b>${x} km/h</b></td><td>${x*40} m</td><td>${x*45} m</td><td>${x*50} m</td><td>${x*160} m<br><small>${tours(x*160)}</small></td></tr>`).join('')}</table>
+    <ul>
+      <li>Règle rapide : en 3 min, l'élève parcourt <b>VMA × 50 m</b> à 100 %, × 45 à 90 %, × 40 à 80 %.</li>
+      <li>En 1 min à 100 %, il parcourt environ VMA × 17 m (ex. 11 km/h ≈ 185 m).</li>
+    </ul>
+    <h3>Repères approximatifs au collège</h3>
+    <ul>
+      <li>La plupart des élèves de 6e se situent entre 9 et 12 km/h, ceux de 3e entre 10 et 14 km/h.</li>
+      <li>Ce sont des ordres de grandeur, pas des normes : compare surtout l'élève à lui-même.</li>
+    </ul>
+    <h3>Dans les barèmes</h3>
+    <ul>
+      <li>Le critère VMA (/4) note l'aptitude mesurée au test.</li>
+      <li>Si tu préfères noter la démarche plutôt que le niveau, il peut devenir « test réalisé sérieusement + allures calculées justes » : dis-le-moi et je le change.</li>
+    </ul>`;} },
+];
+function docAppRender(){
+  const box=document.getElementById('docAppListe'); if(!box) return;
+  box.innerHTML=DOCS_APP.map(d=>`<button type="button" class="da-card" onclick="docAppOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('');
+}
+function docAppOuvrir(id){
+  const d=DOCS_APP.find(x=>x.id===id); if(!d) return;
+  document.getElementById('docAppTitre').textContent=d.icone+' '+d.titre;
+  document.getElementById('docAppBody').innerHTML=`<div class="da-etat">${d.etat}</div>`+d.html();
+  document.getElementById('docAppOverlay').classList.add('open');
+  document.body.classList.add('modal-open');
+}
+function docAppFermer(){ document.getElementById('docAppOverlay').classList.remove('open'); document.body.classList.remove('modal-open'); }
+function docAppImprimer(){
+  let s=document.getElementById('daPrint'); if(!s){ s=document.createElement('style'); s.id='daPrint'; document.head.appendChild(s); }
+  s.textContent='@media print{@page{size:A4 portrait;margin:12mm}body>*:not(#docAppOverlay){display:none!important}#docAppOverlay{display:block!important;position:static!important;background:#fff!important;padding:0!important}#docAppOverlay .fiche-modal{max-height:none!important;box-shadow:none!important;width:100%!important;max-width:100%!important}#docAppOverlay .fiche-modal-body{overflow:visible!important;max-height:none!important}#docAppOverlay .fiche-modal-ft,#docAppOverlay .fiche-modal-close{display:none!important}}';
+  window.print(); setTimeout(()=>{ s.textContent=''; },1000);
+}
+
 async function docRender(){
+  docAppRender();
   const box=document.getElementById('docListe'); if(!box) return;
   try{ docCache=await docTout(); }
   catch(e){ box.innerHTML='<div style="padding:20px;color:var(--muted)">Le stockage du navigateur est indisponible (navigation privée ?). Les documents ne peuvent pas être enregistrés ici.</div>'; return; }
@@ -3741,6 +3884,15 @@ document.addEventListener('click',e=>{
 // Service worker désactivé - sw.js non présent sur ce dépôt
 
 </script>
+
+<!-- ══ DOCUMENTS PRÉPARÉS ══ -->
+<div class="fiche-modal-overlay" id="docAppOverlay" onclick="if(event.target===this)docAppFermer()">
+  <div class="fiche-modal">
+    <div class="fiche-modal-hd"><div class="fiche-modal-titre" id="docAppTitre">Document</div><button class="fiche-modal-close" onclick="docAppFermer()" aria-label="Fermer">✕</button></div>
+    <div class="fiche-modal-body da-body" id="docAppBody"></div>
+    <div class="fiche-modal-ft"><span></span><button class="btn btn-teal" onclick="docAppImprimer()">🖨️ Imprimer</button></div>
+  </div>
+</div>
 
 <!-- ══ FICHE PROGRAMMATIONS MODALE ══ -->
 <div class="fiche-modal-overlay" id="ficheModalOverlay">

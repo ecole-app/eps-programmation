@@ -110,3 +110,18 @@ describe("Observateurs dans les séances", () => {
     assert.deepEqual(obs, { Lina: 1 });
   });
 });
+
+describe("Documents préparés", () => {
+  it("la séance de tests 6e, les attendus 2027 et le mémo VMA s'ouvrent depuis Documents", async () => {
+    const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
+    await p.click(".nav-tab[onclick*=\"'documents'\"]");
+    assert.equal(await p.locator(".da-card").count(), 3);
+    await p.locator(".da-card").first().click();
+    assert.match(await p.locator("#docAppBody").textContent(), /navette Luc-Léger/);
+    await p.evaluate(() => { docAppFermer(); docAppOuvrir("afc-2027"); });
+    assert.equal(await p.locator("#docAppBody ol li").count(), 12);
+    await p.evaluate(() => { docAppFermer(); docAppOuvrir("memo-vma"); });
+    assert.match(await p.locator("#docAppBody").textContent(), /550 m/);
+    assert.deepEqual(p.erreurs, []);
+  });
+});
