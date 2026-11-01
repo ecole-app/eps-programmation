@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<script>
+// Taille d'affichage : réglage manuel (Plus → Taille) ; sinon, sur téléphone en « site pour ordinateur » (page trop large), on agrandit automatiquement.
+(function(){var z=0;try{z=parseFloat(localStorage.getItem('eps-zoom'))||0;}catch(e){}
+if(!z&&window.screen&&screen.width<=820&&innerWidth>screen.width*1.25)z=Math.min(2.6,innerWidth/screen.width);
+if(z&&z!==1)document.documentElement.style.zoom=z;})();
+</script>
 <title>EPS Collège — Programmation</title>
 <meta name="theme-color" content="#095958">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -976,6 +982,10 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
 @media (display-mode: standalone){
   header{padding-top:calc(6px + env(safe-area-inset-top,0px))}
 }
+
+.plus-zoom{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border,#e2e8f0);border-radius:12px;background:#fff;font-size:.9rem}
+.plus-zoom span{flex:1;font-weight:600}
+.plus-zoom button{min-width:48px;min-height:44px;border-radius:10px;border:1.5px solid #0e7c7b;background:#f0fdfa;color:#0b5f5e;font-weight:700;font-size:1rem}
 </style>
 </head>
 <body>
@@ -2883,6 +2893,13 @@ function majBottomNav(id){
   document.querySelectorAll('#bnav button').forEach(b=>b.classList.toggle('on', b.dataset.page===id || (b.dataset.page==='plus' && !PAGES_BAS.includes(id))));
 }
 function estInstallee(){ return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true; }
+function zoomApp(d){
+  const el=document.documentElement; let z=parseFloat(el.style.zoom)||1;
+  if(d===0){ try{localStorage.removeItem('eps-zoom');}catch(e){} el.style.zoom=''; location.reload(); return; }
+  z=Math.max(0.8,Math.min(3,Math.round((z+d)*10)/10)); el.style.zoom=z;
+  try{localStorage.setItem('eps-zoom',String(z));}catch(e){}
+  showToast('Taille : '+Math.round(z*100)+' %');
+}
 function ouvrirPlus(){
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   const pi=document.getElementById('plusInstall'); if(pi) pi.hidden=!deferredPrompt||estInstallee();
@@ -4010,6 +4027,7 @@ document.addEventListener('click',e=>{
     <button type="button" class="pa-main" onclick="fermerPlus();openAddModal()">+ Ajouter une APSA</button>
     <button type="button" onclick="fermerPlus();toggleMobileSidebar()">👥 Élèves, créneaux et réglages</button>
     <button type="button" onclick="fermerPlus();exportAllData()">⬇️ Sauvegarde de secours</button>
+    <div class="plus-zoom"><span>🔎 Taille d'affichage</span><button type="button" onclick="zoomApp(-0.1)" aria-label="Plus petit">A−</button><button type="button" onclick="zoomApp(0.1)" aria-label="Plus grand">A+</button><button type="button" onclick="zoomApp(0)">Auto</button></div>
     <button type="button" id="plusInstall" onclick="installPWA()" hidden>📲 Installer l'appli sur ce téléphone</button>
   </div>
   <p class="plus-ios" id="plusIos" hidden>Pour installer l'appli sur iPhone : bouton Partager <b>⎋</b> puis « Sur l'écran d'accueil ».</p>

@@ -64,4 +64,11 @@ describe("Téléphone", () => {
     assert.equal(await p.locator(".nav-tabs").isVisible(), true);
     assert.equal(await p.locator("#bnav").isVisible(), false);
   });
+  it("taille d'affichage : A+ agrandit et le réglage est gardé", async () => {
+    const p = await tel();
+    await p.evaluate(() => zoomApp(0.2));
+    assert.equal(await p.evaluate(() => document.documentElement.style.zoom), "1.2");
+    assert.equal(await p.evaluate(() => localStorage.getItem("eps-zoom")), "1.2");
+    assert.deepEqual(p.erreurs, []);
+  });
 });
