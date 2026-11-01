@@ -26,8 +26,9 @@ export async function demarrer() {
   const navigateur = await chromium.launch();
 
   // Ouvre une page « propre » (stockage vide sauf l'année en cours) et relève les erreurs JS.
-  async function page(chemin, { largeur = 1300, stockage = {}, routes = {} } = {}) {
-    const contexte = await navigateur.newContext({ viewport: { width: largeur, height: 900 } });
+  async function page(chemin, { largeur = 1300, hauteur = 900, stockage = {}, routes = {}, sw = false, mobile = false } = {}) {
+    // Service worker bloqué par défaut (sinon il court-circuite le blocage réseau des tests).
+    const contexte = await navigateur.newContext({ viewport: { width: largeur, height: hauteur }, serviceWorkers: sw ? "allow" : "block", isMobile: mobile, hasTouch: mobile });
     await contexte.addInitScript(([annee, sto]) => {
       if (sessionStorage.getItem("__init")) return;
       sessionStorage.setItem("__init", "1");

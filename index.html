@@ -2,11 +2,17 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>EPS Collège — Programmation</title>
 <meta name="theme-color" content="#095958">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="EPS Collège">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EPS Luqmân">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="application-name" content="EPS Luqmân">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
 
 :root {
@@ -871,13 +877,93 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
 }
 
 }
+
+/* ══════════════════════════════════════
+   APPLI TÉLÉPHONE (PWA) — barre du bas, en-tête compact
+══════════════════════════════════════ */
+.logo-img{width:28px;height:28px;border-radius:7px;background:#fff;padding:2px;object-fit:contain}
+.bnav,.plus-sheet,.plus-back,.pl-cl{display:none}
+@media (max-width:768px),(max-device-width:768px){
+  :root{--bnav-h:62px}
+  body{padding-bottom:calc(var(--bnav-h) + env(safe-area-inset-bottom,0px))}
+  /* En-tête : une seule ligne, sans les onglets (ils passent en bas) */
+  header{height:auto !important;min-height:52px;padding:calc(6px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 6px 60px !important;flex-wrap:nowrap !important;gap:8px !important}
+  .sidebar-toggle-btn{top:calc(4px + env(safe-area-inset-top,0px)) !important}
+  .nav-tabs{display:none !important}
+  .h-actions{margin-left:auto}
+  .h-actions .btn{display:none !important}
+  .logo{font-size:0.95rem !important;gap:7px}
+  .logo-badge{display:inline-block !important;font-size:0.55rem}
+  /* Barre de navigation du bas */
+  .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:150;background:var(--surface);border-top:1px solid var(--border);
+    padding:4px max(6px,env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));
+    box-shadow:0 -4px 18px rgba(0,0,0,0.06)}
+  .bnav button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:54px;border:none;background:none;
+    color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.66rem;font-weight:600;border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .bnav .bi{font-size:1.25rem;line-height:1}
+  .bnav .bl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .bnav button.on{color:var(--teal-d);background:var(--teal-g)}
+  .bnav button.on .bl{font-weight:800}
+  /* Feuille « Plus » */
+  .plus-back{display:block;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:160;opacity:0;pointer-events:none;transition:opacity .2s}
+  .plus-back.open{opacity:1;pointer-events:auto}
+  .plus-sheet{display:block;position:fixed;left:0;right:0;bottom:0;z-index:170;background:var(--surface);border-radius:18px 18px 0 0;
+    padding:8px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+    transform:translateY(105%);transition:transform .25s ease;box-shadow:0 -8px 30px rgba(0,0,0,0.15);max-height:85vh;overflow-y:auto}
+  .plus-sheet.open{transform:translateY(0)}
+  body.plus-open .sidebar-toggle-btn{display:none !important}
+  .plus-grip{width:40px;height:5px;border-radius:3px;background:var(--border);margin:0 auto 12px}
+  .plus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .plus-grid button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;border:1px solid var(--border);border-radius:12px;background:var(--bg);
+    font-family:'DM Sans',sans-serif;font-size:0.76rem;font-weight:600;color:var(--text);cursor:pointer;min-height:72px}
+  .plus-grid button span{font-size:1.4rem}
+  .plus-actions{display:flex;flex-direction:column;gap:8px}
+  .plus-actions button{min-height:46px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);font-family:'DM Sans',sans-serif;font-size:0.86rem;font-weight:600;color:var(--text);cursor:pointer;text-align:left;padding:0 14px}
+  .plus-actions .pa-main{background:var(--teal);border-color:var(--teal);color:#fff;text-align:center}
+  .plus-ios{font-size:0.76rem;color:var(--muted);margin:10px 2px 0}
+  /* Contenu */
+  .main{padding:0.75rem max(12px,env(safe-area-inset-right,0px)) 1rem max(12px,env(safe-area-inset-left,0px)) !important}
+  .toast{bottom:calc(var(--bnav-h) + 14px + env(safe-area-inset-bottom,0px)) !important;right:12px !important;left:12px !important;justify-content:center;pointer-events:none}
+  .alert-panel{bottom:calc(var(--bnav-h) + 12px + env(safe-area-inset-bottom,0px)) !important}
+  /* Barèmes et appréciations : la page interne occupe tout l'écran disponible */
+  #baremesFrame{height:calc(100dvh - 52px - var(--bnav-h) - 1.75rem - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) !important;min-height:420px !important;border-radius:10px !important}
+  #apprFrame{height:calc(100dvh - 52px - var(--bnav-h) - 4.5rem - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) !important;min-height:420px !important;border-radius:10px !important}
+  /* Planning : une classe à la fois */
+  .pl-cl{display:flex;gap:6px;margin-bottom:8px}
+  .pl-cl button{flex:1;min-height:40px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);font-weight:800;font-size:0.9rem;cursor:pointer;color:var(--text)}
+  .pl-cl button.on{background:var(--teal);border-color:var(--teal);color:#fff}
+  .grid-wrap[data-cl] .grid-head,.grid-wrap[data-cl] .periode-row{grid-template-columns:84px 1fr !important;min-width:0 !important}
+  .grid-wrap[data-cl] #gridBody,.grid-wrap[data-cl] #gridBody .trimestre-row{min-width:0 !important}
+  .grid-wrap[data-cl="6e"] .grid-head>:nth-child(n+3),.grid-wrap[data-cl="6e"] .periode-row>:nth-child(n+3){display:none !important}
+  .grid-wrap[data-cl="5e"] .grid-head>:nth-child(2),.grid-wrap[data-cl="5e"] .periode-row>:nth-child(2),
+  .grid-wrap[data-cl="5e"] .grid-head>:nth-child(n+4),.grid-wrap[data-cl="5e"] .periode-row>:nth-child(n+4){display:none !important}
+  .grid-wrap[data-cl="4e"] .grid-head>:nth-child(2),.grid-wrap[data-cl="4e"] .periode-row>:nth-child(2),
+  .grid-wrap[data-cl="4e"] .grid-head>:nth-child(3),.grid-wrap[data-cl="4e"] .periode-row>:nth-child(3),
+  .grid-wrap[data-cl="4e"] .grid-head>:nth-child(5),.grid-wrap[data-cl="4e"] .periode-row>:nth-child(5){display:none !important}
+  .grid-wrap[data-cl="3e"] .grid-head>:nth-child(2),.grid-wrap[data-cl="3e"] .periode-row>:nth-child(2),
+  .grid-wrap[data-cl="3e"] .grid-head>:nth-child(3),.grid-wrap[data-cl="3e"] .periode-row>:nth-child(3),
+  .grid-wrap[data-cl="3e"] .grid-head>:nth-child(4),.grid-wrap[data-cl="3e"] .periode-row>:nth-child(4){display:none !important}
+  .grid-wrap[data-cl] .apsa-tag{font-size:0.8rem !important;padding:8px 9px !important}
+  .grid-wrap[data-cl] .a-label{font-size:0.8rem !important;white-space:normal}
+  .grid-wrap[data-cl] .a-sem,.grid-wrap[data-cl] .a-h{font-size:0.66rem !important}
+  .grid-wrap[data-cl] .a-ca{font-size:0.6rem !important;padding:1px 5px !important}
+  .grid-wrap[data-cl] .p-name{font-size:0.74rem !important}
+  .grid-wrap[data-cl] .p-dates,.grid-wrap[data-cl] .p-sem{font-size:0.62rem !important}
+  /* Zones tactiles confortables */
+  .btn,.comp-select,.form-select,.form-input{min-height:40px}
+  /* Fenêtres : pas de chevauchement avec la barre du bas */
+  .modal-overlay,.fiche-modal-overlay{z-index:300 !important}
+}
+@media (display-mode: standalone){
+  header{padding-top:calc(6px + env(safe-area-inset-top,0px))}
+}
 </style>
 </head>
 <body>
 
 
 <header>
-  <div class="logo">🏃 EPS Collège <span class="logo-badge">Pro</span></div>
+  <div class="logo"><img src="icons/favicon-64.png" alt="" class="logo-img"><span class="logo-txt">EPS Collège</span> <span class="logo-badge">Luqmân</span></div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('aujourdhui',this)">🏠 Aujourd'hui</button>
     <button class="nav-tab" onclick="showPage('planning',this)">📅 Planning</button>
@@ -1068,7 +1154,13 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
       </div>
     </div>
 
-    <div class="grid-wrap">
+    <div class="pl-cl" id="plCl" role="tablist" aria-label="Classe affichée">
+      <button type="button" class="on" onclick="planningClasse('6e',this)">6e</button>
+      <button type="button" onclick="planningClasse('5e',this)">5e</button>
+      <button type="button" onclick="planningClasse('4e',this)">4e</button>
+      <button type="button" onclick="planningClasse('3e',this)">3e</button>
+    </div>
+    <div class="grid-wrap" id="gridWrap" data-cl="6e">
       <div class="grid-head">
         <div class="gh-cell">Cycle</div>
         <div class="gh-cell">6e</div>
@@ -2634,7 +2726,43 @@ function showPage(id,btn){
   if(id==='appreciations'||id==='baremes') rafraichirIframesEleves();
   if(id==='documents') docRender();
   if(id==='baremes'){const f=document.getElementById('baremesFrame');if(f&&!f.getAttribute('src')){f.addEventListener('load',()=>setTimeout(scheduleCloudSync,1500),{once:true});f.setAttribute('src','baremes.html?v='+Date.now());}}
+  majBottomNav(id);
+  try{ if(location.hash!=='#'+id) history.replaceState(null,'','#'+id); }catch(e){}
 }
+
+// ═══ TÉLÉPHONE : barre du bas, feuille « Plus », planning par classe ═══
+const PAGES_BAS=['aujourdhui','seances','baremes','appreciations'];
+function navMobile(id){
+  const b=document.querySelector(`.nav-tab[onclick*="'${id}'"]`); if(!b) return;
+  showPage(id,b); fermerPlus(); window.scrollTo(0,0);
+}
+function majBottomNav(id){
+  document.querySelectorAll('#bnav button').forEach(b=>b.classList.toggle('on', b.dataset.page===id || (b.dataset.page==='plus' && !PAGES_BAS.includes(id))));
+}
+function estInstallee(){ return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches) || navigator.standalone===true; }
+function ouvrirPlus(){
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const pi=document.getElementById('plusInstall'); if(pi) pi.hidden=!deferredPrompt||estInstallee();
+  const po=document.getElementById('plusIos'); if(po) po.hidden=!ios||estInstallee();
+  document.body.classList.add('plus-open');
+  document.getElementById('plusSheet').classList.add('open');
+  document.getElementById('plusBack').classList.add('open');
+}
+function fermerPlus(){
+  document.body.classList.remove('plus-open');
+  document.getElementById('plusSheet')?.classList.remove('open');
+  document.getElementById('plusBack')?.classList.remove('open');
+}
+function planningClasse(cl,btn){
+  document.getElementById('gridWrap')?.setAttribute('data-cl',cl);
+  document.querySelectorAll('#plCl button').forEach(b=>b.classList.toggle('on',b===btn));
+}
+// Ouvre la page indiquée dans l'adresse (#baremes…) : raccourcis de l'appli et rechargement.
+function pageDepuisAdresse(){
+  const id=(location.hash||'').slice(1);
+  if(id && document.getElementById('page-'+id)) navMobile(id); else majBottomNav('aujourdhui');
+}
+window.addEventListener('hashchange',()=>{ const id=(location.hash||'').slice(1); const pg=document.getElementById('page-'+id); if(pg && !pg.classList.contains('active')) navMobile(id); });
 
 // ═══ SIDEBAR ═══
 function toggleSidebar(id){
@@ -2739,7 +2867,12 @@ window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault(); deferredPrompt=e;
   const b=document.getElementById('installBtn'); if(b)b.style.display='flex';
 });
+window.addEventListener('appinstalled',()=>{ deferredPrompt=null; const b=document.getElementById('installBtn'); if(b)b.style.display='none'; showToast('📲 Appli installée'); });
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{}); });
+}
 function installPWA(){
+  fermerPlus();
   if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});}
 }
 
@@ -3578,6 +3711,7 @@ function initApp(){
   renderContraintes();
   filterSports();
   renderAll();
+  pageDepuisAdresse();
 }
 pullFromCloudThenInit();
 
@@ -3702,6 +3836,32 @@ document.addEventListener('click',e=>{
 
 <!-- SIDEBAR MOBILE -->
 <button class="sidebar-toggle-btn" id="sidebarToggle" onclick="toggleMobileSidebar()">☰</button>
+<nav class="bnav" id="bnav" aria-label="Navigation principale">
+  <button type="button" data-page="aujourdhui" onclick="navMobile('aujourdhui')"><span class="bi">🏠</span><span class="bl">Aujourd'hui</span></button>
+  <button type="button" data-page="seances" onclick="navMobile('seances')"><span class="bi">🗓️</span><span class="bl">Séances</span></button>
+  <button type="button" data-page="baremes" onclick="navMobile('baremes')"><span class="bi">🎯</span><span class="bl">Barèmes</span></button>
+  <button type="button" data-page="appreciations" onclick="navMobile('appreciations')"><span class="bi">💬</span><span class="bl">Appréciations</span></button>
+  <button type="button" data-page="plus" onclick="ouvrirPlus()"><span class="bi">•••</span><span class="bl">Plus</span></button>
+</nav>
+<div class="plus-back" id="plusBack" onclick="fermerPlus()"></div>
+<div class="plus-sheet" id="plusSheet" role="dialog" aria-label="Plus de pages et d'actions">
+  <div class="plus-grip"></div>
+  <div class="plus-grid">
+    <button type="button" onclick="navMobile('planning')"><span>📅</span>Planning</button>
+    <button type="button" onclick="navMobile('programmations')"><span>📚</span>Fiches APSA</button>
+    <button type="button" onclick="navMobile('cycles')"><span>⚙️</span>Cycles</button>
+    <button type="button" onclick="navMobile('bilan')"><span>📊</span>Bilan</button>
+    <button type="button" onclick="navMobile('comparaison')"><span>🔀</span>Comparaison</button>
+    <button type="button" onclick="navMobile('documents')"><span>📁</span>Documents</button>
+  </div>
+  <div class="plus-actions">
+    <button type="button" class="pa-main" onclick="fermerPlus();openAddModal()">+ Ajouter une APSA</button>
+    <button type="button" onclick="fermerPlus();toggleMobileSidebar()">👥 Élèves, créneaux et réglages</button>
+    <button type="button" onclick="fermerPlus();exportAllData()">⬇️ Sauvegarde de secours</button>
+    <button type="button" id="plusInstall" onclick="installPWA()" hidden>📲 Installer l'appli sur ce téléphone</button>
+  </div>
+  <p class="plus-ios" id="plusIos" hidden>Pour installer l'appli sur iPhone : bouton Partager <b>⎋</b> puis « Sur l'écran d'accueil ».</p>
+</div>
 <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
 
 </body>

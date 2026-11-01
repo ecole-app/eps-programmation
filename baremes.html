@@ -135,6 +135,8 @@ tr:last-child td{border-bottom:none}
 .fam-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:7px;padding-bottom:3px;border-bottom:1px solid var(--gray)}
 .home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 @media(max-width:400px){.home-grid{grid-template-columns:repeat(2,1fr)}}
+/* Téléphone : barre du haut plus compacte, boutons de classe plus grands */
+@media(max-width:600px){.topbar-logo{display:none}.topbar{padding:0 8px}.cycle-bar{padding:8px 10px}.cyc-btn{min-height:40px;min-width:54px;font-size:.95rem}.home-title{font-size:2rem}}
 .home-card{background:var(--white);border-radius:11px;padding:13px 10px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 1px 7px rgba(14,124,123,.07);display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;border:2px solid transparent}
 .home-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(14,124,123,.13)}
 .home-card.has-data{border-color:var(--teal-l)}
@@ -175,7 +177,7 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <div class="cycle-bar">
-  <span class="cycle-label">Cycle</span>
+  <span class="cycle-label">Classe</span>
   <div class="cycle-btns">
     <button class="cyc-btn c3 active" id="btn-6e" onclick="setClasse('6e')">6e</button>
     <button class="cyc-btn c4" id="btn-5e" onclick="setClasse('5e')">5e</button>
@@ -1163,6 +1165,7 @@ loadNotes();
 })();
 SPORTS.forEach(function(sp){ renderListe(sp.id,'c3'); });
 majTerrains();
+setCycle(currentCycle);
 majNav();
 buildHome();
 remplirNoms();

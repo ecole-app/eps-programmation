@@ -39,7 +39,7 @@ describe("Élèves", () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP, ["eleves-" + ANNEE]: { "5e": ["Amina"] } } });
     await p.click(".nav-tab[onclick*=\"'appreciations'\"]");
     await p.waitForTimeout(800);
-    const fr = p.frames().find((x) => x.url().includes("appreciations"));
+    const fr = p.frames().find((x) => /appreciations(-ia)?\.html/.test(x.url()));
     await fr.selectOption("#classe", "5e");
     await p.click(".nav-tab[onclick*=\"'aujourdhui'\"]");
     await p.evaluate(() => { openElevesModal(); document.getElementById("el_5e").value = "Amina, F\nNouvelle, F"; saveElevesModal(); });

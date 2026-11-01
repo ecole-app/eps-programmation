@@ -1,0 +1,23 @@
+{
+  "name": "EPS Collège Luqmân",
+  "short_name": "EPS Luqmân",
+  "description": "Programmation, séances, barèmes et appréciations EPS du collège Luqmân.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#095958",
+  "lang": "fr",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Aujourd'hui", "url": "./#aujourdhui", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Barèmes", "url": "./#baremes", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Appréciations", "url": "./#appreciations", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
