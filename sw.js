@@ -2,10 +2,11 @@
 // Pages du site : réseau d'abord (toujours la dernière version en ligne), copie locale si pas de réseau.
 // Polices et scripts Firebase : copie locale d'abord, mise à jour en arrière-plan.
 // Le nom du cache est propre à ce site : les autres applis du domaine (ASMB…) ne sont jamais touchées.
-const CACHE = 'eps-programmation-v1';
+const CACHE = 'eps-programmation-v2';
 const BASE = new URL('./', self.location).pathname;
 const FICHIERS = ['./', 'index.html', 'baremes.html', 'baremes-data.js', 'appreciations.html', 'appreciations-ia.html',
-  'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/logo-luqman.png'];
+  'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/logo-luqman.png',
+  'docs/fiche-citoyennete.pdf', 'docs/fiche-formation-enseignants.pdf'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS)).then(() => self.skipWaiting()));

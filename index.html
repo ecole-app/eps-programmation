@@ -2718,9 +2718,9 @@ const DOCS_APP = [
 ];
 function docAppRender(){
   const box=document.getElementById('docAppListe'); if(!box) return;
-  const RAPPORTS=[{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
+  const RAPPORTS=[{t:"Fiche thématique : citoyenneté (CAPEPS écrit 1)",u:"docs/fiche-citoyennete.pdf",s:"PDF · 4 pages"},{t:"Fiche thématique : la formation des enseignants (CAPEPS écrit 1)",u:"docs/fiche-formation-enseignants.pdf",s:"PDF · 4 pages"},{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
   box.innerHTML=DOCS_APP.map(d=>`<button type="button" class="da-card" onclick="docAppOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')
-  box.innerHTML+=RAPPORTS.map(r=>`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>Rapport Claude · s'ouvre dans un nouvel onglet</small></span><span class="da-go">›</span></a>`).join('');
+  box.innerHTML+=RAPPORTS.map(r=>`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>${r.s||'Rapport Claude · s\'ouvre dans un nouvel onglet'}</small></span><span class="da-go">›</span></a>`).join('');
 }
 function docAppOuvrir(id){
   const d=DOCS_APP.find(x=>x.id===id); if(!d) return;
