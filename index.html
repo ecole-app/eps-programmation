@@ -1439,8 +1439,8 @@ let plannings = {
     P1:{'6e':[{apsa:'Relais',famille:'ath',semaines:6,ca:'CA1',note:'',objectif:''}],'5e':[{apsa:'Basket-ball',famille:'col',semaines:6,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:"Course d'orientation",famille:'plein',semaines:6,ca:'CA2',note:'',objectif:''}],'3e':[{apsa:'Badminton',famille:'raq',semaines:6,ca:'CA4',note:'',objectif:''}]},
     P2:{'6e':[{apsa:'Course longue durée',famille:'ath',semaines:5,ca:'CA1',note:'',objectif:''}],'5e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Renfo musculaire',famille:'gym',semaines:5,ca:'CA1',note:'',objectif:''}]},
     P3:{'6e':[{apsa:'Acrosport',famille:'gym',semaines:6,ca:'CA3',note:'',objectif:''}],'5e':[{apsa:'Demi-fond',famille:'ath',semaines:6,ca:'CA1',note:'',objectif:''}],'4e':[{apsa:'Lutte',famille:'combat',semaines:6,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Relais',famille:'ath',semaines:6,ca:'CA1',note:'',objectif:''}]},
-    P4:{'6e':[{apsa:'Ultimate',famille:'col',semaines:5,ca:'CA4',note:'',objectif:''}],'5e':[{apsa:'Relais',famille:'ath',semaines:5,ca:'CA1',note:'',objectif:''}],'4e':[{apsa:'Relais',famille:'ath',semaines:5,ca:'CA1',note:'',objectif:''}],'3e':[{apsa:'Tennis de table',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}]},
-    P5:{'6e':[{apsa:'Badminton',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''},{apsa:'Combiné athlétique',famille:'ath',semaines:6,ca:'CA1',note:'',objectif:''}],'5e':[{apsa:'Ultimate',famille:'col',semaines:6,ca:'CA4',note:'',objectif:''},{apsa:'Ballon prisonnier',famille:'col',semaines:5,ca:'CA4',note:'Non évalué',objectif:''}],'4e':[{apsa:'Tennis de table',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''},{apsa:'Rugby à 7',famille:'col',semaines:6,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Ultimate',famille:'col',semaines:5,ca:'CA4',note:'',objectif:''},{apsa:'Acrosport',famille:'gym',semaines:6,ca:'CA3',note:'',objectif:''}]},
+    P4:{'6e':[{apsa:'Ultimate',famille:'col',semaines:5,ca:'CA4',note:'',objectif:''}],'5e':[{apsa:'Acrosport',famille:'gym',semaines:5,ca:'CA3',note:'',objectif:''}],'4e':[{apsa:'Combiné athlétique',famille:'ath',semaines:5,ca:'CA1',note:'',objectif:''}],'3e':[{apsa:'Tennis de table',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''}]},
+    P5:{'6e':[{apsa:"Course d'orientation",famille:'plein',semaines:5,ca:'CA2',note:'Version simplifiée',objectif:''},{apsa:'Combiné athlétique',famille:'ath',semaines:6,ca:'CA1',note:'',objectif:''}],'5e':[{apsa:'Ultimate',famille:'col',semaines:6,ca:'CA4',note:'',objectif:''},{apsa:'Ballon prisonnier',famille:'col',semaines:5,ca:'CA4',note:'Non évalué',objectif:''}],'4e':[{apsa:'Tennis de table',famille:'raq',semaines:5,ca:'CA4',note:'',objectif:''},{apsa:'Rugby à 7',famille:'col',semaines:6,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Ultimate',famille:'col',semaines:5,ca:'CA4',note:'',objectif:''},{apsa:'Acrosport',famille:'gym',semaines:6,ca:'CA3',note:'',objectif:''}]},
   },
   '2025-26': {
     P1:{'6e':[{apsa:'Relais',famille:'ath',semaines:7,ca:'CA1',note:'',objectif:'Endurance collective'}],'5e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'4e':[{apsa:'Basket-ball',famille:'col',semaines:7,ca:'CA4',note:'',objectif:''}],'3e':[{apsa:'Badminton',famille:'raq',semaines:7,ca:'CA4',note:'',objectif:''}]},
@@ -1688,6 +1688,15 @@ function migrerProgrammation(){
     // 3e : la course longue de fin d'année laisse la place à l'acrosport (champ 3 au cycle 4)
     (pl.P5['3e']||[]).forEach(a=>{ if(/course longue/i.test(a.apsa||'')){ a.apsa='Acrosport'; a.famille='gym'; a.ca='CA3'; ch=true; } });
     pr2.migr=[...done2,'2611b']; saveParams(y,pr2);
+  }
+  const pr3=Object.assign({}, getParams(y)); const done3=Array.isArray(pr3.migr)?pr3.migr:[];
+  if(pl && pl.P5 && pl.P4 && !done3.includes('2611c')){
+    // Choix de novembre 2026 : CO simplifiée en 6e, acrosport en 5e, combiné en 4e (dates et cycles inchangés)
+    const chg=(arr,de,vers)=>{ const a=(arr||[]).find(x=>new RegExp('^\\s*'+de+'\\s*$','i').test(x.apsa||'')); if(a){ Object.assign(a,vers); ch=true; } };
+    chg(pl.P5['6e'],'Badminton',{apsa:"Course d'orientation",famille:'plein',ca:'CA2',note:'Version simplifiée'});
+    chg(pl.P4['5e'],'Relais',{apsa:'Acrosport',famille:'gym',ca:'CA3'});
+    chg(pl.P4['4e'],'Relais',{apsa:'Combiné athlétique',famille:'ath',ca:'CA1'});
+    pr3.migr=[...done3,'2611c']; saveParams(y,pr3);
   }
   return ch;
 }
@@ -3283,7 +3292,7 @@ const LIEU_PAR_SPORT = {
 const SPORTS_GYMNASE_REQUIS = new Set(['basket','badminton','tennis-table','acrosport','renfo','lutte']);
 function getLieuSeance(sportId, seanceType, cl, horaire, s){
   if(s && s.lieuKey && LIEUX[s.lieuKey]) return LIEUX[s.lieuKey];
-  if(sportId==='course-orientation' && seanceType==='eval') return LIEUX.siteCO;
+  if(sportId==='course-orientation' && seanceType==='eval' && cl!=='6e') return LIEUX.siteCO; // en 6e (version simplifiée) l'évaluation se fait au parc
   if(SPORTS_GYMNASE_REQUIS.has(sportId)){
     const gymDispo = (cl==='4e'||cl==='3e') && horaire && horaire.jour==='Mercredi';
     return gymDispo ? LIEUX.gymnase : LIEUX.ecole;
@@ -3376,9 +3385,11 @@ const THEMES_SEANCES = {
     'course-longue': ["Découverte, échauffement, notion d'allure","Courir 8-10 min sans s'arrêter","Trouver son allure régulière (fractionné court)","Test VMA / vitesse repère","Courir à allure projet (individuel)","Courir en binôme, allure imposée","Course bilan, comparaison projet/réalisé"],
     ultimate: ["Découverte, règles, prise en main du disque","Lancer/réception à l'arrêt (revers, coup droit)","Se démarquer, recevoir en mouvement","Progresser vers l'en-but, jeu réduit 3v3","Interception, replacement défensif","Mini-tournoi 5v5, auto-arbitrage","Tournoi final"],
     combine: ["Découverte des 3 épreuves, sécurité du lancer, rôles (athlète, juge, chronométreur)","Course : départ arrêté, réaction, 30 m chronométré","5 bonds : pieds joints puis bonds alternés, trouver son rythme","Vortex : position de lancer, élan de 3 pas, zones de sécurité","Course : accélération et fréquence, chronos en binôme","5 bonds : marques au sol, mesure en binôme","Vortex : trajectoire, mesure et secrétaire","Ateliers tournants sur les 3 épreuves, fiche de performances","Où gagner des points ? Choisir sa stratégie","Combiné à blanc avec juges et chronométreurs","Derniers réglages, rôles tenus seuls","Combiné évalué"],
+    'course-orientation': ["Orienter une carte de la cour, légende simple","Retrouver des plots avec la carte, en binômes","Plan d'un petit parcours, poser des plots pour les autres","Parc de Montreynaud : parcours en étoile, balises proches","Parc de Montreynaud : parcours au score, retour à l'heure","Parcours bilan en binômes"],
     rugby: ["Découverte, règles, manipulation du ballon ovale","Passe en arrière, progression collective","Toucher-plaquage, règle du hors-jeu","Créer le surnombre, jeu à 3","Soutien du porteur de balle","Défense en ligne, replacement","Tournoi 5v5"],
   },
   '5e': {
+    acrosport: ["Découverte, sécurité, rôles (porteur, voltigeur, pareur)","Figures à 2 puis à 3, montées et descentes en sécurité","Figures de niveau 2, tenue 3 secondes","Liaisons entre figures, comptes de 8 sans musique","Construire un enchaînement de 4 figures","Présenter et juger avec la fiche de juge","Répétition générale, derniers réglages","Présentation évaluée"],
     basket: ["Découverte, règles","Travail de passe","Dribble et déplacement","Dribble et passe combiné","Tir en course + dribble","Mini jeu dribble + passe","Tir en course + match"],
     ultimate: ["Rappel règles, lancers de base","Travail du démarquage","Jeu réduit 3v3, auto-arbitrage","Progression vers l'en-but, couloirs","Interceptions, transitions défense/attaque","Mini-tournoi 5v5","Tournoi final, spirit of the game"],
     relais: ["Découverte, prise de marque","Transmission à l'arrêt","Transmission en mouvement","Zone de transmission, synchronisation","Stratégie d'ordre de passage","Relais chronométré en équipe","Tournoi chronométré"],
@@ -3386,6 +3397,7 @@ const THEMES_SEANCES = {
     'demi-fond': ["Test VMA","Courir à % de VMA (fractionné)","Gérer 2 allures différentes","Construire son projet de course","Course en binôme observateur","Ajuster son projet","Course bilan à 3 allures"],
   },
   '4e': {
+    combine: ["Découverte des 3 épreuves, sécurité du lancer, rôles","Course : départ arrêté, 40 m chronométré","5 bonds : rythme, marques au sol","Vortex ou balle : élan de 3 pas, trajectoire","Course et bonds : enchaîner sans perdre de vitesse","Lancer : mesure et fiche de performances","Ateliers tournants, où gagner des points","Combiné à blanc, rôles tenus seuls","Combiné évalué"],
     'course-orientation': ["Carte + légende","Travail de carte + pose de plots dans la cour pour se repérer sur un plan","Recherche de plots cachés par d'autres équipes + suivi d'itinéraire","Découverte des lieux → faire le plan du parc (découverte divisée en 2 × 3 parties du parc)","Récup bâtons → poser les bâtons → recherche des bâtons des autres équipes","Récup bâtons → recherche de bâtons","Récup bâtons + pose → recherche de tous les bâtons des autres équipes","Méons : découverte du site","Méons : évaluation"],
     basket: ["Découverte, dribble de protection","Passe et démarquage","Tir en course","Jeu à 3, conservation du ballon","Contre-attaque","Attaque placée, lecture du jeu","Tournoi 4v4"],
     badminton: ["Découverte, prise en main, service","Frappes de base (clear, amorti)","Replacement au centre","Construction de l'échange","Jeu en double","Tournoi simple"],

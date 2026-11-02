@@ -162,3 +162,28 @@ describe("Situations pratiques dans le déroulé", () => {
     assert.deepEqual(p.erreurs, []);
   });
 });
+
+describe("Choix de novembre : CO 6e, acrosport 5e, combiné 4e", () => {
+  it("ancienne sauvegarde corrigée une seule fois, dates et cycles inchangés", async () => {
+    const vieux = await (async () => {
+      const p = await env.page("index.html");
+      const v = await p.evaluate((a) => {
+        const pl = plannings[a];
+        pl.P5["6e"][0] = { apsa: "Badminton", famille: "raq", semaines: 5, ca: "CA4", note: "", objectif: "" };
+        pl.P4["5e"][0] = { apsa: "Relais", famille: "ath", semaines: 5, ca: "CA1", note: "", objectif: "" };
+        pl.P4["4e"][0] = { apsa: "Relais", famille: "ath", semaines: 5, ca: "CA1", note: "", objectif: "" };
+        saveAll(); return localStorage.getItem("eps-v2");
+      }, ANNEE);
+      await p.context().close(); return v;
+    })();
+    const p = await env.page("index.html", { stockage: { "eps-v2": vieux } });
+    const r = await p.evaluate((a) => { const pl = plannings[a]; return [pl.P5["6e"][0].apsa + pl.P5["6e"][0].ca, pl.P4["5e"][0].apsa + pl.P4["5e"][0].ca, pl.P4["4e"][0].apsa + pl.P4["4e"][0].ca, pl.P5["6e"][0].semaines, periodesData[a].map((x) => x.dates).join()]; }, ANNEE);
+    assert.deepEqual(r.slice(0, 4), ["Course d'orientationCA2", "AcrosportCA3", "Combiné athlétiqueCA1", 5]);
+    assert.equal(r[4], "1/09 – 9/10,12/10 – 27/11,1/12 – 22/01,25/01 – 12/03,15/03 – 11/06");
+    await p.evaluate((a) => { plannings[a].P4["5e"][0].apsa = "Relais"; saveAll(); }, ANNEE);
+    await p.reload(); await p.waitForTimeout(300);
+    assert.equal(await p.evaluate((a) => plannings[a].P4["5e"][0].apsa, ANNEE), "Relais");
+    assert.deepEqual(p.erreurs, []);
+  });
+});
+
