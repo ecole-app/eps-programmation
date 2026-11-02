@@ -132,7 +132,7 @@ describe("Documents préparés", () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
     await p.click(".nav-tab[onclick*=\"'documents'\"]");
     assert.equal(await p.locator("button.da-card").count(), 3);
-    assert.equal(await p.locator("a.da-card").count(), 4);
+    assert.equal(await p.locator("a.da-card").count(), 2);
     await p.locator(".da-card").first().click();
     assert.match(await p.locator("#docAppBody").textContent(), /navette Luc-Léger/);
     await p.evaluate(() => { docAppFermer(); docAppOuvrir("afc-2027"); });

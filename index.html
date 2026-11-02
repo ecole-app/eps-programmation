@@ -987,6 +987,15 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
 .plus-zoom span{flex:1;font-weight:600}
 .plus-zoom button{min-width:48px;min-height:44px;border-radius:10px;border:1.5px solid #0e7c7b;background:#f0fdfa;color:#0b5f5e;font-weight:700;font-size:1rem}
 a.da-card{text-decoration:none;color:inherit;margin-top:8px}
+
+.doc-onglets{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin-bottom:2px}
+.doc-onglet{flex:none;border:1.5px solid var(--border);background:var(--surface);color:var(--text);border-radius:99px;padding:8px 14px;font-size:.84rem;font-weight:600;min-height:40px;cursor:pointer;font-family:inherit}
+.doc-onglet span{color:var(--muted);font-weight:500;margin-left:2px}
+.doc-onglet.on{background:var(--teal-d);border-color:var(--teal-d);color:#fff}
+.doc-onglet.on span{color:#d9f3f1}
+.da-doc{flex-wrap:wrap;cursor:pointer;margin-top:0}
+.da-act{flex-basis:100%;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.da-act .btn{padding:8px 12px;min-height:40px}
 </style>
 </head>
 <body>
@@ -1167,8 +1176,9 @@ a.da-card{text-decoration:none;color:inherit;margin-top:8px}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
       <input type="search" id="docRecherche" class="form-input" placeholder="Rechercher un document…" oninput="docRender()" style="flex:1;min-width:180px">
-      <select id="docFiltreCat" class="form-input" style="width:auto" onchange="docRender()"></select>
+      <select id="docFiltreCat" class="form-input" style="display:none" onchange="docRender()"></select>
     </div>
+    <div id="docOnglets" class="doc-onglets"></div>
     <div id="docListe"></div>
     <div id="docEspace" style="font-size:0.7rem;color:var(--muted);margin-top:12px"></div>
   </div>
@@ -2718,7 +2728,7 @@ const DOCS_APP = [
 ];
 function docAppRender(){
   const box=document.getElementById('docAppListe'); if(!box) return;
-  const RAPPORTS=[{t:"Fiche thématique : citoyenneté (CAPEPS écrit 1)",u:"docs/fiche-citoyennete.pdf",s:"PDF · 4 pages"},{t:"Fiche thématique : la formation des enseignants (CAPEPS écrit 1)",u:"docs/fiche-formation-enseignants.pdf",s:"PDF · 4 pages"},{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
+  const RAPPORTS=[{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
   box.innerHTML=DOCS_APP.map(d=>`<button type="button" class="da-card" onclick="docAppOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')
   box.innerHTML+=RAPPORTS.map(r=>`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>${r.s||'Rapport Claude · s\'ouvre dans un nouvel onglet'}</small></span><span class="da-go">›</span></a>`).join('');
 }
@@ -2736,6 +2746,7 @@ function docAppImprimer(){
   window.print(); setTimeout(()=>{ s.textContent=''; },1000);
 }
 
+function docFiltrer(c){ const f=document.getElementById('docFiltreCat'); if(f){ f.value=c; } docRender(); }
 async function docRender(){
   docAppRender();
   const box=document.getElementById('docListe'); if(!box) return;
@@ -2744,26 +2755,34 @@ async function docRender(){
   docRemplirSelects();
   const q=(document.getElementById('docRecherche').value||'').trim().toLowerCase();
   const fc=document.getElementById('docFiltreCat').value;
+  const ong=document.getElementById('docOnglets');
+  if(ong){
+    const nb={}; docCache.forEach(d=>{ const c=d.cat||'Autre'; nb[c]=(nb[c]||0)+1; });
+    const cats=Object.keys(nb).sort((a,b)=>a.localeCompare(b,'fr'));
+    ong.innerHTML=[['*','Tout',docCache.length]].concat(cats.map(c=>[c,c,nb[c]])).map(([v,l,n])=>`<button type="button" class="doc-onglet${fc===v?' on':''}" data-cat="${escHtml(v)}" onclick="docFiltrer(this.dataset.cat)">${escHtml(l)} <span>${n}</span></button>`).join('');
+  }
   const liste=docCache.filter(d=>(fc==='*'||(d.cat||'Autre')===fc)&&(!q||(d.name||'').toLowerCase().includes(q)||(d.cat||'').toLowerCase().includes(q)));
   if(!docCache.length){ box.innerHTML='<div style="padding:28px;text-align:center;color:var(--muted);font-size:0.85rem">Aucun document pour l\'instant. Ajoute ton premier fichier ci-dessus.</div>'; }
   else if(!liste.length){ box.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.85rem">Aucun résultat.</div>'; }
   else{
+    const carte=d=>{
+      const brut=(d.name||'').replace(/\.[a-z0-9]{2,5}$/i,''), hash=/^[0-9a-f]{8,}/i.test(brut);
+      const titre=hash?'Document sans titre (✏️ pour le renommer)':brut;
+      return `<div class="da-card da-doc doc-ligne" onclick="docOuvrir('${d.id}')">
+        <span class="da-ic">${docIcone(d)}</span>
+        <span class="da-tx"><b>${escHtml(titre)}</b><small>${escHtml(d.cat||'Autre')} · ${docTaille(d.size||0)} · ajouté le ${new Date(d.added).toLocaleDateString('fr-FR')}</small></span>
+        <span class="da-go">›</span>
+        <span class="da-act" onclick="event.stopPropagation()">
+          <button class="btn btn-outline" title="Télécharger" onclick="docTelecharger('${d.id}')">⬇ Télécharger</button>
+          <button class="btn btn-outline" title="Renommer / changer de catégorie" onclick="docRenommer('${d.id}')">✏️ Renommer</button>
+          <button class="btn btn-outline" title="Supprimer" onclick="docSupprimer('${d.id}')">🗑</button>
+        </span></div>`;
+    };
     const groupes={}; liste.forEach(d=>{ (groupes[d.cat||'Autre']=groupes[d.cat||'Autre']||[]).push(d); });
     box.innerHTML=Object.keys(groupes).sort((a,b)=>a.localeCompare(b,'fr')).map(c=>`
-      <div style="margin-bottom:14px">
-        <div style="font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;color:var(--teal-d);margin:0 2px 6px">${escHtml(c)} <span style="color:var(--muted);font-weight:600">(${groupes[c].length})</span></div>
-        ${groupes[c].sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(d=>`
-        <div class="doc-ligne" style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px">
-          <div style="font-size:1.4rem">${docIcone(d)}</div>
-          <div style="flex:1;min-width:0;cursor:pointer" onclick="docOuvrir('${d.id}')">
-            <div style="font-size:0.85rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(d.name)}</div>
-            <div style="font-size:0.7rem;color:var(--muted)">${docTaille(d.size||0)} · ajouté le ${new Date(d.added).toLocaleDateString('fr-FR')}</div>
-          </div>
-          <button class="btn btn-outline" style="padding:5px 9px" title="Ouvrir" onclick="docOuvrir('${d.id}')">Ouvrir</button>
-          <button class="btn btn-outline" style="padding:5px 9px" title="Télécharger" onclick="docTelecharger('${d.id}')">⬇</button>
-          <button class="btn btn-outline" style="padding:5px 9px" title="Renommer / changer de catégorie" onclick="docRenommer('${d.id}')">✏️</button>
-          <button class="btn btn-outline" style="padding:5px 9px" title="Supprimer" onclick="docSupprimer('${d.id}')">🗑</button>
-        </div>`).join('')}
+      <div class="da-sec">
+        ${fc==='*'?`<div class="da-sec-t">${escHtml(c)} (${groupes[c].length})</div>`:''}
+        <div class="da-liste">${groupes[c].sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(carte).join('')}</div>
       </div>`).join('');
   }
   const tot=docCache.reduce((a,d)=>a+(d.size||0),0);

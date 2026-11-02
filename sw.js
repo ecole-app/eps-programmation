@@ -5,8 +5,7 @@
 const CACHE = 'eps-programmation-v2';
 const BASE = new URL('./', self.location).pathname;
 const FICHIERS = ['./', 'index.html', 'baremes.html', 'baremes-data.js', 'appreciations.html', 'appreciations-ia.html',
-  'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/logo-luqman.png',
-  'docs/fiche-citoyennete.pdf', 'docs/fiche-formation-enseignants.pdf'];
+  'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/logo-luqman.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS)).then(() => self.skipWaiting()));
