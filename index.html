@@ -1386,6 +1386,7 @@ a.da-card{text-decoration:none;color:inherit;margin-top:8px}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="baremes-data.js"></script>
+<script src="situations-data.js"></script>
 <script>
 const allSports = {
   col: [
@@ -3253,7 +3254,27 @@ function buildDerouleText(cl, s, sd){
   const rangementMin = trajet>0 ? 5 : 3;
   const finCorps = fin - trajet - rangementMin - 5;
   if(finCorps > t){
-    lignes.push(`${fmtHeure(t)}–${fmtHeure(finCorps)} — Corps de séance : ${s.titre}`);
+    const sits = (typeof situationsSeance==='function' && sd) ? situationsSeance(sd.id, s.titre, s.type, (s.num||1)-1) : [];
+    const D = finCorps - t;
+    if(!sits.length){
+      lignes.push(`${fmtHeure(t)}–${fmtHeure(finCorps)} — Corps de séance : ${s.titre}`);
+    } else {
+      lignes.push(`Thème : ${s.titre}`);
+      const deux = sits.length>1 && D>=20;
+      const liste = deux ? sits : sits.slice(0,1);
+      const d1 = deux ? Math.max(8, Math.round(D*0.45/5)*5) : D;
+      liste.forEach((x,k)=>{
+        const a = k===0 ? t : t+d1, b = k===0 && deux ? t+d1 : finCorps;
+        const nom = (s.type==='revision' ? 'À blanc : ' : '') + x.n;
+        const lib = liste.length>1 ? `Situation ${k+1}` : (s.type==='eval'||s.type==='revision' ? 'Épreuve' : 'Situation');
+        lignes.push(`${fmtHeure(a)}–${fmtHeure(b)} — ${lib} : ${nom} (${b-a} min)`);
+        if((s.type==='eval'||s.type==='revision') && sd.epreuve) lignes.push(`   • Épreuve : ${sd.epreuve}`);
+        lignes.push(`   • Organisation : ${x.o}`);
+        lignes.push(`   • Consigne : ${x.c}`);
+        lignes.push(`   • Réussite : ${x.r}`);
+        if(x.v) lignes.push(`   • Variante : ${x.v}`);
+      });
+    }
     t = finCorps;
   }
   const calmeFin = t + 5;
@@ -3789,6 +3810,11 @@ function suggestGroupement(nbEleves, sdEffectifText){
     : `${nbGroupes} groupes de ${base}`;
   return `${nbEleves} élèves → ${detail}`;
 }
+function regenDeroule(){
+  const d=seanceDataMap[currentSeanceKey]; const ta=document.getElementById('sfderoule'); if(!d||!ta) return;
+  if(ta.value.trim() && !confirm('Remplacer ton déroulé par la proposition avec les situations pratiques ?')) return;
+  ta.value=buildDerouleText(d.cl,d.s,d.sd);
+}
 function openSeanceFiche(key){
   const d = seanceDataMap[key];
   if(!d) return;
@@ -3820,8 +3846,8 @@ function openSeanceFiche(key){
         <div class="fiche-cond-item"><div class="fiche-cond-label">Espace</div><input class="fiche-edit-input" id="sfespace" value="${g('espace',(sd&&sd.espace)||'')}"></div>
         <div class="fiche-cond-item"><div class="fiche-cond-label">Effectif</div><input class="fiche-edit-input" id="sfeffectif" value="${g('effectif',effectifDefaut)}"></div>
       </div></div>
-    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">⏱️</span><span class="fiche-section-title">Déroulé horaire</span></div>
-      <textarea class="fiche-edit-ta" id="sfderoule" style="min-height:140px;white-space:pre-wrap">${g('deroule',buildDerouleText(cl,s,sd))}</textarea></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">⏱️</span><span class="fiche-section-title">Déroulé horaire</span><button type="button" class="btn btn-outline" style="margin-left:auto;padding:4px 10px;font-size:0.72rem" title="Remplacer par le déroulé proposé (avec les situations pratiques)" onclick="regenDeroule()">↺ Proposition</button></div>
+      <textarea class="fiche-edit-ta" id="sfderoule" style="min-height:320px;white-space:pre-wrap">${g('deroule',buildDerouleText(cl,s,sd))}</textarea></div>
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">⚙️</span><span class="fiche-section-title">Détail du corps de séance</span></div>
       <textarea class="fiche-edit-ta" id="sfcorps" style="min-height:90px">${g('corps',s.contenu+(s.obs?'\n\nObservateurs : '+s.obs+' Rotation pour que chacun observe au moins une fois.':''))}</textarea></div>
     ${s.obs?`<div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">👀</span><span class="fiche-section-title">Observateurs de la séance</span></div>

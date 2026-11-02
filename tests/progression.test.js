@@ -142,3 +142,23 @@ describe("Documents préparés", () => {
     assert.deepEqual(p.erreurs, []);
   });
 });
+
+describe("Situations pratiques dans le déroulé", () => {
+  it("chaque séance propose 1 ou 2 situations datées, l'évaluation propose l'épreuve", async () => {
+    const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
+    await p.click(".nav-tab[onclick*=\"'seances'\"]");
+    const r = await p.evaluate(() => {
+      const ks = Object.keys(seanceDataMap);
+      const app = ks.find((k) => seanceDataMap[k].s.type === "appr" && seanceDataMap[k].sd && SITUATIONS[seanceDataMap[k].sd.id]);
+      const ev = ks.find((k) => seanceDataMap[k].s.type === "eval" && seanceDataMap[k].sd && SITUATIONS[seanceDataMap[k].sd.id]);
+      const t = (k) => { const d = seanceDataMap[k]; return buildDerouleText(d.cl, d.s, d.sd); };
+      return [t(app), t(ev), Object.keys(SITUATIONS).length];
+    });
+    assert.match(r[0], /Situation 1 : .*\(\d+ min\)/);
+    assert.match(r[0], /Situation 2 : /);
+    assert.match(r[0], /Organisation : .*\n.*Consigne : .*\n.*Réussite : /);
+    assert.match(r[1], /Épreuve : /);
+    assert.equal(r[2], 16);
+    assert.deepEqual(p.erreurs, []);
+  });
+});
