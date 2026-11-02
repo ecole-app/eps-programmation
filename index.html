@@ -1157,7 +1157,7 @@ a.da-card{text-decoration:none;color:inherit;margin-top:8px}
     <div class="page-header">
       <div>
         <div class="page-title">Mes documents</div>
-        <div class="page-sub">Tes fiches et documents perso, rangés par catégorie. Gardés dans ce navigateur, jamais envoyés sur internet.</div>
+        <div class="page-sub">Tes fiches et documents perso, rangés par catégorie. Synchronisés entre ton PC et ton téléphone (fichiers de 5 Mo maximum).</div>
       </div>
     </div>
     <div class="da-sec">
@@ -1177,6 +1177,7 @@ a.da-card{text-decoration:none;color:inherit;margin-top:8px}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
       <input type="search" id="docRecherche" class="form-input" placeholder="Rechercher un document…" oninput="docRender()" style="flex:1;min-width:180px">
       <select id="docFiltreCat" class="form-input" style="display:none" onchange="docRender()"></select>
+      <button class="btn btn-outline" title="Envoyer mes documents et recevoir ceux des autres appareils" onclick="docSyncManuel()">☁️ Synchroniser</button>
     </div>
     <div id="docOnglets" class="doc-onglets"></div>
     <div id="docListe"></div>
@@ -2536,8 +2537,9 @@ function saveElevesModal(){
 }
 
 // ═══ DOCUMENTS PERSO ═══
-// Fichiers rangés dans IndexedDB (ce navigateur uniquement). Le dépôt du site est public :
-// rien de perso n'est jamais envoyé sur internet.
+// Fichiers rangés dans IndexedDB (copie locale, ouverture hors connexion) et envoyés dans la base en ligne
+// (collection « eps-docs », fichier découpé en morceaux) pour apparaître sur tous les appareils.
+// Le dépôt du site est public : les fichiers ne sont JAMAIS dans le dépôt, seulement dans la base.
 const DOC_CATS_DEFAUT=['CAPEPS','Cours EPS','Administratif','Autre'];
 let docCache=[];
 function docDB(){
@@ -2558,6 +2560,88 @@ async function docEcrire(d){
 async function docSupprimerDB(id){
   const db=await docDB();
   return new Promise((ok,ko)=>{ const t=db.transaction('docs','readwrite'); t.objectStore('docs').delete(id); t.oncomplete=ok; t.onerror=()=>ko(t.error); });
+}
+const DOC_MAX=5*1048576, DOC_MORCEAU=600*1024;
+let docSyncEnCours=false;
+function docVersB64(blob){
+  return new Promise((ok,ko)=>{ const r=new FileReader(); r.onload=()=>ok(String(r.result).split(',')[1]||''); r.onerror=()=>ko(r.error); r.readAsDataURL(blob); });
+}
+function docDepuisB64(parts,type){
+  const arr=parts.map(b=>{ const bin=atob(b); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; });
+  return new Blob(arr,{type:type||'application/octet-stream'});
+}
+async function docCloudEnvoyer(d){
+  if(!cloudReady||!cloudDb) return false;
+  if((d.size||0)>DOC_MAX) return false;
+  const ref=cloudDb.collection('eps-docs').doc(d.id);
+  const n=Math.max(1,Math.ceil(d.blob.size/DOC_MORCEAU));
+  for(let k=0;k<n;k++){
+    const b=await docVersB64(d.blob.slice(k*DOC_MORCEAU,(k+1)*DOC_MORCEAU));
+    await ref.collection('parts').doc(String(k)).set({b});
+  }
+  d.upd=d.upd||Date.now();
+  await ref.set({name:d.name,cat:d.cat||'Autre',type:d.type||'',size:d.size||0,added:d.added,upd:d.upd,n}); // en dernier : le document n'apparaît ailleurs qu'une fois complet
+  d.cloud=true; await docEcrire(d);
+  return true;
+}
+async function docCloudMeta(d){
+  if(!cloudReady||!d.cloud) return;
+  await cloudDb.collection('eps-docs').doc(d.id).set({name:d.name,cat:d.cat||'Autre',upd:d.upd||Date.now()},{merge:true});
+}
+async function docCloudSupprimer(id){
+  const ref=cloudDb.collection('eps-docs').doc(id);
+  const ps=await ref.collection('parts').get();
+  for(const p of ps.docs) await p.ref.delete();
+  await ref.delete();
+}
+// Compare la base en ligne et ce navigateur : récupère les nouveaux documents, répercute renommages et suppressions.
+async function docCloudSync(){
+  if(!cloudReady||!cloudDb||docSyncEnCours) return {ok:false};
+  docSyncEnCours=true;
+  let recus=0;
+  try{
+    const snap=await cloudDb.collection('eps-docs').get();
+    const cloud={}; snap.forEach(x=>{ cloud[x.id]=x.data(); });
+    const local=await docTout(); const parId={}; local.forEach(d=>{ parId[d.id]=d; });
+    for(const id of Object.keys(cloud)){
+      const c=cloud[id], d=parId[id];
+      if(!d){
+        const ps=await cloudDb.collection('eps-docs').doc(id).collection('parts').get();
+        const morceaux=ps.docs.sort((a,b)=>Number(a.id)-Number(b.id)).map(x=>x.data().b);
+        if(morceaux.length!==(c.n||morceaux.length)) continue;
+        await docEcrire({id,name:c.name,cat:c.cat||'Autre',type:c.type||'',size:c.size||0,added:c.added||Date.now(),upd:c.upd||0,cloud:true,blob:docDepuisB64(morceaux,c.type)});
+        recus++;
+      } else if(!d.cloud){
+        d.cloud=true; await docEcrire(d);
+      } else if((c.upd||0)>(d.upd||0)){
+        d.name=c.name; d.cat=c.cat||'Autre'; d.upd=c.upd; await docEcrire(d);
+      } else if((d.upd||0)>(c.upd||0)){
+        await docCloudMeta(d);
+      }
+    }
+    for(const d of local){ if(d.cloud && !cloud[d.id]) await docSupprimerDB(d.id); } // supprimé depuis un autre appareil
+    return {ok:true,recus};
+  }catch(e){
+    console.warn('Synchro documents échouée',e);
+    return {ok:false,erreur:e&&e.code||String(e)};
+  }finally{ docSyncEnCours=false; }
+}
+async function docSyncManuel(){
+  if(!cloudReady){ showToast('Connexion en ligne indisponible'); return; }
+  showToast('☁️ Synchro des documents…');
+  const local=await docTout(); let env=0, trop=0, echec=0;
+  for(const d of local){
+    if(d.cloud) continue;
+    if((d.size||0)>DOC_MAX){ trop++; continue; }
+    try{ if(await docCloudEnvoyer(d)) env++; }catch(e){ echec++; console.warn(e); }
+  }
+  const r=await docCloudSync();
+  let msg=r.ok?'✅ Synchronisé':'⚠️ Synchro impossible ('+(r.erreur||'hors connexion')+')';
+  if(env) msg+=' · '+env+' envoyé'+(env>1?'s':'');
+  if(r.recus) msg+=' · '+r.recus+' reçu'+(r.recus>1?'s':'');
+  if(trop) msg+=' · '+trop+' trop gros (5 Mo max)';
+  if(echec) msg+=' · '+echec+' en échec';
+  showToast(msg); docRender();
 }
 function docCategories(){
   const set=new Set(DOC_CATS_DEFAUT); docCache.forEach(d=>set.add(d.cat||'Autre'));
@@ -2592,14 +2676,17 @@ function docRemplirSelects(extra){
 async function docAjouter(files){
   files=Array.from(files||[]); // copie : l'input est vidé juste après
   const cat=document.getElementById('docCatAjout').value; if(!files||!files.length||cat==='__new__') return;
-  let n=0;
+  let n=0, gros=0;
   for(const f of files){
     try{
-      await docEcrire({id:'d'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),name:f.name,cat,type:f.type||'',size:f.size,added:Date.now(),blob:f});
+      const nd={id:'d'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),name:f.name,cat,type:f.type||'',size:f.size,added:Date.now(),upd:Date.now(),cloud:false,blob:f};
+      await docEcrire(nd);
       n++;
+      if(f.size>DOC_MAX) gros++;
+      else docCloudEnvoyer(nd).then(()=>docRender()).catch(e=>{ console.warn('Envoi document',e); showToast('⚠️ '+nd.name+' reste sur cet appareil (envoi impossible)'); });
     }catch(e){ showToast('❌ Impossible d\'enregistrer '+f.name+' (espace du navigateur plein ?)'); }
   }
-  if(n) showToast('✅ '+n+' document'+(n>1?'s':'')+' ajouté'+(n>1?'s':'')+' dans '+cat);
+  if(n) showToast('✅ '+n+' document'+(n>1?'s':'')+' ajouté'+(n>1?'s':'')+' dans '+cat+(gros?' · '+gros+' dépasse 5 Mo : reste sur cet appareil':''));
   docRender();
 }
 async function docOuvrir(id){
@@ -2619,12 +2706,17 @@ async function docRenommer(id){
   const d=docCache.find(x=>x.id===id); if(!d) return;
   const nom=prompt('Nom du document :',d.name); if(nom===null) return;
   const cat=prompt('Catégorie :',d.cat||'Autre'); if(cat===null) return;
-  d.name=(nom.trim()||d.name); d.cat=(cat.trim()||d.cat||'Autre');
+  d.name=(nom.trim()||d.name); d.cat=(cat.trim()||d.cat||'Autre'); d.upd=Date.now();
   await docEcrire(d); docRender();
+  docCloudMeta(d).catch(e=>showToast('⚠️ Renommage non envoyé (hors connexion)'));
 }
 async function docSupprimer(id){
   const d=docCache.find(x=>x.id===id); if(!d) return;
   if(!confirm('Supprimer « '+d.name+' » ? Cette action est définitive.')) return;
+  if(d.cloud){
+    try{ await docCloudSupprimer(id); }
+    catch(e){ showToast('⚠️ Suppression en ligne impossible : réessaie avec une connexion'); return; }
+  }
   await docSupprimerDB(id); showToast('Document supprimé'); docRender();
 }
 // ═══ DOCUMENTS PRÉPARÉS DANS L'APPLI (lecture, impression) ═══
@@ -2787,7 +2879,7 @@ async function docRender(){
       </div>`).join('');
   }
   const tot=docCache.reduce((a,d)=>a+(d.size||0),0);
-  document.getElementById('docEspace').textContent=docCache.length?docCache.length+' document'+(docCache.length>1?'s':'')+' · '+docTaille(tot)+' · rangés uniquement dans ce navigateur (autre appareil = liste vide).':'';
+  document.getElementById('docEspace').textContent=docCache.length?docCache.length+' document'+(docCache.length>1?'s':'')+' · '+docTaille(tot)+' · '+(docCache.filter(d=>!d.cloud).length?docCache.filter(d=>!d.cloud).length+' pas encore en ligne (bouton ☁️ ci-dessus)':'tous synchronisés')+'.':'';
 }
 (function(){
   const z=document.getElementById('docDrop'); if(!z) return;
@@ -2906,7 +2998,7 @@ function showPage(id,btn){
   if(id==='aujourdhui')renderAujourdhui();
   if(id==='appreciations'){const f=document.getElementById('apprFrame');if(f&&!f.getAttribute('src'))setApprVersion(apprVersion);}
   if(id==='appreciations'||id==='baremes') rafraichirIframesEleves();
-  if(id==='documents') docRender();
+  if(id==='documents'){ docRender(); docCloudSync().then(r=>{ if(r&&r.ok&&r.recus) showToast('☁️ '+r.recus+' document'+(r.recus>1?'s':'')+' reçu'+(r.recus>1?'s':'')); docRender(); }); }
   if(id==='baremes'){const f=document.getElementById('baremesFrame');if(f&&!f.getAttribute('src')){f.addEventListener('load',()=>setTimeout(scheduleCloudSync,1500),{once:true});f.setAttribute('src','baremes.html?v='+Date.now());}}
   majBottomNav(id);
   try{ if(location.hash!=='#'+id) history.replaceState(null,'','#'+id); }catch(e){}
