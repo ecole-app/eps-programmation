@@ -71,4 +71,14 @@ describe("Téléphone", () => {
     assert.equal(await p.evaluate(() => localStorage.getItem("eps-zoom")), "1.2");
     assert.deepEqual(p.erreurs, []);
   });
+  it("l'en-tête et le bouton ☰ restent fixes quand on fait défiler la page", async () => {
+    const p = await tel();
+    await p.evaluate(() => { const d = document.createElement("div"); d.style.height = "3000px"; document.querySelector(".main, main, body").appendChild(d); });
+    await p.evaluate(() => window.scrollTo(0, 800));
+    await p.waitForTimeout(200);
+    const r = await p.evaluate(() => [Math.round(document.querySelector("header").getBoundingClientRect().top), Math.round(document.getElementById("sidebarToggle").getBoundingClientRect().top), window.scrollY]);
+    assert.ok(r[2] > 0, "la page a défilé");
+    assert.equal(r[0], 0);
+    assert.ok(r[1] >= 0 && r[1] < 20);
+  });
 });
