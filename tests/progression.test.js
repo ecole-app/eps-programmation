@@ -127,13 +127,38 @@ describe("Observateurs dans les séances", () => {
   });
 });
 
+describe("Documents interactifs", () => {
+  it("programmation cliquable, document unique et fiche de suivi course longue", async () => {
+    const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
+    await p.click(".nav-tab[onclick*=\"'documents'\"]");
+    await p.evaluate(() => docSpecialOuvrir("prog-sports"));
+    assert.ok((await p.locator(".ps-sport:not(.ps-off)").count()) > 3);
+    await p.evaluate(() => { window.print = () => {}; });
+    await p.locator(".ps-sport:not(.ps-off)").nth(0).click();
+    await p.locator(".ps-sport:not(.ps-off)").nth(1).click();
+    await p.evaluate(() => psBasculer("plan"));
+    assert.match(await p.locator("#psPanier").textContent(), /Mon document \(3\)/);
+    await p.evaluate(() => progSportsGenerer());
+    await p.waitForTimeout(300);
+    const txt = await p.locator("#docPrint").textContent();
+    assert.match(txt, /Programmation EPS/);
+    assert.ok((await p.locator("#docPrint section.bp").count()) == 3);
+    assert.match(await p.locator("#docPrintStyle").textContent(), /#docPrint \.bp/);
+    await p.evaluate(() => docSpecialOuvrir("suivi-cl"));
+    await p.evaluate(() => suiviClGenerer());
+    await p.waitForTimeout(300);
+    assert.match(await p.locator("#docPrint").textContent(), /Fiche de suivi/);
+    assert.deepEqual(p.erreurs, []);
+  });
+});
+
 describe("Documents préparés", () => {
   it("la séance de tests 6e, les attendus 2027 et le mémo VMA s'ouvrent depuis Documents", async () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
     await p.click(".nav-tab[onclick*=\"'documents'\"]");
-    assert.equal(await p.locator("button.da-card").count(), 3);
+    assert.equal(await p.locator("button.da-card").count(), 5);
     assert.equal(await p.locator("a.da-card").count(), 2);
-    await p.locator(".da-card").first().click();
+    await p.evaluate(() => docAppOuvrir("tests-6e"));
     assert.match(await p.locator("#docAppBody").textContent(), /navette Luc-Léger/);
     await p.evaluate(() => { docAppFermer(); docAppOuvrir("afc-2027"); });
     assert.equal(await p.locator("#docAppBody ol li").count(), 12);

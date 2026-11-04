@@ -1402,6 +1402,7 @@ a.da-card{text-decoration:none;color:inherit;margin-top:8px}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="baremes-data.js"></script>
+<script src="fiche-suivi.js"></script>
 <script src="situations-data.js"></script>
 <script>
 const allSports = {
@@ -2834,13 +2835,14 @@ const DOCS_APP = [
 function docAppRender(){
   const box=document.getElementById('docAppListe'); if(!box) return;
   const RAPPORTS=[{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
-  box.innerHTML=DOCS_APP.map(d=>`<button type="button" class="da-card" onclick="docAppOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')
+  box.innerHTML=DOCS_SPECIAUX.map(d=>`<button type="button" class="da-card" onclick="docSpecialOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')+DOCS_APP.map(d=>`<button type="button" class="da-card" onclick="docAppOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')
   box.innerHTML+=RAPPORTS.map(r=>`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>${r.s||'Rapport Claude · s\'ouvre dans un nouvel onglet'}</small></span><span class="da-go">›</span></a>`).join('');
 }
 function docAppOuvrir(id){
   const d=DOCS_APP.find(x=>x.id===id); if(!d) return;
   document.getElementById('docAppTitre').textContent=d.icone+' '+d.titre;
   document.getElementById('docAppBody').innerHTML=`<div class="da-etat">${d.etat}</div>`+d.html();
+  document.getElementById('docAppImpBtn').style.display='';
   document.getElementById('docAppOverlay').classList.add('open');
   document.body.classList.add('modal-open');
 }
@@ -2849,6 +2851,136 @@ function docAppImprimer(){
   let s=document.getElementById('daPrint'); if(!s){ s=document.createElement('style'); s.id='daPrint'; document.head.appendChild(s); }
   s.textContent='@media print{@page{size:A4 portrait;margin:12mm}body>*:not(#docAppOverlay){display:none!important}#docAppOverlay{display:block!important;position:static!important;background:#fff!important;padding:0!important}#docAppOverlay .fiche-modal{max-height:none!important;box-shadow:none!important;width:100%!important;max-width:100%!important}#docAppOverlay .fiche-modal-body{overflow:visible!important;max-height:none!important}#docAppOverlay .fiche-modal-ft,#docAppOverlay .fiche-modal-close{display:none!important}}';
   window.print(); setTimeout(()=>{ s.textContent=''; },1000);
+}
+
+
+// ═══ DOCUMENTS INTERACTIFS : programmation cliquable + fiche de suivi (course longue) ═══
+const DOCS_SPECIAUX=[
+  {id:'prog-sports', icone:'📚', titre:'Programmation des sports', etat:'Cliquable · barèmes · un seul document à envoyer'},
+  {id:'suivi-cl', icone:'🏃', titre:'Fiche de suivi élève · course longue', etat:'Une page par élève · choisis la classe et le nombre de séances'}
+];
+let docSpecialId=null;
+function docImprimerHtml(html){
+  const css=(html.match(/<style[^>]*>([\s\S]*?)<\/style>/i)||[,''])[1];
+  const corps=(html.match(/<body[^>]*>([\s\S]*)<\/body>/i)||[,html])[1];
+  let box=document.getElementById('docPrint');
+  if(!box){ box=document.createElement('div'); box.id='docPrint'; document.body.appendChild(box); }
+  box.innerHTML=corps;
+  let st=document.getElementById('docPrintStyle');
+  if(!st){ st=document.createElement('style'); st.id='docPrintStyle'; document.head.appendChild(st); }
+  const scoped=css.replace(/@page[^{]*\{[^}]*\}/g,'').replace(/(^|\})\s*([^@{}]+)\{/g,(m,a,sel)=>a+sel.split(',').map(x=>'#docPrint '+x.trim()).join(',')+'{');
+  const page=(css.match(/@page[^{]*\{[^}]*\}/)||['@page{size:A4 portrait;margin:10mm}'])[0];
+  st.textContent='#docPrint{display:none}@media print{'+page+'body>*:not(#docPrint){display:none!important}html,body{zoom:1!important;background:#fff!important}#docPrint{display:block!important;font-family:Arial,sans-serif;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+scoped+'}';
+  setTimeout(()=>window.print(),150);
+}
+function docSpecialOuvrir(id){
+  const d=DOCS_SPECIAUX.find(x=>x.id===id); if(!d) return;
+  docSpecialId=id;
+  document.getElementById('docAppTitre').textContent=d.icone+' '+d.titre;
+  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():suiviClHtml();
+  const b=document.getElementById('docAppImpBtn'); b.style.display='none';
+  document.getElementById('docAppOverlay').classList.add('open');
+  document.body.classList.add('modal-open');
+  if(id==='suivi-cl') suiviClInfo();
+  if(id==='prog-sports') psRendre();
+}
+// — Programmation des sports —
+function progSportsListe(){
+  const y=currentYear, pl=plannings[y]||{}, per=periodes()||[];
+  return ['6e','5e','4e','3e'].map(cl=>({cl, cycles:per.map(p=>({p, items:((pl[p.id]||{})[cl]||[]).map(a=>({a, sd:findSportData(a.apsa)}))})).filter(c=>c.items.length)}));
+}
+let psPanier=[];
+function progSportsHtml(){
+  psPanier=[];
+  const blocs=progSportsListe().map(c=>`<h3>${c.cl}</h3>`+c.cycles.map(cy=>`<div class="ps-cy"><div class="ps-cyh">${escHtml(cy.p.name)} <small>${escHtml(cy.p.dates)}</small></div>`+cy.items.map(it=>{
+    const sd=it.sd&&SPORTS.find(x=>x.id===it.sd.id);
+    return sd&&baremeNiveau(sd,c.cl)
+      ?`<div class="ps-ligne"><button type="button" class="ps-sport" data-k="${sd.id}|${c.cl}" onclick="psBasculer(this.dataset.k)">${sd.emoji||''} ${escHtml(it.a.apsa)}<small>${escHtml(it.a.ca||'')} · ${it.a.semaines} sem.</small><span class="ps-plus">＋</span></button><button type="button" class="ps-voir" title="Voir le barème" onclick="docAppFermer();ouvrirBareme('${sd.id}','${c.cl}')">👁</button></div>`
+      :`<div class="ps-ligne"><span class="ps-sport ps-off">${escHtml(it.a.apsa)}<small>${escHtml(it.a.ca||'')} · pas de barème</small></span></div>`;
+  }).join('')+'</div>').join('')).join('');
+  return `<p class="da-lead">Touche un sport pour l'<b>ajouter</b> à ton document (comme pour fusionner des PDF). Réorganise la liste en bas, puis génère <b>un seul PDF</b> à envoyer. 👁 ouvre le barème.</p>
+  ${blocs}
+  <div class="ps-panier" id="psPanier"></div>
+  <style>.ps-cy{margin:6px 0 10px}.ps-cyh{font-weight:700;font-size:.8rem;color:var(--teal)}.ps-cyh small{font-weight:400;color:var(--muted)}
+  .ps-ligne{display:flex;align-items:stretch;gap:6px;margin:5px 0}
+  .ps-sport{position:relative;flex:1;text-align:left;background:#fff;border:1.5px solid var(--border,#ccd);border-radius:9px;padding:9px 38px 9px 11px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit}
+  .ps-sport small{display:block;font-weight:400;color:var(--muted);font-size:.72rem}.ps-off{opacity:.6;cursor:default}
+  .ps-sport.on{border-color:var(--teal);background:#e8f1f1}.ps-plus{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:1.2rem;color:var(--teal)}
+  .ps-voir{width:44px;border:1.5px solid var(--border,#ccd);border-radius:9px;background:#fff;font-size:1.1rem;cursor:pointer}
+  .ps-panier{position:sticky;bottom:0;background:#fff;border-top:2px solid var(--teal);padding:10px 4px;margin-top:14px;box-shadow:0 -4px 10px rgba(0,0,0,.08)}
+  .ps-pl{display:flex;align-items:center;gap:6px;margin:4px 0;font-size:.85rem}.ps-pl span{flex:1}.ps-pl button{width:34px;height:34px;border:1px solid #ccd;border-radius:8px;background:#fff;cursor:pointer}</style>`;
+}
+function psNom(k){
+  if(k==='plan') return '📅 Planning de l\'année';
+  const [sid,cl]=k.split('|'); const sd=SPORTS.find(x=>x.id===sid);
+  return (sd?(sd.emoji||'')+' '+sd.nom:sid)+' — '+cl;
+}
+function psBasculer(k){
+  const i=psPanier.indexOf(k); if(i>=0) psPanier.splice(i,1); else psPanier.push(k);
+  psRendre();
+}
+function psDeplacer(i,d){ const j=i+d; if(j<0||j>=psPanier.length) return; [psPanier[i],psPanier[j]]=[psPanier[j],psPanier[i]]; psRendre(); }
+function psRendre(){
+  document.querySelectorAll('.ps-sport[data-k]').forEach(b=>{ const on=psPanier.includes(b.dataset.k); b.classList.toggle('on',on); b.querySelector('.ps-plus').textContent=on?'✓':'＋'; });
+  const box=document.getElementById('psPanier'); if(!box) return;
+  const l=psPanier.map((k,i)=>`<div class="ps-pl"><span>${i+1}. ${escHtml(psNom(k))}</span><button type="button" onclick="psDeplacer(${i},-1)">↑</button><button type="button" onclick="psDeplacer(${i},1)">↓</button><button type="button" onclick="psBasculer('${k}')">✕</button></div>`).join('');
+  box.innerHTML=`<b>Mon document (${psPanier.length})</b>`
+    +(psPanier.includes('plan')?'':`<div><button type="button" class="btn" style="margin:6px 0" onclick="psBasculer('plan')">＋ Ajouter le planning de l'année</button></div>`)
+    +(l||'<div style="font-size:.8rem;color:var(--muted);margin:4px 0">Rien pour l\'instant : touche des sports ci-dessus.</div>')
+    +`<button type="button" class="btn btn-teal" style="margin-top:6px" ${psPanier.length?'':'disabled'} onclick="progSportsGenerer()">📄 Générer le PDF (${psPanier.length})</button>`;
+}
+function baremePageHtml(sd,cl){
+  const n=baremeNiveau(sd,cl); if(!n) return '';
+  const lignes=n.criteres.map(c=>{
+    const t=(c.table||[]).map(r=>`<tr><td>${escHtml(r[0])}</td><td class="pt">${escHtml(String(r[1]))}</td></tr>`).join('');
+    const sous=c.sous?`<div class="so">${c.sous.map(x=>escHtml(x.label)+' /'+x.max).join(' · ')}</div>`:'';
+    return `<div class="cr"><div class="crh"><b>${escHtml(c.label)}</b><span>/ ${c.max} pts</span></div><div class="so">${escHtml(c.hint||'')}</div>${sous}${t?`<table class="bt">${t}</table>`:''}</div>`;
+  }).join('');
+  return `<section class="bp"><h2>${sd.emoji||''} ${escHtml(sd.nom)} — ${cl} <small>(${n.cycle==='c3'?'cycle 3':'cycle 4'} · ${escHtml(n.seances)} séances)</small></h2><p class="ca">${escHtml(n.ca_texte)}</p>${n.epreuve?`<p class="ca"><b>Épreuve :</b> ${escHtml(n.epreuve)}</p>`:''}${lignes}</section>`;
+}
+function progSportsGenerer(){
+  if(!psPanier.length){ showToast('Ajoute au moins un élément'); return; }
+  let pages='';
+  const planCode=()=>{
+    const per=periodes()||[], y=currentYear, pl=plannings[y]||{};
+    const th=per.map(p=>`<th>${escHtml(p.name)}<small>${escHtml(p.dates)}</small></th>`).join('');
+    const rows=['6e','5e','4e','3e'].map(cl=>`<tr><th class="cl">${cl}</th>`+per.map(p=>{
+      const l=((pl[p.id]||{})[cl]||[]);
+      return '<td>'+(l.length?l.map(a=>`<div class="a"><b>${escHtml(a.apsa)}</b><span>${escHtml(a.ca||'')} · ${a.semaines} sem.</span></div>`).join(''):'—')+'</td>';
+    }).join('')+'</tr>').join('');
+    return `<section class="bp"><h1>Programmation EPS ${escHtml(y)} — Collège Luqmân</h1><table class="pt2"><thead><tr><th></th>${th}</tr></thead><tbody>${rows}</tbody></table></section>`;
+  };
+  psPanier.forEach(k=>{
+    if(k==='plan'){ pages+=planCode(); return; }
+    const [sid,cl]=k.split('|'); const sd=SPORTS.find(x=>x.id===sid); if(sd) pages+=baremePageHtml(sd,cl);
+  });
+  const css=`@page{size:A4 portrait;margin:10mm}
+  .bp{page-break-after:always}.bp:last-child{page-break-after:auto}
+  h1{font-size:15pt;color:#095958;margin:0 0 8pt}h2{font-size:14pt;color:#095958;margin:0 0 4pt}h2 small{font-size:9pt;color:#555;font-weight:400}
+  .ca{font-size:9.5pt;margin:2pt 0 6pt}.cr{margin:6pt 0;break-inside:avoid}.crh{display:flex;justify-content:space-between;background:#e8f1f1;padding:3pt 6pt;font-size:10pt}
+  .so{font-size:8pt;color:#555;margin:2pt 0}.bt{width:100%;border-collapse:collapse}.bt td{border:1px solid #bbb;padding:2pt 5pt;font-size:8.5pt}.bt td.pt{width:50pt;text-align:center;font-weight:700}
+  .pt2{width:100%;border-collapse:collapse;table-layout:fixed}.pt2 th,.pt2 td{border:1px solid #bbb;padding:4pt;font-size:8pt;vertical-align:top;text-align:left}.pt2 thead th{background:#e8f1f1;color:#095958}.pt2 small{display:block;font-weight:400}.pt2 th.cl{width:28pt;text-align:center;font-size:11pt}.a{margin-bottom:3pt}.a b{display:block}.a span{color:#555;font-size:7pt}`;
+  docImprimerHtml(`<!doctype html><html><head><style>${css}</style></head><body>${pages}</body></html>`);
+}
+// — Fiche de suivi course longue —
+function suiviClHtml(){
+  let n=10; try{ n=parseInt(localStorage.getItem('fiche-suivi-seances'),10)||10; }catch(e){}
+  return `<p class="da-lead">Fiche de suivi de la course longue : une page A4 par élève (durée courue, ressenti, essoufflement, graphique de progression). Les prénoms viennent de ta liste « Élèves ».</p>
+  <div style="display:flex;flex-direction:column;gap:12px;max-width:340px">
+  <label>Classe <select id="scClasse" onchange="suiviClInfo()" style="width:100%;padding:8px;font-size:1rem">${['6e','5e','4e','3e'].map(c=>`<option>${c}</option>`).join('')}</select></label>
+  <label>Nombre de séances (3 à 20) <input id="scNb" type="number" min="3" max="20" value="${n}" style="width:100%;padding:8px;font-size:1rem"></label>
+  <div id="scInfo" style="font-size:.8rem;color:var(--muted)"></div>
+  <button type="button" class="btn btn-teal" onclick="suiviClGenerer()">📄 Générer les fiches (PDF)</button></div>`;
+}
+function suiviClInfo(){
+  const cl=document.getElementById('scClasse').value, n=(getEleves(currentYear)[cl]||[]).length;
+  document.getElementById('scInfo').textContent=n?n+' élèves en '+cl+' : '+n+' pages.':'Aucun élève enregistré en '+cl+' : une fiche vierge à remplir à la main.';
+}
+function suiviClGenerer(){
+  const cl=document.getElementById('scClasse').value;
+  let nb=parseInt(document.getElementById('scNb').value,10); if(!(nb>=3&&nb<=20)) nb=10;
+  try{ localStorage.setItem('fiche-suivi-seances',String(nb)); }catch(e){}
+  docImprimerHtml(ficheSuiviHtml('course-longue',cl,nb,getEleves(currentYear)[cl]||[]));
 }
 
 function docFiltrer(c){ const f=document.getElementById('docFiltreCat'); if(f){ f.value=c; } docRender(); }
@@ -4105,7 +4237,7 @@ document.addEventListener('click',e=>{
   <div class="fiche-modal">
     <div class="fiche-modal-hd"><div class="fiche-modal-titre" id="docAppTitre">Document</div><button class="fiche-modal-close" onclick="docAppFermer()" aria-label="Fermer">✕</button></div>
     <div class="fiche-modal-body da-body" id="docAppBody"></div>
-    <div class="fiche-modal-ft"><span></span><button class="btn btn-teal" onclick="docAppImprimer()">🖨️ Imprimer</button></div>
+    <div class="fiche-modal-ft"><span></span><button class="btn btn-teal" id="docAppImpBtn" onclick="docAppImprimer()">🖨️ Imprimer</button></div>
   </div>
 </div>
 
