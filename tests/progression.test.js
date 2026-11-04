@@ -132,10 +132,10 @@ describe("Documents interactifs", () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
     await p.click(".nav-tab[onclick*=\"'documents'\"]");
     await p.evaluate(() => docSpecialOuvrir("prog-sports"));
-    assert.ok((await p.locator(".ps-sport:not(.ps-off)").count()) > 3);
+    assert.ok((await p.locator(".ps-sport").count()) > 10);
     await p.evaluate(() => { window.print = () => {}; });
-    await p.locator(".ps-sport:not(.ps-off)").nth(0).click();
-    await p.locator(".ps-sport:not(.ps-off)").nth(1).click();
+    await p.locator(".ps-sport").nth(0).click();
+    await p.locator(".ps-sport").nth(1).click();
     await p.evaluate(() => psBasculer("plan"));
     assert.match(await p.locator("#psPanier").textContent(), /Mon document \(3\)/);
     await p.evaluate(() => progSportsGenerer());

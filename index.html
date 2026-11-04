@@ -2856,7 +2856,7 @@ function docAppImprimer(){
 
 // ═══ DOCUMENTS INTERACTIFS : programmation cliquable + fiche de suivi (course longue) ═══
 const DOCS_SPECIAUX=[
-  {id:'prog-sports', icone:'📚', titre:'Programmation des sports', etat:'Cliquable · barèmes · un seul document à envoyer'},
+  {id:'prog-sports', icone:'📚', titre:'Programmation des sports (fiches APSA)', etat:'Touche les fiches à ajouter · un seul PDF à envoyer'},
   {id:'suivi-cl', icone:'🏃', titre:'Fiche de suivi élève · course longue', etat:'Une page par élève · choisis la classe et le nombre de séances'}
 ];
 let docSpecialId=null;
@@ -2889,22 +2889,21 @@ function progSportsListe(){
   const y=currentYear, pl=plannings[y]||{}, per=periodes()||[];
   return ['6e','5e','4e','3e'].map(cl=>({cl, cycles:per.map(p=>({p, items:((pl[p.id]||{})[cl]||[]).map(a=>({a, sd:findSportData(a.apsa)}))})).filter(c=>c.items.length)}));
 }
+const sdListe=()=>typeof SPORTS_DATA!=="undefined"?SPORTS_DATA:(window.SPORTS_DATA||[]);
 let psPanier=[];
 function progSportsHtml(){
   psPanier=[];
-  const blocs=progSportsListe().map(c=>`<h3>${c.cl}</h3>`+c.cycles.map(cy=>`<div class="ps-cy"><div class="ps-cyh">${escHtml(cy.p.name)} <small>${escHtml(cy.p.dates)}</small></div>`+cy.items.map(it=>{
-    const sd=it.sd&&SPORTS.find(x=>x.id===it.sd.id);
-    return sd&&baremeNiveau(sd,c.cl)
-      ?`<div class="ps-ligne"><button type="button" class="ps-sport" data-k="${sd.id}|${c.cl}" onclick="psBasculer(this.dataset.k)">${sd.emoji||''} ${escHtml(it.a.apsa)}<small>${escHtml(it.a.ca||'')} · ${it.a.semaines} sem.</small><span class="ps-plus">＋</span></button><button type="button" class="ps-voir" title="Voir le barème" onclick="docAppFermer();ouvrirBareme('${sd.id}','${c.cl}')">👁</button></div>`
-      :`<div class="ps-ligne"><span class="ps-sport ps-off">${escHtml(it.a.apsa)}<small>${escHtml(it.a.ca||'')} · pas de barème</small></span></div>`;
-  }).join('')+'</div>').join('')).join('');
-  return `<p class="da-lead">Touche un sport pour l'<b>ajouter</b> à ton document (comme pour fusionner des PDF). Réorganise la liste en bas, puis génère <b>un seul PDF</b> à envoyer. 👁 ouvre le barème.</p>
+  const cas=['CA1','CA2','CA3','CA4','CA5'];
+  const blocs=cas.map(ca=>{
+    const l=sdListe().filter(s=>s.ca===ca); if(!l.length) return '';
+    return `<h3 style="color:${CA_COLORS[ca]}">${ca}</h3>`+l.map(s=>`<div class="ps-ligne"><button type="button" class="ps-sport" data-k="${s.id}" onclick="psBasculer(this.dataset.k)">${s.emoji} ${escHtml(s.nom)}<small>${escHtml(s.famille||'')} · ${escHtml(String(s.seances))} séances</small><span class="ps-plus">＋</span></button><button type="button" class="ps-voir" title="Voir la fiche" onclick="docAppFermer();showPage('programmations');openFicheModal('${s.id}')">👁</button></div>`).join('');
+  }).join('');
+  return `<p class="da-lead">Touche une fiche APSA pour l'<b>ajouter</b> à ton document (comme pour fusionner des PDF). Réorganise la liste en bas, puis génère <b>un seul PDF</b> à envoyer. 👁 ouvre la fiche.</p>
   ${blocs}
   <div class="ps-panier" id="psPanier"></div>
-  <style>.ps-cy{margin:6px 0 10px}.ps-cyh{font-weight:700;font-size:.8rem;color:var(--teal)}.ps-cyh small{font-weight:400;color:var(--muted)}
-  .ps-ligne{display:flex;align-items:stretch;gap:6px;margin:5px 0}
+  <style>.ps-ligne{display:flex;align-items:stretch;gap:6px;margin:5px 0}
   .ps-sport{position:relative;flex:1;text-align:left;background:#fff;border:1.5px solid var(--border,#ccd);border-radius:9px;padding:9px 38px 9px 11px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit}
-  .ps-sport small{display:block;font-weight:400;color:var(--muted);font-size:.72rem}.ps-off{opacity:.6;cursor:default}
+  .ps-sport small{display:block;font-weight:400;color:var(--muted);font-size:.72rem}
   .ps-sport.on{border-color:var(--teal);background:#e8f1f1}.ps-plus{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:1.2rem;color:var(--teal)}
   .ps-voir{width:44px;border:1.5px solid var(--border,#ccd);border-radius:9px;background:#fff;font-size:1.1rem;cursor:pointer}
   .ps-panier{position:sticky;bottom:0;background:#fff;border-top:2px solid var(--teal);padding:10px 4px;margin-top:14px;box-shadow:0 -4px 10px rgba(0,0,0,.08)}
@@ -2912,8 +2911,7 @@ function progSportsHtml(){
 }
 function psNom(k){
   if(k==='plan') return '📅 Planning de l\'année';
-  const [sid,cl]=k.split('|'); const sd=SPORTS.find(x=>x.id===sid);
-  return (sd?(sd.emoji||'')+' '+sd.nom:sid)+' — '+cl;
+  const s=sdListe().find(x=>x.id===k); return s?s.emoji+' '+s.nom:k;
 }
 function psBasculer(k){
   const i=psPanier.indexOf(k); if(i>=0) psPanier.splice(i,1); else psPanier.push(k);
@@ -2938,6 +2936,29 @@ function baremePageHtml(sd,cl){
   }).join('');
   return `<section class="bp"><h2>${sd.emoji||''} ${escHtml(sd.nom)} — ${cl} <small>(${n.cycle==='c3'?'cycle 3':'cycle 4'} · ${escHtml(n.seances)} séances)</small></h2><p class="ca">${escHtml(n.ca_texte)}</p>${n.epreuve?`<p class="ca"><b>Épreuve :</b> ${escHtml(n.epreuve)}</p>`:''}${lignes}</section>`;
 }
+function ficheApsaHtml(id){
+  const s=sdListe().find(x=>x.id===id); if(!s) return '';
+  const sv=JSON.parse(localStorage.getItem('fiche-prog-'+id)||'{}');
+  const g=(f,d)=>sv[f]!==undefined&&sv[f]!==''?sv[f]:d;
+  const e=escHtml, p=t=>t?`<p>${t}</p>`:'';
+  const mine=(t)=>t?`<p class="mine">${e(t)}</p>`:'';
+  const afcO=AFC_OFFICIELS[s.ca], li=a=>'<ul>'+a.map(x=>`<li>${x}</li>`).join('')+'</ul>';
+  const prog=['6e','5e','4e','3e'].map(cl=>{
+    const bs=SPORTS.find(x=>x.id===id), n=bs&&baremeNiveau(bs,cl); if(!n) return '';
+    return `<div class="cr"><b>${cl}</b> — ${e(n.ca_texte)}<br><small>${n.criteres.map(c=>e(c.label)+' /'+c.max).join(' · ')}</small></div>`;
+  }).join('');
+  const objs=[1,2,3].map(k=>g('afc'+k,s['afc'+k]||'')).filter(Boolean).map((t,i)=>`<li><b>Objectif ${i+1} :</b> ${t}</li>`).join('');
+  const axes=(s.axes||[]).map(a=>`<li>${a}</li>`).join('');
+  return `<section class="bp fa"><h1>${s.emoji} ${e(s.nom)} <small>${s.ca} · ${e(s.famille||'')} · ${e(String(s.seances))} séances</small></h1>
+  <h2>Fond culturel</h2>${p(s.fond)}${s.pb?`<p><b>Problème fondamental :</b> ${s.pb}</p>`:''}${mine(g('fond',''))}
+  <h2>Conditions d'enseignement</h2><p><b>Matériel :</b> ${e(g('materiel',s.materiel||''))}<br><b>Temps :</b> ${e(g('temporel',s.temporel||''))}<br><b>Espace :</b> ${e(g('espace',s.espace||''))}<br><b>Effectif :</b> ${e(g('effectif',s.effectif||''))}</p>
+  ${afcO?`<h2>Attendus officiels — ${s.ca} ${e(afcO.titre)}</h2><b>Fin de cycle 3 (6e)</b>${li(afcO.c3)}<b>Fin de cycle 4 (3e)</b>${li(afcO.c4)}`:''}
+  ${prog?`<h2>Progression de la 6e à la 3e (barèmes)</h2>${prog}`:''}
+  ${objs?`<h2>Objectifs d'apprentissage</h2><ul>${objs}</ul>`:''}
+  <h2>Ciblage — le pas en avant</h2>${p(s.ciblage)}${mine(g('ciblage',''))}
+  ${axes?`<h2>Axes de travail</h2><ul>${axes}</ul>`:''}${mine(g('axes',''))}
+  <h2>Observateurs</h2>${p(e(texteObservation(id)||'À définir.'))}</section>`;
+}
 function progSportsGenerer(){
   if(!psPanier.length){ showToast('Ajoute au moins un élément'); return; }
   let pages='';
@@ -2950,15 +2971,13 @@ function progSportsGenerer(){
     }).join('')+'</tr>').join('');
     return `<section class="bp"><h1>Programmation EPS ${escHtml(y)} — Collège Luqmân</h1><table class="pt2"><thead><tr><th></th>${th}</tr></thead><tbody>${rows}</tbody></table></section>`;
   };
-  psPanier.forEach(k=>{
-    if(k==='plan'){ pages+=planCode(); return; }
-    const [sid,cl]=k.split('|'); const sd=SPORTS.find(x=>x.id===sid); if(sd) pages+=baremePageHtml(sd,cl);
-  });
+  psPanier.forEach(k=>{ pages+=k==='plan'?planCode():ficheApsaHtml(k); });
   const css=`@page{size:A4 portrait;margin:10mm}
   .bp{page-break-after:always}.bp:last-child{page-break-after:auto}
   h1{font-size:15pt;color:#095958;margin:0 0 8pt}h2{font-size:14pt;color:#095958;margin:0 0 4pt}h2 small{font-size:9pt;color:#555;font-weight:400}
   .ca{font-size:9.5pt;margin:2pt 0 6pt}.cr{margin:6pt 0;break-inside:avoid}.crh{display:flex;justify-content:space-between;background:#e8f1f1;padding:3pt 6pt;font-size:10pt}
   .so{font-size:8pt;color:#555;margin:2pt 0}.bt{width:100%;border-collapse:collapse}.bt td{border:1px solid #bbb;padding:2pt 5pt;font-size:8.5pt}.bt td.pt{width:50pt;text-align:center;font-weight:700}
+  .fa h1 small{font-size:9pt;color:#555;font-weight:400}.fa h2{font-size:11pt;margin:9pt 0 2pt;border-bottom:1px solid #095958}.fa p,.fa li{font-size:9pt;margin:2pt 0}.fa ul{margin:2pt 0 4pt 14pt;padding:0}.fa .mine{color:#095958;font-style:italic}.fa .cr{margin:3pt 0;font-size:9pt}.fa small{font-size:8pt;color:#555}
   .pt2{width:100%;border-collapse:collapse;table-layout:fixed}.pt2 th,.pt2 td{border:1px solid #bbb;padding:4pt;font-size:8pt;vertical-align:top;text-align:left}.pt2 thead th{background:#e8f1f1;color:#095958}.pt2 small{display:block;font-weight:400}.pt2 th.cl{width:28pt;text-align:center;font-size:11pt}.a{margin-bottom:3pt}.a b{display:block}.a span{color:#555;font-size:7pt}`;
   docImprimerHtml(`<!doctype html><html><head><style>${css}</style></head><body>${pages}</body></html>`);
 }
