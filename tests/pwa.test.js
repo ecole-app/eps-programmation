@@ -81,4 +81,12 @@ describe("Téléphone", () => {
     assert.equal(r[0], 0);
     assert.ok(r[1] >= 0 && r[1] < 20);
   });
+  it("le planning de l'année se prépare en tableau 4 classes × 5 cycles pour le PDF", async () => {
+    const p = await tel();
+    const r = await p.evaluate(() => { const d = document.createElement("div"); d.innerHTML = planningImprimable(); return [d.querySelectorAll("tbody tr").length, d.querySelectorAll("thead th").length, d.textContent]; });
+    assert.equal(r[0], 4); assert.equal(r[1], 6);
+    assert.match(r[2], /Programmation EPS 2026-27/);
+    assert.match(r[2], /Combiné athlétique/);
+    assert.equal(await p.locator("button[onclick*=telechargerPlanning]").count() >= 2, true);
+  });
 });

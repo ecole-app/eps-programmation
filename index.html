@@ -1212,6 +1212,7 @@ a.da-card{text-decoration:none;color:inherit;margin-top:8px}
         <div class="page-title" id="mainTitle">Planning 2025–26</div>
         <div class="page-sub">6e · 5e · 4e · 3e</div>
       </div>
+      <button type="button" class="btn btn-teal" onclick="telechargerPlanning()" title="Télécharger le planning de l'année en PDF">⬇️ Planning PDF</button>
     </div>
 
     <div class="pl-cl" id="plCl" role="tablist" aria-label="Classe affichée">
@@ -3083,6 +3084,44 @@ function hideSidebarBtn(){document.body.classList.add('modal-open');}
 function showSidebarBtn(){document.body.classList.remove('modal-open');}
 
 // ═══ IMPRESSION ═══
+// Planning de l'année en PDF : une page A4 paysage propre (4 classes × 5 cycles), construite à part de l'écran.
+// Le navigateur propose « Enregistrer au format PDF » dans la fenêtre d'impression (PC et téléphone).
+function planningImprimable(){
+  const y=currentYear, pl=plannings[y]||{}, per=periodes()||[];
+  const classes=['6e','5e','4e','3e'];
+  const champ={CA1:'Performance',CA2:'Milieu varié',CA3:'Artistique',CA4:'Duel / collectif'};
+  const th=per.map(p=>`<th>${escHtml(p.name)}<small>${escHtml(p.dates)} · ${p.semaines} sem.</small></th>`).join('');
+  const rows=classes.map(cl=>`<tr><th class="cl">${cl}</th>`+per.map(p=>{
+    const l=((pl[p.id]||{})[cl]||[]);
+    return '<td>'+(l.length?l.map(a=>`<div class="a"><b>${escHtml(a.apsa)}</b><span>${escHtml(a.ca||'')} · ${a.semaines} sem.${a.note?' · '+escHtml(a.note):''}</span></div>`).join(''):'<span class="v">—</span>')+'</td>';
+  }).join('')+'</tr>').join('');
+  const leg=Object.keys(champ).map(k=>`${k} ${champ[k]}`).join(' · ');
+  return `<h1>Programmation EPS ${escHtml(y)} — Collège Luqmân</h1><p class="lg">${leg}</p><table><thead><tr><th></th>${th}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+function telechargerPlanning(){
+  let box=document.getElementById('planPrint');
+  if(!box){ box=document.createElement('div'); box.id='planPrint'; document.body.appendChild(box); }
+  box.innerHTML=planningImprimable();
+  let st=document.getElementById('planPrintStyle');
+  if(!st){ st=document.createElement('style'); st.id='planPrintStyle'; document.head.appendChild(st); }
+  st.textContent=`#planPrint{display:none}
+@media print{@page{size:A4 landscape;margin:10mm}
+body>*:not(#planPrint){display:none!important}
+html,body{zoom:1!important;background:#fff!important}
+#planPrint{display:block!important;font-family:Arial,sans-serif;color:#111;zoom:1;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#planPrint h1{font-size:15pt;margin:0 0 3pt;color:#095958}
+#planPrint .lg{font-size:8pt;margin:0 0 8pt;color:#555}
+#planPrint table{width:100%;border-collapse:collapse;table-layout:fixed}
+#planPrint th,#planPrint td{border:1px solid #bbb;padding:5pt 6pt;vertical-align:top;font-size:9pt;text-align:left}
+#planPrint thead th{background:#e8f1f1;color:#095958;font-size:9pt;border-bottom:2px solid #095958}
+#planPrint thead small{display:block;font-weight:400;font-size:7.5pt;opacity:.9}
+#planPrint th.cl{width:34pt;font-size:13pt;background:#e8f1f1;text-align:center}
+#planPrint .a{margin-bottom:4pt}#planPrint .a b{display:block;font-size:9.5pt}#planPrint .a span{font-size:7.5pt;color:#555}
+#planPrint .v{color:#999}}`;
+  const net=()=>{ box.innerHTML=''; };
+  window.addEventListener('afterprint',net,{once:true});
+  setTimeout(()=>window.print(),50);
+}
 function toggleOrientation(){
   printOrientation=printOrientation==='landscape'?'portrait':'landscape';
   const btn=document.getElementById('orientBtn');
@@ -4186,6 +4225,7 @@ document.addEventListener('click',e=>{
   <div class="plus-actions">
     <button type="button" class="pa-main" onclick="fermerPlus();openAddModal()">+ Ajouter une APSA</button>
     <button type="button" onclick="fermerPlus();toggleMobileSidebar()">👥 Élèves, créneaux et réglages</button>
+    <button type="button" onclick="fermerPlus();telechargerPlanning()">📄 Télécharger le planning (PDF)</button>
     <button type="button" onclick="fermerPlus();exportAllData()">⬇️ Sauvegarde de secours</button>
     <div class="plus-zoom"><span>🔎 Taille d'affichage</span><button type="button" onclick="zoomApp(-0.1)" aria-label="Plus petit">A−</button><button type="button" onclick="zoomApp(0.1)" aria-label="Plus grand">A+</button><button type="button" onclick="zoomApp(0)">Auto</button></div>
     <button type="button" id="plusInstall" onclick="installPWA()" hidden>📲 Installer l'appli sur ce téléphone</button>
