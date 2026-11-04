@@ -3118,9 +3118,8 @@ html,body{zoom:1!important;background:#fff!important}
 #planPrint th.cl{width:34pt;font-size:13pt;background:#e8f1f1;text-align:center}
 #planPrint .a{margin-bottom:4pt}#planPrint .a b{display:block;font-size:9.5pt}#planPrint .a span{font-size:7.5pt;color:#555}
 #planPrint .v{color:#999}}`;
-  const net=()=>{ box.innerHTML=''; };
-  window.addEventListener('afterprint',net,{once:true});
-  setTimeout(()=>window.print(),50);
+  // Le tableau reste dans la page (caché à l'écran) : sur Android l'aperçu est dessiné après l'ouverture de la fenêtre d'impression.
+  setTimeout(()=>window.print(),150);
 }
 function toggleOrientation(){
   printOrientation=printOrientation==='landscape'?'portrait':'landscape';
