@@ -4,10 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script>
-// Taille d'affichage : réglage manuel (Plus → Taille) ; sinon, sur téléphone en « site pour ordinateur » (page trop large), on agrandit automatiquement.
-(function(){var z=0;try{z=parseFloat(localStorage.getItem('eps-zoom'))||0;}catch(e){}
-if(!z&&window.screen&&screen.width<=820&&innerWidth>screen.width*1.25)z=Math.min(2.6,innerWidth/screen.width);
-if(z&&z!==1)document.documentElement.style.zoom=z;})();
+// Taille d'affichage : réglage manuel (Plus → Taille) ; sinon, sur téléphone en page trop large, on agrandit automatiquement.
+// Le calcul est refait au chargement, au retour dans l'appli et à chaque changement de taille : au tout premier affichage la largeur n'est pas toujours connue.
+(function(){
+  function manuel(){ try{ return parseFloat(localStorage.getItem('eps-zoom'))||0; }catch(e){ return 0; } }
+  function auto(){
+    var sw=(window.screen&&screen.width)||0, iw=window.innerWidth||document.documentElement.clientWidth||0;
+    if(sw>0&&sw<=820&&iw>sw*1.25) return Math.min(2.6,iw/sw);
+    return 1;
+  }
+  function appliquer(){
+    var z=manuel()||auto();
+    document.documentElement.style.zoom=(z&&z!==1)?z:'';
+  }
+  window.__epsZoomAuto=appliquer;
+  appliquer();
+  ['DOMContentLoaded','load','pageshow','resize','orientationchange','visibilitychange'].forEach(function(e){ (e==='DOMContentLoaded'?document:window).addEventListener(e,appliquer); });
+  [150,600,1500].forEach(function(t){ setTimeout(appliquer,t); });
+})();
 </script>
 <title>EPS Collège — Programmation</title>
 <meta name="theme-color" content="#095958">
