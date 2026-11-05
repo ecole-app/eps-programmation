@@ -2857,6 +2857,7 @@ function docAppImprimer(){
 // ═══ DOCUMENTS INTERACTIFS : programmation cliquable + fiche de suivi (course longue) ═══
 const DOCS_SPECIAUX=[
   {id:'prog-sports', icone:'📚', titre:'Programmation des sports (fiches APSA)', etat:'Touche les fiches à ajouter · un seul PDF à envoyer'},
+  {id:'renfo-suivi', icone:'💪', titre:'Fiche de suivi · renforcement musculaire', etat:'Une page par groupe · 10 exercices · séances + évaluation'},
   {id:'suivi-cl', icone:'🏃', titre:'Fiche de suivi élève · course longue', etat:'Une page par élève · choisis la classe et le nombre de séances'}
 ];
 let docSpecialId=null;
@@ -2877,12 +2878,13 @@ function docSpecialOuvrir(id){
   const d=DOCS_SPECIAUX.find(x=>x.id===id); if(!d) return;
   docSpecialId=id;
   document.getElementById('docAppTitre').textContent=d.icone+' '+d.titre;
-  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():suiviClHtml();
+  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():id==='renfo-suivi'?renfoSuiviHtml():suiviClHtml();
   const b=document.getElementById('docAppImpBtn'); b.style.display='none';
   document.getElementById('docAppOverlay').classList.add('open');
   document.body.classList.add('modal-open');
   if(id==='suivi-cl') suiviClInfo();
   if(id==='prog-sports') psRendre();
+  if(id==='renfo-suivi') renfoInfo();
 }
 // — Programmation des sports —
 function progSportsListe(){
@@ -2980,6 +2982,54 @@ function progSportsGenerer(){
   .fa h1 small{font-size:9pt;color:#555;font-weight:400}.fa h2{font-size:11pt;margin:9pt 0 2pt;border-bottom:1px solid #095958}.fa p,.fa li{font-size:9pt;margin:2pt 0}.fa ul{margin:2pt 0 4pt 14pt;padding:0}.fa .mine{color:#095958;font-style:italic}.fa .cr{margin:3pt 0;font-size:9pt}.fa small{font-size:8pt;color:#555}
   .pt2{width:100%;border-collapse:collapse;table-layout:fixed}.pt2 th,.pt2 td{border:1px solid #bbb;padding:4pt;font-size:8pt;vertical-align:top;text-align:left}.pt2 thead th{background:#e8f1f1;color:#095958}.pt2 small{display:block;font-weight:400}.pt2 th.cl{width:28pt;text-align:center;font-size:11pt}.a{margin-bottom:3pt}.a b{display:block}.a span{color:#555;font-size:7pt}`;
   docImprimerHtml(`<!doctype html><html><head><style>${css}</style></head><body>${pages}</body></html>`);
+}
+
+// — Fiche de suivi renforcement musculaire (groupes de 2-3, 3 bas / 3 haut / 4 full body) —
+const RENFO_EXOS_DEF=[['Bas','Squats'],['Bas','Fentes alternées'],['Bas','Chaise murale'],['Haut','Pompes'],['Haut','Dips sur banc'],['Haut','Élévations latérales (élastique)'],['Full','Gainage planche'],['Full','Burpees'],['Full','Mountain climbers'],['Full','Gainage latéral']];
+function renfoLire(){ try{ return JSON.parse(localStorage.getItem('renfo-suivi')||'{}'); }catch(e){ return {}; } }
+function renfoSuiviHtml(){
+  const sv=renfoLire(), ex=sv.exos||RENFO_EXOS_DEF.map(x=>x[1]);
+  const lab={Bas:'Bas du corps',Haut:'Haut du corps',Full:'Full body'};
+  return `<p class="da-lead">Une page A4 par groupe : 10 exercices, une colonne par séance et une colonne évaluation. Modifie les noms des exercices si besoin (ils sont mémorisés).</p>
+  <div style="display:flex;flex-direction:column;gap:10px;max-width:420px">
+  <label>Classe <select id="rfClasse" onchange="renfoInfo()" style="width:100%;padding:8px;font-size:1rem">${['6e','5e','4e','3e'].map(c=>`<option${c===sv.cl?' selected':''}>${c}</option>`).join('')}</select></label>
+  <label>Séances restantes, évaluation comprise <input id="rfNb" type="number" min="2" max="10" value="${sv.nb||5}" style="width:100%;padding:8px;font-size:1rem"></label>
+  ${RENFO_EXOS_DEF.map((d,i)=>`<label style="font-size:.8rem">${lab[d[0]]} ${i<3?i+1:i<6?i-2:i-5}<input class="rf-ex" value="${escHtml(ex[i])}" style="width:100%;padding:8px;font-size:1rem"></label>`).join('')}
+  <label>Groupes (un par ligne, prénoms séparés par des virgules)<textarea id="rfGroupes" rows="6" style="width:100%;padding:8px;font-size:1rem" placeholder="Amine, Yanis&#10;Sara, Lina, Nour">${escHtml(sv.groupes||'')}</textarea></label>
+  <div id="rfInfo" style="font-size:.8rem;color:var(--muted)"></div>
+  <button type="button" class="btn" onclick="renfoRemplir()">Pré-remplir avec ma liste d'élèves (groupes de 2)</button>
+  <button type="button" class="btn btn-teal" onclick="renfoGenerer()">📄 Générer les fiches (PDF)</button></div>`;
+}
+function renfoInfo(){ const cl=document.getElementById('rfClasse').value, n=(getEleves(currentYear)[cl]||[]).length; document.getElementById('rfInfo').textContent=n?n+' élèves enregistrés en '+cl+'.':'Aucun élève enregistré en '+cl+'.'; }
+function renfoRemplir(){
+  const cl=document.getElementById('rfClasse').value, l=getEleves(currentYear)[cl]||[]; if(!l.length){ showToast('Aucun élève en '+cl); return; }
+  const g=[]; for(let i=0;i<l.length;i+=2) g.push(l.slice(i,i+2)); if(g.length>1&&g[g.length-1].length===1){ g[g.length-2].push(g.pop()[0]); }
+  document.getElementById('rfGroupes').value=g.map(x=>x.join(', ')).join('\n');
+}
+function renfoGenerer(){
+  const cl=document.getElementById('rfClasse').value;
+  let nb=parseInt(document.getElementById('rfNb').value,10); if(!(nb>=2&&nb<=10)) nb=5;
+  const ex=[...document.querySelectorAll('.rf-ex')].map(i=>i.value.trim()||'…');
+  const gtxt=document.getElementById('rfGroupes').value;
+  try{ localStorage.setItem('renfo-suivi',JSON.stringify({cl,nb,exos:ex,groupes:gtxt})); }catch(e){}
+  const groupes=gtxt.split('\n').map(x=>x.split(',').map(y=>y.trim()).filter(Boolean)).filter(g=>g.length);
+  if(!groupes.length) groupes.push([]);
+  const type=i=>i<3?'Bas':i<6?'Haut':'Full';
+  const heads=Array.from({length:nb-1},(_,i)=>`<th>S${i+1}</th>`).join('')+'<th class="ev">Éval</th>';
+  const rows=ex.map((e,i)=>`<tr><td class="t">${type(i)}</td><td class="n">${escHtml(e)}</td>${Array.from({length:nb},()=>'<td></td>').join('')}</tr>`).join('');
+  const page=g=>`<section><h1>Renforcement musculaire — Fiche de suivi</h1>
+    <div class="id"><span>Classe : <b>${cl}</b></span><span>Groupe : <b>${g.length?g.map(escHtml).join(' · '):'<i class="ligne"></i>'}</b></span></div>
+    <table class="t"><tr><th>Type</th><th>Exercice</th>${heads}</tr>${rows}</table>
+    <p class="pied">Dans chaque case : nombre de répétitions ou durée tenue. Un élève travaille, l'autre observe la posture (dos, genoux, gainage) puis on change.${g.length>2?' Le 3e élève chronomètre et compte.':''}</p>
+    <h2>Mon ressenti et mon objectif pour la séance suivante</h2><div class="zone"></div></section>`;
+  const html=`<!doctype html><html><head><style>@page{size:A4 landscape;margin:10mm}
+  section{page-break-after:always}section:last-child{page-break-after:auto}
+  h1{font-size:16px;margin:0 0 6px;color:#095958}h2{font-size:12px;margin:10px 0 4px}
+  .id{display:flex;gap:28px;font-size:13px;margin-bottom:8px}.ligne{display:inline-block;border-bottom:1px solid #333;width:300px;height:12px}
+  table{border-collapse:collapse;width:100%}.t th,.t td{border:1px solid #333;font-size:11px;padding:4px;height:30px}
+  .t th{background:#e8f1f1;height:auto}.t td.t{width:44px;text-align:center;font-size:9px}.t td.n{width:190px;font-weight:700}.t th.ev{background:#fde8c8}
+  .pied{font-size:9px;color:#555;margin:6px 0}.zone{border:1px solid #333;height:60px}</style></head><body>${groupes.map(page).join('')}</body></html>`;
+  docImprimerHtml(html);
 }
 // — Fiche de suivi course longue —
 function suiviClHtml(){

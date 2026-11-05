@@ -144,6 +144,12 @@ describe("Documents interactifs", () => {
     assert.match(txt, /Programmation EPS/);
     assert.ok((await p.locator("#docPrint section.bp").count()) == 3);
     assert.match(await p.locator("#docPrintStyle").textContent(), /#docPrint \.bp/);
+    await p.evaluate(() => docSpecialOuvrir("renfo-suivi"));
+    await p.fill("#rfGroupes", "A, B\nC, D, E");
+    await p.evaluate(() => renfoGenerer());
+    await p.waitForTimeout(300);
+    assert.equal(await p.locator("#docPrint section").count(), 2);
+    assert.equal(await p.locator("#docPrint tr").count(), 22);
     await p.evaluate(() => docSpecialOuvrir("suivi-cl"));
     await p.evaluate(() => suiviClGenerer());
     await p.waitForTimeout(300);
@@ -156,7 +162,7 @@ describe("Documents préparés", () => {
   it("la séance de tests 6e, les attendus 2027 et le mémo VMA s'ouvrent depuis Documents", async () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
     await p.click(".nav-tab[onclick*=\"'documents'\"]");
-    assert.equal(await p.locator("button.da-card").count(), 5);
+    assert.equal(await p.locator("button.da-card").count(), 6);
     assert.equal(await p.locator("a.da-card").count(), 2);
     await p.evaluate(() => docAppOuvrir("tests-6e"));
     assert.match(await p.locator("#docAppBody").textContent(), /navette Luc-Léger/);
