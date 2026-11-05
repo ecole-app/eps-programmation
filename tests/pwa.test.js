@@ -81,6 +81,16 @@ describe("Téléphone", () => {
     assert.equal(r[0], 0);
     assert.ok(r[1] >= 0 && r[1] < 20);
   });
+  it("menu ouvert : pas de croix, on ferme en touchant le fond", async () => {
+    const p = await tel();
+    await p.evaluate(() => toggleMobileSidebar());
+    assert.equal(await p.evaluate(() => getComputedStyle(document.getElementById("sidebarToggle")).display), "none");
+    await p.mouse.click(380, 600);
+    await p.waitForTimeout(300);
+    assert.equal(await p.evaluate(() => document.querySelector(".sidebar").classList.contains("mobile-open")), false);
+    assert.notEqual(await p.evaluate(() => getComputedStyle(document.getElementById("sidebarToggle")).display), "none");
+    assert.deepEqual(p.erreurs, []);
+  });
   it("le planning de l'année se prépare en tableau 4 classes × 5 cycles pour le PDF", async () => {
     const p = await tel();
     const r = await p.evaluate(() => { const d = document.createElement("div"); d.innerHTML = planningImprimable(); return [d.querySelectorAll("tbody tr").length, d.querySelectorAll("thead th").length, d.textContent]; });

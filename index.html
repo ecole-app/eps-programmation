@@ -951,7 +951,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
     padding:8px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
     transform:translateY(105%);transition:transform .25s ease;box-shadow:0 -8px 30px rgba(0,0,0,0.15);max-height:85%;overflow-y:auto}
   .plus-sheet.open{transform:translateY(0)}
-  body.plus-open .sidebar-toggle-btn{display:none !important}
+  body.plus-open .sidebar-toggle-btn,.sidebar-toggle-btn.cache{display:none !important}
   .plus-grip{width:40px;height:5px;border-radius:3px;background:var(--border);margin:0 auto 12px}
   .plus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
   .plus-grid button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;border:1px solid var(--border);border-radius:12px;background:var(--bg);
@@ -3270,7 +3270,7 @@ function toggleMobileSidebar(){
   const btn=document.getElementById('sidebarToggle');
   const isOpen=sidebar.classList.toggle('mobile-open');
   backdrop?.classList.toggle('open',isOpen);
-  if(btn){btn.textContent=isOpen?'✕':'☰';btn.style.background=isOpen?'#d62828':'';}
+  if(btn){btn.textContent='☰';btn.style.background='';btn.classList.toggle('cache',isOpen);}
 }
 
 // ═══ MODAUX ═══

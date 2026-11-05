@@ -104,7 +104,7 @@ const SITUATIONS = {
   renfo: [
     { k:/decouverte|technique|base/, p:'diag', n:"Postures en binôme correcteur", o:"Binômes, 4 ateliers : gainage, pompes, squats, abdos.", c:"L'un fait 30 s, l'autre corrige la posture avec la fiche (dos plat, genoux, nuque).", r:"Posture correcte sur les 4 exercices.", v:"Version facile : pompes sur les genoux, gainage sur les genoux." },
     { k:/test|repere/, p:'appr', n:"Test de repères", o:"Binômes, fiche de résultats.", c:"Maximum de répétitions correctes en 30 s, et tenue maximale en gainage.", r:"Résultats notés pour chaque exercice.", v:"" },
-    { k:/programme|construction/, p:'appr', n:"Construire son circuit", o:"Groupes de 3, cartes d'exercices.", c:"Choisir 6 exercices : 2 haut du corps, 2 bas du corps, 2 tout le corps.", r:"Circuit équilibré et réalisable en sécurité.", v:"Ajouter une intensité (temps ou répétitions) par exercice." },
+    { k:/programme|construction/, p:'appr', n:"Construire son circuit", o:"Binômes, cartes d'exercices. Poids du corps uniquement.", c:"Choisir 10 exercices : 3 bas du corps, 3 haut du corps, 4 tout le corps.", r:"Circuit équilibré et réalisable en sécurité.", v:"Ajouter une intensité (temps ou répétitions) par exercice." },
     { k:/circuit|autonomie/, p:'appr', n:"Circuit 30 / 30", o:"6 ateliers, 30 s de travail, 30 s de récupération.", c:"Réaliser le circuit 2 fois. Le binôme vérifie la posture.", r:"Posture correcte jusqu'à la fin du circuit.", v:"40 s / 20 s pour les plus avancés." },
     { k:/evalue|evaluation/, p:'eval', n:"Circuit évalué", o:"Binômes exécutant / observateur, fiche du circuit.", c:"Réaliser son circuit, l'observateur note les postures.", r:"Barème du renfo.", v:"" },
   ],
