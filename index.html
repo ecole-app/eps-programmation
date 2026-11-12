@@ -2835,7 +2835,7 @@ const DOCS_APP = [
 function docAppRender(){
   const box=document.getElementById('docAppListe'); if(!box) return;
   const RAPPORTS=[{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
-  box.innerHTML=DOCS_SPECIAUX.map(d=>`<button type="button" class="da-card" onclick="docSpecialOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')+DOCS_APP.map(d=>`<button type="button" class="da-card" onclick="docAppOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')
+  box.innerHTML=DOCS_SPECIAUX.map(d=>d.fichier?`<a class="da-card" href="${d.fichier}" download><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">⬇</span></a>`:`<button type="button" class="da-card" onclick="docSpecialOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')+DOCS_APP.map(d=>`<button type="button" class="da-card" onclick="docAppOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')
   box.innerHTML+=RAPPORTS.map(r=>`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>${r.s||'Rapport Claude · s\'ouvre dans un nouvel onglet'}</small></span><span class="da-go">›</span></a>`).join('');
 }
 function docAppOuvrir(id){
@@ -2856,6 +2856,7 @@ function docAppImprimer(){
 
 // ═══ DOCUMENTS INTERACTIFS : programmation cliquable + fiche de suivi (course longue) ═══
 const DOCS_SPECIAUX=[
+  {id:'renfo-word', icone:'💪', titre:'Fiche de suivi · renforcement 3e (Word)', etat:'Fichier Word à télécharger · 2 élèves · 10 exercices · barème au dos', fichier:'docs-files/Fiche-suivi-renforcement-3e.docx'},
   {id:'prog-sports', icone:'📚', titre:'Programmation des sports (fiches APSA)', etat:'Touche les fiches à ajouter · un seul PDF à envoyer'},
   {id:'renfo-suivi', icone:'💪', titre:'Fiche de suivi · renforcement musculaire', etat:'Une page par groupe · 10 exercices · séances + évaluation'},
   {id:'suivi-cl', icone:'🏃', titre:'Fiche de suivi élève · course longue', etat:'Une page par élève · choisis la classe et le nombre de séances'}

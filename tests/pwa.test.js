@@ -24,7 +24,7 @@ describe("Appli installable", () => {
     const p = await tel({ sw: true });
     const ok = await p.evaluate(async () => {
       const reg = await navigator.serviceWorker.ready;
-      for (let i = 0; i < 50; i++) { const c = await caches.open("eps-programmation-v4"); if ((await c.keys()).length >= 6) return [reg.scope, (await c.keys()).length]; await new Promise((r) => setTimeout(r, 100)); }
+      for (let i = 0; i < 50; i++) { const c = await caches.open("eps-programmation-v5"); if ((await c.keys()).length >= 6) return [reg.scope, (await c.keys()).length]; await new Promise((r) => setTimeout(r, 100)); }
       return [reg.scope, 0];
     });
     assert.match(ok[0], /\/$/);
