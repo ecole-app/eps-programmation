@@ -230,3 +230,16 @@ describe("Choix de novembre : CO 6e, acrosport 5e, combiné 4e", () => {
   });
 });
 
+
+describe("Titres de séance modifiables", () => {
+  it("seanceEdit applique le titre modifié et garde le reste", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      localStorage.setItem("fiche-seance-K", JSON.stringify({ titreEdit: "Jeu en simple" }));
+      return seanceEdit({ titre: "Jeu en double", contenu: "x", num: 1 }, "K");
+    });
+    assert.equal(r.titre, "Jeu en simple");
+    assert.equal(r.contenu, "x");
+    await p.close();
+  });
+});

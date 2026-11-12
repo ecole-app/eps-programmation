@@ -3919,6 +3919,7 @@ function renderSeances(){
             const bg  = s.type==='diag'?'rgba(0,119,182,.07)':s.type==='eval'?'rgba(214,40,40,.07)':s.type==='revision'?'rgba(240,165,0,.09)':'var(--bg)';
             const semLabel = s.partie ? `S${s.semaine} · ${s.partie}/${s.totalPart}` : `S${s.semaine}`;
             const key = `${p.id}_${cl}_${itemIdx}_${s.num}`;
+            s = seanceEdit(s,key);
             seanceDataMap[key] = {item, p, cl, s, sd, total:nb};
             return `<div style="display:flex;gap:10px;align-items:flex-start;background:${bg};border-radius:8px;padding:9px 11px;border-left:3px solid ${col}">
               <div style="background:${col};color:#fff;font-family:'Syne',sans-serif;font-size:0.68rem;font-weight:800;min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${s.num}</div>
@@ -4062,8 +4063,9 @@ function getAujourdhuiInfo(){
           if(clos){
             results.push({cl, item, cycle:activeCycle, slot, closed:true, clos, itemKey, rawWeek, dispSemaine: rawWeek + dispOffset});
           } else {
-            seanceDataMap[key] = {item, p:activeCycle, cl, s:seance, sd:findSportData(item.apsa), total:list.length};
-            results.push({cl, item, cycle:activeCycle, slot, seance, key, itemKey, rawWeek, dispSemaine: rawWeek + dispOffset, total: list.length, hasAlternance: (parSem % 1) !== 0});
+            const seanceE = seanceEdit(seance,key);
+            seanceDataMap[key] = {item, p:activeCycle, cl, s:seanceE, sd:findSportData(item.apsa), total:list.length};
+            results.push({cl, item, cycle:activeCycle, slot, seance:seanceE, key, itemKey, rawWeek, dispSemaine: rawWeek + dispOffset, total: list.length, hasAlternance: (parSem % 1) !== 0});
           }
         } else {
           const ci = (cancelledInfo||[]).find(c => c.semaine===rawWeek && (c.partie||1)===slot.partie);
@@ -4203,8 +4205,10 @@ function openSeanceFiche(key){
         <div class="fiche-cond-item"><div class="fiche-cond-label">Horaire</div><div style="font-weight:700;font-size:0.85rem">${horaire?`${horaire.jour} ${horaire.debut}–${horaire.fin}`:'—'}</div></div>
       </div>
     </div>
-    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🎯</span><span class="fiche-section-title">${s.titre}</span></div>
-      <div class="fiche-fond-text">${s.contenu}</div></div>
+    <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">🎯</span><span class="fiche-section-title">Titre et sous-titre (modifiables)</span></div>
+      <input class="fiche-edit-ta" id="sftitre" style="min-height:0;height:auto;font-weight:700" value="${(s.titre||'').replace(/"/g,'&quot;')}" placeholder="Titre de la séance">
+      <textarea class="fiche-edit-ta" id="sfsous" style="min-height:60px;margin-top:6px" placeholder="Sous-titre / contenu">${s.contenu||''}</textarea>
+      <div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Ex. badminton 5e : retire « double » → simple uniquement. <a href="javascript:void(0)" onclick="resetSeanceTitres()">Rétablir l'original</a></div></div>
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">📋</span><span class="fiche-section-title">Conditions</span></div>
       <div class="fiche-cond-grid">
         <div class="fiche-cond-item"><div class="fiche-cond-label">Lieu</div><input class="fiche-edit-input" id="sflieu" value="${g('lieu',lieu.nom)}"></div>
@@ -4227,6 +4231,11 @@ function openSeanceFiche(key){
   hideSidebarBtn();
 }
 // ── Participation des observateurs (enregistrée avec la fiche de séance, synchronisée) ──
+function seanceEdit(s,key){
+  let sv={}; try{sv=JSON.parse(localStorage.getItem('fiche-seance-'+key)||'{}');}catch(e){}
+  if(!sv.titreEdit&&!sv.contenuEdit) return s;
+  return Object.assign({},s,{titre:sv.titreEdit||s.titre,contenu:sv.contenuEdit||s.contenu,_t0:s.titre,_c0:s.contenu});
+}
 function lireFicheSeance(key){ try{ return JSON.parse(localStorage.getItem('fiche-seance-'+key)||'{}'); }catch(e){ return {}; } }
 function renderObsBox(key){
   const box=document.getElementById('sfObsBox'); const d=seanceDataMap[key]; if(!box||!d) return;
@@ -4259,11 +4268,26 @@ function saveSeanceFiche(){
   const data={};
   fields.forEach(f=>{const el=document.getElementById('sf'+f);if(el)data[f]=el.value;});
   const prevObs=lireFicheSeance(currentSeanceKey).obs; if(prevObs) data.obs=prevObs;
+  const dd=seanceDataMap[currentSeanceKey];
+  if(dd){
+    const t0=dd.s._t0!==undefined?dd.s._t0:dd.s.titre, c0=dd.s._c0!==undefined?dd.s._c0:dd.s.contenu;
+    const tv=(document.getElementById('sftitre')||{}).value, cv=(document.getElementById('sfsous')||{}).value;
+    if(tv!==undefined&&tv.trim()&&tv!==t0) data.titreEdit=tv.trim();
+    if(cv!==undefined&&cv.trim()&&cv!==c0) data.contenuEdit=cv.trim();
+    dd.s=Object.assign({},dd.s,{titre:data.titreEdit||t0,contenu:data.contenuEdit||c0,_t0:t0,_c0:c0});
+  }
   localStorage.setItem('fiche-seance-'+currentSeanceKey,JSON.stringify(data));
   scheduleCloudSync();
   const badge=document.getElementById('seanceFicheSavedBadge');
   if(badge){badge.classList.add('show');setTimeout(()=>badge.classList.remove('show'),2000);}
   showToast('💾 Fiche de séance sauvegardée !');
+}
+function resetSeanceTitres(){
+  const d=seanceDataMap[currentSeanceKey]; if(!d) return;
+  const sv=lireFicheSeance(currentSeanceKey); delete sv.titreEdit; delete sv.contenuEdit;
+  localStorage.setItem('fiche-seance-'+currentSeanceKey,JSON.stringify(sv)); scheduleCloudSync();
+  if(d.s._t0!==undefined){document.getElementById('sftitre').value=d.s._t0;document.getElementById('sfsous').value=d.s._c0;d.s=Object.assign({},d.s,{titre:d.s._t0,contenu:d.s._c0});}
+  showToast('Titres d\'origine rétablis');
 }
 function printSeanceFiche(){
   let styleEl=document.getElementById('printSeanceFicheStyle');
