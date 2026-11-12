@@ -91,6 +91,16 @@ describe("Téléphone", () => {
     assert.notEqual(await p.evaluate(() => getComputedStyle(document.getElementById("sidebarToggle")).display), "none");
     assert.deepEqual(p.erreurs, []);
   });
+  it("les onglets Appréciations et Barèmes remplissent l'écran jusqu'au menu du bas, même zoomé", async () => {
+    for (const z of [1, 2.4]) {
+      const p = await env.page("index.html", { largeur: Math.round(390 * z), hauteur: Math.round(844 * z), mobile: true, stockage: { "eps-v2": APP } });
+      await p.evaluate((z) => { document.documentElement.style.zoom = String(z); }, z);
+      await p.evaluate(() => navMobile("appreciations"));
+      await p.waitForTimeout(2200);
+      const r = await p.evaluate(() => { const f = document.getElementById("apprFrame").getBoundingClientRect(), b = document.getElementById("bnav"); const bas = getComputedStyle(b).display !== "none" ? b.getBoundingClientRect().top : innerHeight; return [f.bottom, bas]; });
+      assert.ok(Math.abs(r[0] - r[1]) < 60 * z, `zoom ${z} : bas du cadre ${r[0]} / menu ${r[1]}`);
+    }
+  });
   it("le planning de l'année se prépare en tableau 4 classes × 5 cycles pour le PDF", async () => {
     const p = await tel();
     const r = await p.evaluate(() => { const d = document.createElement("div"); d.innerHTML = planningImprimable(); return [d.querySelectorAll("tbody tr").length, d.querySelectorAll("thead th").length, d.textContent]; });

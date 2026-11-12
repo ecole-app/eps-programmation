@@ -3192,6 +3192,26 @@ function rafraichirIframesEleves(){
     try{ const w=document.getElementById(id)?.contentWindow; if(w&&w.rafraichirEleves) w.rafraichirEleves(); }catch(e){}
   });
 }
+
+// Hauteur des onglets Appréciations / Barèmes (iframes) : mesurée dans le même repère que le pied de page,
+// donc juste même quand l'affichage est agrandi automatiquement (zoom) sur téléphone.
+function ajusterFrames(){
+  ['apprFrame','baremesFrame'].forEach(id=>{
+    const f=document.getElementById(id); if(!f||!f.offsetParent) return;
+    try{
+      f.style.setProperty('min-height','0px','important');
+      f.style.setProperty('height','400px','important');
+      const r=f.getBoundingClientRect(); if(!r.height) return;
+      const echelle=r.height/400;
+      const bn=document.getElementById('bnav');
+      const bas=(bn&&getComputedStyle(bn).display!=='none')?bn.getBoundingClientRect().top:window.innerHeight;
+      const dispo=bas-r.top-8*echelle;
+      if(dispo>200) f.style.setProperty('height',Math.max(300,Math.floor(dispo/echelle))+'px','important');
+    }catch(e){}
+  });
+}
+['resize','orientationchange','load','pageshow'].forEach(ev=>window.addEventListener(ev,()=>setTimeout(ajusterFrames,150)));
+setInterval(ajusterFrames,1500);
 let apprVersion='std';
 function setApprVersion(v){
   apprVersion=v;

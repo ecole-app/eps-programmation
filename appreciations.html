@@ -503,6 +503,10 @@ function renderTags(){
 }
 
 // ── Génération ──
+// Mots libres : reconnaît un nom de sport tapé à la main (accents/majuscules ignorés) pour l'intégrer à la phrase.
+var SPORTS_LIBRES={"relais":"relais","course longue":"course longue","course longue duree":"course longue","demi-fond":"demi-fond","demi fond":"demi-fond","sprint":"sprint","vitesse":"","basket":"basket-ball","basket-ball":"basket-ball","basketball":"basket-ball","football":"football","foot":"football","ultimate":"ultimate","ballon prisonnier":"ballon prisonnier","ballon":"ballon prisonnier","rugby":"rugby à 7","rugby a 7":"rugby à 7","badminton":"badminton","bad":"badminton","tennis de table":"tennis de table","ping":"tennis de table","ping-pong":"tennis de table","acrosport":"acrosport","acro":"acrosport","renfo":"renforcement musculaire","renforcement":"renforcement musculaire","renforcement musculaire":"renforcement musculaire","renfo musculaire":"renforcement musculaire","musculation":"renforcement musculaire","course d'orientation":"course d'orientation","orientation":"course d'orientation","co":"course d'orientation","lutte":"lutte","handball":"handball","hand":"handball","volley":"volley-ball","volley-ball":"volley-ball","volleyball":"volley-ball","natation":"natation","escalade":"escalade","gymnastique":"gymnastique","gym":"gymnastique","danse":"danse","judo":"judo","athletisme":"athlétisme","athlétisme":"athlétisme","saut en longueur":"saut en longueur","lancer":"lancer","javelot":"javelot","hockey":"hockey","tennis":"tennis","boxe":"boxe","combine athletique":"combiné athlétique","combiné athlétique":"combiné athlétique","vma":"VMA","cross":"cross"};
+function sNorm(s){return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," ").trim();}
+function triLibres(ft){var sp=[],au=[];ft.forEach(function(m){var n=sNorm(m),v=SPORTS_LIBRES[n]||SPORTS_LIBRES[m.toLowerCase().trim()];if(v){if(sp.indexOf(v)<0)sp.push(v);}else au.push(m);});return {sports:sp,autres:au};}
 function genPhrase(keys,f,Il,il,mat,ri){
   var gen=keys.filter(function(k){return sel[k]==="gen";});
   var pos=keys.filter(function(k){return sel[k]==="pos";});
@@ -544,8 +548,11 @@ function genPhrase(keys,f,Il,il,mat,ri){
   else{p=Il+" participe aux activités. Des marges de progression existent.";}
   p=fx(p);
   if(mat&&mat!=="EPS")p="En "+mat+", "+p.charAt(0).toLowerCase()+p.slice(1);
-  if(sport.length){var d2=MAT["EPS"]||{};var sL=sport.map(function(k){var f2=(d2.sports||[]).filter(function(c){return c.k===k;})[0];return f2?f2.l:k;});var sS=sL.length===1?sL[0]:sL.slice(0,-1).join(", ")+" et "+sL[sL.length-1];p=p.replace(/\.$/,"")+", notamment en "+sS+".";}
   var fv=document.getElementById("free").value;var ftA=fv?fv.split(",").map(function(s){return s.trim();}).filter(Boolean):[];
+  var tl=triLibres(ftA);ftA=tl.autres;
+  var sL=[];if(sport.length){var d2=MAT["EPS"]||{};sport.forEach(function(k){var f2=(d2.sports||[]).filter(function(c){return c.k===k;})[0];sL.push(f2?f2.l:k);});}
+  tl.sports.forEach(function(x){if(sL.map(function(y){return y.toLowerCase();}).indexOf(x.toLowerCase())<0)sL.push(x);});
+  if(sL.length){var sS=sL.length===1?sL[0]:sL.slice(0,-1).join(", ")+" et "+sL[sL.length-1];p=p.replace(/\.$/,"")+", notamment en "+sS.replace(/^([A-ZÉ])(?=[a-zé])/,function(c){return c.toLowerCase();})+".";}
   if(ftA.length){var profils=["ulis","segpa","dys","tdah","fragile","blessé","handicap","asthme","dispensé","inclusion","allophone"];var isPr=ftA.some(function(m){return profils.some(function(pr){return m.toLowerCase().indexOf(pr)>=0;});});var ctx=ftA.join(", ");if(isPr)p=p.replace(/\.$/,"")+" (profil "+ctx+" pris en compte).";else p=p.replace(/\.$/,"")+" ("+ctx+").";}
   if(p.length>200)p=p.substring(0,197)+"...";
   return p;

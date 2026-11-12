@@ -127,6 +127,18 @@ describe("Observateurs dans les séances", () => {
   });
 });
 
+describe("Appréciations : sport tapé dans les mots libres", () => {
+  for (const f of ["appreciations.html", "appreciations-ia.html"]) it(f + " : le sport est intégré à la phrase", async () => {
+    const p = await env.page(f, { largeur: 390, hauteur: 844, mobile: true });
+    await p.evaluate(() => { const b = document.querySelector("#cp-pos .chip, #cp-gen .chip"); if (b) b.click(); });
+    const phrase = await p.evaluate(() => { document.getElementById("free").value = "Badminton, ULIS"; return genPhrase(Object.keys(sel).length ? Object.keys(sel) : [], false, "Il", "il", "EPS", 0); });
+    assert.match(phrase, /notamment en badminton/);
+    assert.match(phrase, /ULIS/);
+    assert.ok(!/\(badminton\)/i.test(phrase));
+    assert.deepEqual(p.erreurs, []);
+  });
+});
+
 describe("Documents interactifs", () => {
   it("programmation cliquable, document unique et fiche de suivi course longue", async () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
