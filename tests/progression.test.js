@@ -261,3 +261,12 @@ describe("Tableau VMA réglable", () => {
     await p.close();
   });
 });
+
+describe("Tableau VMA en secondes", () => {
+  it("affiche le temps par tour", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => { docSpecialOuvrir("vma-tableau"); document.getElementById("vmaMode").value = "temps"; vmaRendre(); const i = document.getElementById("vmaD0"); i.value = "1200"; i.dispatchEvent(new Event("input")); return document.getElementById("vmaC100_0").textContent; });
+    assert.match(r, /^36\.0 s/);
+    await p.close();
+  });
+});
