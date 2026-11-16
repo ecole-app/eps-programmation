@@ -702,6 +702,11 @@ header{background:var(--teal-d);color:#fff;padding:0 1.25rem;display:flex;align-
   .da-body li{margin:3px 0}
   .da-lead{background:var(--teal-g);border-radius:10px;padding:10px 12px;margin:0 0 6px}
   .da-etat{display:inline-block;font-size:0.7rem;font-weight:700;color:#8f5a00;background:#fbefd2;border-radius:99px;padding:2px 10px;margin-bottom:8px}
+  .vma-t{border-collapse:collapse;font-size:0.8rem;white-space:nowrap}
+  .vma-t th{background:var(--teal-d);color:#fff;padding:6px 8px;text-align:left}
+  .vma-t td{border-bottom:1px solid var(--border);padding:5px 8px;vertical-align:top}
+  .vma-t td small{color:var(--muted);font-size:0.68rem}
+  .vma-t input{width:78px}
   .da-t{width:100%;border-collapse:collapse;font-size:0.78rem;margin:4px 0 8px;display:block;overflow-x:auto}
   .da-t th{background:var(--teal-d);color:#fff;text-align:left;padding:6px 8px}
   .da-t td{border-bottom:1px solid var(--border);padding:6px 8px;vertical-align:top}
@@ -2903,20 +2908,22 @@ function vmaTours(m,len){
   let t=Math.floor(m/len), r=Math.round((m-t*len)/20)*20; if(r>=len){ t++; r=0; }
   return Math.round(m)+' m<br><small>'+(t?t+' tour'+(t>1?'s':''):'')+(t&&r?' + ':'')+(r?r+' m':'')+(!t&&!r?'0':'')+'</small>';
 }
-const vmaPcts=()=>{ const e=document.getElementById('vmaPct'); const a=((e?e.value:localStorage.getItem('vma-pct'))||'80,90,100').split(/[ ,;]+/).map(x=>parseFloat(x.replace(',','.'))).filter(x=>x>0&&x<=200).slice(0,6); return a.length?a:[80,90,100]; };
+const vmaPcts=()=>{ const e=document.getElementById('vmaPct'); const a=((e?e.value:localStorage.getItem('vma-pct'))||'80,90,100').split(/[ ,;]+/).map(x=>parseFloat(x.replace(',','.'))).filter(x=>x>0&&x<=200).slice(0,10); return a.length?a:[80,90,100]; };
 const vmaDuree=()=>{ const e=document.getElementById('vmaDur'); const x=parseFloat(((e?e.value:localStorage.getItem('vma-duree'))||'3').replace(',','.')); return x>0&&x<=60?x:3; };
 const vmaCible=(v,pct,min)=>v*min*pct/6;
 function vmaHtml(){
   const len=localStorage.getItem('vma-piste')||'120';
-  return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-    <label style="flex:1;min-width:90px">Classe <select id="vmaCl" onchange="vmaRendre()" style="width:100%;padding:8px;font-size:1rem">${['6e','5e','4e','3e'].map(c=>`<option>${c}</option>`).join('')}</select></label>
-    <label style="flex:1;min-width:90px">Test <select id="vmaN" onchange="vmaRendre()" style="width:100%;padding:8px;font-size:1rem">${[1,2,3].map(c=>`<option value="${c}">Test ${c}</option>`).join('')}</select></label>
-    <label style="flex:1;min-width:90px">Piste (m) <input id="vmaLen" type="number" inputmode="numeric" value="${len}" oninput="vmaMaj()" style="width:100%;padding:8px;font-size:1rem"></label>
-    <label style="flex:1;min-width:90px">Durée (min) <input id="vmaDur" type="text" inputmode="decimal" value="${localStorage.getItem('vma-duree')||'3'}" onchange="vmaRendre()" style="width:100%;padding:8px;font-size:1rem"></label>
-    <label style="flex:2;min-width:150px">% de VMA <input id="vmaPct" type="text" value="${localStorage.getItem('vma-pct')||'80,90,100'}" onchange="vmaRendre()" style="width:100%;padding:8px;font-size:1rem"></label>
-    <label style="flex:1;min-width:130px">Date <input id="vmaDate" type="date" oninput="vmaMaj()" style="width:100%;padding:8px;font-size:1rem"></label></div>
-  <div style="font-size:0.74rem;color:var(--muted);margin-bottom:6px">Tape la distance en mètres (ex. <b>1120</b>) ou en tours + mètres (ex. <b>9+40</b> = 9 tours de la piste + 40 m). VMA = distance ÷ 100. Cibles = distance à parcourir pour la durée et les % choisis, arrondies aux plots de 20 m (tours + mètres en plus). Enregistré tout seul.</div>
-  <div id="vmaTable"></div>
+  const L=(l,c)=>`<label style="display:block;min-width:0;font-size:0.72rem;font-weight:700;color:var(--muted)">${l}${c}</label>`;
+  const st='width:100%;box-sizing:border-box;padding:8px;font-size:1rem;margin-top:2px';
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+    ${L('Classe',`<select id="vmaCl" onchange="vmaRendre()" style="${st}">${['6e','5e','4e','3e'].map(c=>`<option>${c}</option>`).join('')}</select>`)}
+    ${L('Test',`<select id="vmaN" onchange="vmaRendre()" style="${st}">${[1,2,3].map(c=>`<option value="${c}">Test ${c}</option>`).join('')}</select>`)}
+    ${L('Piste (m)',`<input id="vmaLen" type="number" inputmode="numeric" value="${len}" oninput="vmaMaj()" style="${st}">`)}
+    ${L('Durée (min)',`<input id="vmaDur" type="text" inputmode="decimal" value="${localStorage.getItem('vma-duree')||'3'}" onchange="vmaRendre()" style="${st}">`)}
+    <div style="grid-column:1/-1">${L('% de VMA (séparés par des virgules)',`<input id="vmaPct" type="text" value="${localStorage.getItem('vma-pct')||'80,90,100'}" onchange="vmaRendre()" style="${st}">`)}</div>
+    <div style="grid-column:1/-1">${L('Date',`<input id="vmaDate" type="date" oninput="vmaMaj()" style="${st}">`)}</div></div>
+  <div style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;line-height:1.4">Distance en mètres (<b>1120</b>) ou tours+mètres (<b>9+40</b>). VMA = distance ÷ 100 (test de 6 min). Cibles arrondies aux plots de 20 m. Enregistré tout seul.</div>
+  <div id="vmaTable" style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%"></div>
   <button type="button" class="btn btn-teal" style="margin-top:8px" onclick="vmaImprimer()">🖨️ Imprimer / PDF</button>`;
 }
 function vmaNoms(cl){ const n=getEleves(currentYear)[cl]||[]; return n.length?n:Array.from({length:30},(_,i)=>'Élève '+(i+1)); }
@@ -2925,7 +2932,7 @@ function vmaRendre(){
   const d=vmaLire(cl,n); document.getElementById('vmaDate').value=d.date||'';
   const noms=vmaNoms(cl), len=parseFloat(document.getElementById('vmaLen').value)||120;
   const lg=!(getEleves(currentYear)[cl]||[]).length;
-  document.getElementById('vmaTable').innerHTML=`<table class="da-t" style="display:table"><tr><th>Élève</th><th>Distance</th><th>VMA</th>${vmaPcts().map(x=>`<th>${vmaDuree()} min à ${x} %</th>`).join('')}${n!=='1'?'<th>vs test 1</th>':''}</tr>
+  document.getElementById('vmaTable').innerHTML=`<div style="font-size:0.74rem;font-weight:700;margin-bottom:4px">Distance à courir en ${vmaDuree()} min selon le % de VMA</div><table class="vma-t"><tr><th>Élève</th><th>Distance</th><th>VMA</th>${vmaPcts().map(x=>`<th>${x} %</th>`).join('')}${n!=='1'?'<th>vs test 1</th>':''}</tr>
   ${noms.map((nom,i)=>`<tr><td>${lg?nom:nom.replace(/</g,'&lt;')}</td><td><input id="vmaD${i}" value="${((d.d||{})[nom]||'').toString().replace(/"/g,'')}" oninput="vmaMaj()" style="width:80px;padding:6px;font-size:1rem" inputmode="text"></td><td id="vmaV${i}"></td>${vmaPcts().map(x=>`<td id="vmaC${x}_${i}"></td>`).join('')}${n!=='1'?`<td id="vmaP${i}"></td>`:''}</tr>`).join('')}
   <tr><td><b>Moyenne</b></td><td id="vmaMd"></td><td id="vmaMv"></td>${vmaPcts().map(()=>'<td></td>').join('')}${n!=='1'?'<td id="vmaMp"></td>':''}</tr></table>`;
   vmaMaj(true);
