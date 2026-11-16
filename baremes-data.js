@@ -91,12 +91,12 @@ const SPORTS = [
         { id:'duree', label:'⏱ Durée soutenue', max:5, hint:'Course à allure rapide mais tenue sans interruption',
           sous:null,
           table:[['≥ 8 min','5'],['7–8 min','4'],['6–7 min','3'],['5–6 min','2'],['< 5 min','1']] },
-        { id:'regul', label:'📊 Régularité', max:6, hint:'Constance de l\'allure — tours chronométrés',
+        { id:'regul', label:'📊 Régularité', max:6, hint:'Constance de l\'allure — écart en secondes entre le tour le plus rapide et le plus lent',
           sous:null,
-          table:[['Variation < 8%','6'],['Variation 8–14%','4'],['Variation 14–20%','2'],['> 20%','1']] },
-        { id:'projet', label:'🎯 Projet tenu', max:6, hint:'Annonce une allure cible — écart avec réalisé',
+          table:[['Écart ≤ 3 s','6'],['Écart 3–5 s','4'],['Écart 5–8 s','2'],['> 8 s','1']] },
+        { id:'projet', label:'🎯 Projet tenu', max:6, hint:'Annonce une distance cible — écart en mètres avec la distance réalisée',
           sous:null,
-          table:[['Écart ≤ 5%','6'],['Écart 5–10%','4'],['Écart 10–15%','2'],['> 15%','1']] },
+          table:[['Écart ≤ 60 m','6'],['Écart 60–110 m','4'],['Écart 110–170 m','2'],['> 170 m','1']] },
         { id:'fiche', label:'📋 Fiche sensations', max:3, hint:'Ressenti par allure (facile/moyen/difficile) noté',
           sous:null,
           table:[['Fiche complète','3'],['Fiche partielle','2'],['Quelques notes','1'],['Absente','0']] }
@@ -109,9 +109,9 @@ const SPORTS = [
         { id:'vma', label:'📐 VMA', max:4, hint:'Palier au test initial',
           sous:null,
           table:[['Palier ≥ 11','4'],['Palier 9–10','3'],['Palier 7–8','2'],['Palier 5–6','1'],['< 5','0']] },
-        { id:'projet', label:'🎯 Écart projet/réalisé', max:9, hint:'3 allures progressives sur 15 min — écart global prévu/réalisé',
+        { id:'projet', label:'🎯 Écart projet/réalisé', max:9, hint:'3 allures — écart total en mètres entre les distances annoncées et réalisées',
           sous:null,
-          table:[['Écart ≤ 5%','9'],['Écart 5–10%','7'],['Écart 10–15%','5'],['Écart 15–20%','3'],['> 20%','1']] },
+          table:[['Écart ≤ 80 m','9'],['Écart 80–150 m','7'],['Écart 150–230 m','5'],['Écart 230–300 m','3'],['> 300 m','1']] },
         { id:'perf', label:'⚡ Performance absolue', max:5, hint:'Distance parcourue sur les 3 allures',
           sous:null,
           table:[['≥ 3000m','5'],['2600–3000m','4'],['2200–2600m','3'],['1800–2200m','2'],['< 1800m','1']] },
@@ -750,23 +750,23 @@ const NIVEAUX = {
   },
 
   'demi-fond': {
-    '6e': { epreuve: "Courir 8 min à allure soutenue sans s'arrêter, tours chronométrés." },
+    '6e': { epreuve: "Courir 8 min à allure soutenue sans s'arrêter, tours chronométrés (régularité en secondes d'écart entre tours)." },
     '5e': {
       ca_texte: "Courir 3 fois 3 minutes à 3 allures différentes annoncées à l'avance. Connaître sa VMA et s'en servir pour choisir ses allures.",
-      epreuve: "3 courses de 3 min (environ 80, 90 et 100 % de VMA), 2 min de récupération marchée entre chaque. L'élève annonce sa distance avant chaque course ; plot posé au coup de sifflet final.",
+      epreuve: "3 courses de 3 min (environ 80, 90 et 100 % de VMA : pour une VMA de 12 km/h, cibles de 480, 540 et 600 m), 2 min de récupération marchée entre chaque. L'élève annonce sa distance avant chaque course ; plot posé au coup de sifflet final.",
       crit: {
         vma: { hint: "VMA en km/h au test de début de cycle", table: [['≥ 13 km/h','4'],['12–13 km/h','3'],['11–12 km/h','2'],['10–11 km/h','1'],['< 10 km/h','0']] },
-        projet: { hint: "Écart total entre les 3 distances annoncées et réalisées", table: [['Écart ≤ 6 %','9'],['Écart 6–10 %','7'],['Écart 10–15 %','5'],['Écart 15–20 %','3'],['> 20 %','1']] },
+        projet: { hint: "Total des 3 écarts (en mètres) entre distances annoncées et réalisées", table: [['≤ 90 m','9'],['90–150 m','7'],['150–230 m','5'],['230–300 m','3'],['> 300 m','1']] },
         perf: { hint: "Distance totale des 3 courses de 3 min", table: [['≥ 1650 m','5'],['1500–1650 m','4'],['1350–1500 m','3'],['1200–1350 m','2'],['< 1200 m','1']] },
         fiche: { hint: "VMA, distances annoncées et réalisées notées", table: [['Fiche complète','2'],['Fiche incomplète','1'],['Absente','0']] }
       }
     },
     '4e': {
       ca_texte: "Construire un projet à 3 allures à partir de sa VMA et le tenir. Analyser l'écart entre prévu et réalisé.",
-      epreuve: "3 × 3 min à 3 allures annoncées (80, 90, 100 % de VMA), récupération 2 min. Analyse écrite des écarts.",
+      epreuve: "3 × 3 min à 3 allures annoncées (80, 90, 100 % de VMA : VMA × 40, 45, 50 m, soit 480, 540, 600 m pour 12 km/h), récupération 2 min. Analyse écrite des écarts.",
       crit: {
         vma: { hint: "VMA en km/h au test de début de cycle", table: [['≥ 13,5 km/h','4'],['12,5–13,5 km/h','3'],['11,5–12,5 km/h','2'],['10,5–11,5 km/h','1'],['< 10,5 km/h','0']] },
-        projet: { hint: "Écart total entre les 3 distances annoncées et réalisées", table: [['Écart ≤ 5 %','9'],['Écart 5–9 %','7'],['Écart 9–13 %','5'],['Écart 13–18 %','3'],['> 18 %','1']] },
+        projet: { hint: "Total des 3 écarts (en mètres) entre distances annoncées et réalisées", table: [['≤ 80 m','9'],['80–140 m','7'],['140–200 m','5'],['200–280 m','3'],['> 280 m','1']] },
         perf: { hint: "Distance totale des 3 courses de 3 min", table: [['≥ 1720 m','5'],['1560–1720 m','4'],['1400–1560 m','3'],['1250–1400 m','2'],['< 1250 m','1']] }
       }
     },
@@ -775,7 +775,7 @@ const NIVEAUX = {
       epreuve: "3 × 3 min à 3 allures annoncées, récupération 2 min. Analyse des écarts et ajustement proposé pour la course suivante.",
       crit: {
         vma: { hint: "VMA en km/h au test de début de cycle", table: [['≥ 14 km/h','4'],['13–14 km/h','3'],['12–13 km/h','2'],['11–12 km/h','1'],['< 11 km/h','0']] },
-        projet: { hint: "Écart total entre les 3 distances annoncées et réalisées", table: [['Écart ≤ 4 %','9'],['Écart 4–8 %','7'],['Écart 8–12 %','5'],['Écart 12–16 %','3'],['> 16 %','1']] },
+        projet: { hint: "Total des 3 écarts (en mètres) entre distances annoncées et réalisées", table: [['≤ 70 m','9'],['70–130 m','7'],['130–200 m','5'],['200–260 m','3'],['> 260 m','1']] },
         perf: { hint: "Distance totale des 3 courses de 3 min", table: [['≥ 1800 m','5'],['1630–1800 m','4'],['1460–1630 m','3'],['1300–1460 m','2'],['< 1300 m','1']] }
       }
     }
