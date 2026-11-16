@@ -252,3 +252,12 @@ describe("Tableau VMA", () => {
     await p.close();
   });
 });
+
+describe("Tableau VMA réglable", () => {
+  it("durée et % modifiables", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => { docSpecialOuvrir("vma-tableau"); document.getElementById("vmaDur").value = "6"; document.getElementById("vmaPct").value = "70, 85"; vmaRendre(); const i = document.getElementById("vmaD0"); i.value = "1200"; i.dispatchEvent(new Event("input")); return [document.querySelectorAll("#vmaTable th").length, document.getElementById("vmaC85_0").textContent]; });
+    assert.equal(r[0], 5); assert.match(r[1], /^1020 m/);
+    await p.close();
+  });
+});
