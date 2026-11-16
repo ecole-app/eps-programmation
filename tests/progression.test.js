@@ -247,8 +247,8 @@ describe("Titres de séance modifiables", () => {
 describe("Tableau VMA", () => {
   it("calcule la VMA depuis des mètres ou des tours+mètres", async () => {
     const p = await env.page("index.html");
-    const r = await p.evaluate(() => { docSpecialOuvrir("vma-tableau"); const i = document.getElementById("vmaD0"); i.value = "1120"; i.dispatchEvent(new Event("input")); const a = document.getElementById("vmaV0").textContent; i.value = "9+40"; i.dispatchEvent(new Event("input")); return [a, document.getElementById("vmaV0").textContent, document.getElementById("vmaC0").textContent]; });
-    assert.match(r[0], /11\.2/); assert.match(r[1], /11\.2/); assert.equal(r[2], "504 m");
+    const r = await p.evaluate(() => { docSpecialOuvrir("vma-tableau"); const i = document.getElementById("vmaD0"); i.value = "1120"; i.dispatchEvent(new Event("input")); const a = document.getElementById("vmaV0").textContent; i.value = "9+40"; i.dispatchEvent(new Event("input")); return [a, document.getElementById("vmaV0").textContent, document.getElementById("vmaC90_0").textContent]; });
+    assert.match(r[0], /11\.2/); assert.match(r[1], /11\.2/); assert.match(r[2], /^504 m/);
     await p.close();
   });
 });
