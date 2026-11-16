@@ -174,7 +174,7 @@ describe("Documents préparés", () => {
   it("la séance de tests 6e, les attendus 2027 et le mémo VMA s'ouvrent depuis Documents", async () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
     await p.click(".nav-tab[onclick*=\"'documents'\"]");
-    assert.equal(await p.locator("button.da-card").count(), 6);
+    assert.equal(await p.locator("button.da-card").count(), 7);
     assert.equal(await p.locator("a.da-card").count(), 3);
     await p.evaluate(() => docAppOuvrir("tests-6e"));
     assert.match(await p.locator("#docAppBody").textContent(), /navette Luc-Léger/);
@@ -240,6 +240,15 @@ describe("Titres de séance modifiables", () => {
     });
     assert.equal(r.titre, "Jeu en simple");
     assert.equal(r.contenu, "x");
+    await p.close();
+  });
+});
+
+describe("Tableau VMA", () => {
+  it("calcule la VMA depuis des mètres ou des tours+mètres", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => { docSpecialOuvrir("vma-tableau"); const i = document.getElementById("vmaD0"); i.value = "1120"; i.dispatchEvent(new Event("input")); const a = document.getElementById("vmaV0").textContent; i.value = "9+40"; i.dispatchEvent(new Event("input")); return [a, document.getElementById("vmaV0").textContent, document.getElementById("vmaC0").textContent]; });
+    assert.match(r[0], /11\.2/); assert.match(r[1], /11\.2/); assert.equal(r[2], "504 m");
     await p.close();
   });
 });
