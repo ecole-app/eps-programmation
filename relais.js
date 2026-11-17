@@ -574,7 +574,8 @@ function rlInitEditeur(e) {
 }
 
 /* ───────────── Intégration à l'accueil ───────────── */
-function boutonRelais(sd, cl, col, num) {
+function boutonRelais(sd, cl, col, num, petit) {
   if (!sd || sd.id !== 'relais') return '';
-  return `<button onclick="relaisOuvrir('${cl}',${num || 1})" title="Groupes, terrain et exercices du relais" style="background:${col};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">🏃 Relais</button>`;
+  if (petit) return `<button onclick="relaisOuvrir('${cl}',${num || 1})" title="Relais : groupes, exercices animés, notation" style="flex-shrink:0;background:${col};color:#fff;border:none;border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center">🏃</button>`;
+  return `<button onclick="relaisOuvrir('${cl}',${num || 1})" title="Groupes, exercices animés et notation du relais" style="background:${col};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">🏃 Relais</button>`;
 }

@@ -409,3 +409,18 @@ describe("Relais : notation reliée au barème", () => {
     await p.close();
   });
 });
+
+describe("Relais : accès depuis les séances", () => {
+  it("le bouton est dans la liste des séances et dans la fiche de séance", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      document.getElementById("seancesClasse").value = "6e"; renderSeances();
+      const nb = document.querySelectorAll('#page-seances button[onclick^="relaisOuvrir"]').length;
+      const k = Object.keys(seanceDataMap).find((x) => seanceDataMap[x].sd && seanceDataMap[x].sd.id === "relais");
+      openSeanceFiche(k);
+      return [nb > 0, document.getElementById("seanceFicheBody").innerHTML.includes("relaisOuvrir")];
+    });
+    assert.deepEqual(r, [true, true]);
+    await p.close();
+  });
+});
