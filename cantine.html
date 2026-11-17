@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi cantine — Collège Luqmân</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;margin:0;background:#f4f6f5;color:#111}
+.bar{position:sticky;top:0;z-index:10;background:#085e5d;color:#fff;padding:10px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.bar b{font-size:1.05rem;margin-right:8px}
+.bar label{font-size:.7rem;display:flex;flex-direction:column;gap:2px}
+.bar select,.bar input{padding:7px;font-size:1rem;border-radius:6px;border:0}
+.bar input{width:84px}
+.bar button{padding:9px 14px;font-size:1rem;font-weight:700;border:0;border-radius:6px;background:#f0a500;cursor:pointer}
+.info{padding:8px 14px;font-size:.8rem;color:#555}
+#feuilles{padding:0 14px 30px;overflow-x:auto}
+section{background:#fff;padding:10mm;margin:0 0 14px;width:297mm;min-height:210mm;box-shadow:0 1px 6px rgba(0,0,0,.2)}
+h1{font-size:17px;text-align:center;margin:0 0 2px}
+h2{font-size:12px;text-align:center;font-weight:400;margin:0 0 6px}
+.cons{font-size:9px;margin:0 0 5px}
+.pied{font-size:9px;margin:5px 0 0}
+table{border-collapse:collapse;width:100%;table-layout:fixed}
+th,td{border:1px solid #444;padding:0;text-align:center}
+th{background:#dbe5f1;font-size:8px;height:4.5mm}
+th.we,td.we{background:#c9d6e8}
+td.nom,th.nom{width:46mm;text-align:left;padding-left:2mm;font-size:10px}
+th.nom{text-align:center}
+td.dp,th.dp{width:8mm;font-size:9px}
+td.j i{display:inline-block;width:2.6mm;height:2.6mm;border:.3mm solid #222;vertical-align:middle}
+@media screen and (max-width:900px){
+  .bar{padding:8px 10px;gap:8px}.bar b{width:100%;margin:0}.bar select,.bar input{padding:6px;font-size:.9rem}.bar input{width:72px}.bar button{padding:8px 12px;font-size:.9rem;margin-left:auto}
+  #feuilles{padding:0 8px 24px;overflow:visible}
+  section{width:auto;min-height:0;padding:10px 0 10px 10px;margin-bottom:12px}
+  h1{font-size:14px;text-align:left}h2{text-align:left;font-size:12px;margin-bottom:4px}
+  .cons{font-size:10px;padding-right:10px}
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:auto;min-width:900px}
+  td.nom,th.nom{position:sticky;left:0;z-index:2;width:84px;min-width:84px;background:#fff;font-size:12px;padding-left:4px;white-space:nowrap}
+  th.nom{background:#dbe5f1}
+  th{font-size:10px}
+  td.dp,th.dp{width:28px}
+  td.j i{width:3.4mm;height:3.4mm}
+  tr{height:30px!important}
+  .pied{padding-left:0}
+}
+@page{size:A4 landscape;margin:0}
+@media print{
+  .bar,.info{display:none}
+  body{background:#fff}
+  #feuilles{padding:0;overflow:visible}
+  section{margin:0;box-shadow:none;page-break-after:always;width:auto;min-height:0}
+  section:last-child{page-break-after:auto}
+  th,td,th.we,td.we{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>🍽️ Suivi cantine</b>
+  <label>Mois <select id="mois"></select></label>
+  <label>Année <input id="an" type="number" min="2020" max="2100"></label>
+  <label>Classes <select id="classe"><option value="">Toutes les classes</option><option>6e</option><option>5e</option><option>4e</option><option>3e</option></select></label>
+  <button type="button" onclick="window.print()">🖨️ Imprimer / PDF</button>
+</div>
+<div class="info" id="info"></div>
+<div id="feuilles"></div>
+<script>
+const MOIS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const TOUTES=['6e','5e','4e','3e'];
+const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+
+// Prénoms : liste « Élèves » de la gestion des classes du site EPS (même domaine, même stockage que les barèmes).
+function anneeCourante(){
+  try{const d=JSON.parse(localStorage.getItem('eps-v2')||'null');if(d&&d.currentYear)return d.currentYear;}catch(e){}
+  return null;
+}
+function eleves(){
+  try{const y=anneeCourante();if(!y)return {};return JSON.parse(localStorage.getItem('eleves-'+y)||'{}');}catch(e){return {};}
+}
+
+function page(cl,noms,mois,an){
+  const nbJ=new Date(an,mois+1,0).getDate(),L=['D','L','M','M','J','V','S'];
+  const jours=Array.from({length:nbJ},(_,i)=>{const w=new Date(an,mois,i+1).getDay();return {d:i+1,l:L[w],we:w===0||w===6};});
+  const lignes=noms.length?noms:Array.from({length:25},()=>'');
+  const h=Math.max(4.8,Math.min(8,130/(lignes.length+1))).toFixed(2);
+  const entete=`<tr><th class="nom" rowspan="2">Nom et prénom</th><th class="dp" rowspan="2">DP</th>${jours.map(j=>`<th class="${j.we?'we':''}">${j.d}</th>`).join('')}</tr><tr>${jours.map(j=>`<th class="${j.we?'we':''}">${j.l}</th>`).join('')}</tr>`;
+  const corps=lignes.map(n=>`<tr style="height:${h}mm"><td class="nom">${esc(n)}</td><td class="dp"></td>${jours.map(j=>`<td class="j${j.we?' we':''}"><i></i></td>`).join('')}</tr>`).join('');
+  return `<section><h1>COLLÈGE LUQMÂN — SUIVI CANTINE</h1><h2>${cl.replace('e','ème')} — ${MOIS[mois]} ${an}</h2>
+  <p class="cons">Cocher la case correspondant au jour où l'élève a effectivement mangé à la cantine. La colonne « DP » indique le régime habituel ; tous les élèves de la classe sont présents, y compris les externes susceptibles de manger occasionnellement.</p>
+  <div class="tw"><table>${entete}${corps}</table></div><p class="pied">DP = demi-pensionnaire.</p></section>`;
+}
+
+function rendre(){
+  const mois=parseInt(document.getElementById('mois').value,10);
+  let an=parseInt(document.getElementById('an').value,10);if(!(an>=2020&&an<=2100))an=new Date().getFullYear();
+  const el=eleves(),sel=document.getElementById('classe').value;
+  let cls=sel?[sel]:TOUTES.filter(c=>(el[c]||[]).length);
+  if(!cls.length)cls=TOUTES;
+  document.getElementById('feuilles').innerHTML=cls.map(c=>page(c,el[c]||[],mois,an)).join('');
+  const manque=cls.filter(c=>!(el[c]||[]).length);
+  document.getElementById('info').textContent=cls.length+' page'+(cls.length>1?'s':'')+' · '+cls.map(c=>c+' : '+((el[c]||[]).length||'vierge')).join(' · ')
+    +(manque.length?' — pas de prénoms pour '+manque.join(', ')+' : ouvre le site EPS sur cet appareil/navigateur (Élèves) pour les récupérer.':'');
+}
+
+const now=new Date();
+document.getElementById('mois').innerHTML=MOIS.map((m,i)=>`<option value="${i}"${i===now.getMonth()?' selected':''}>${m}</option>`).join('');
+document.getElementById('an').value=now.getFullYear();
+['mois','an','classe'].forEach(id=>document.getElementById(id).addEventListener('change',rendre));
+rendre();
+</script>
+</body>
+</html>
