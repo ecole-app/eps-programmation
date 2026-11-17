@@ -174,8 +174,8 @@ describe("Documents préparés", () => {
   it("la séance de tests 6e, les attendus 2027 et le mémo VMA s'ouvrent depuis Documents", async () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
     await p.click(".nav-tab[onclick*=\"'documents'\"]");
-    assert.equal(await p.locator("button.da-card").count(), 7);
-    assert.equal(await p.locator("a.da-card").count(), 4);
+    assert.equal(await p.locator("button.da-card").count(), 8);
+    assert.equal(await p.locator("a.da-card").count(), 5);
     await p.evaluate(() => docAppOuvrir("tests-6e"));
     assert.match(await p.locator("#docAppBody").textContent(), /navette Luc-Léger/);
     await p.evaluate(() => { docAppFermer(); docAppOuvrir("afc-2027"); });
@@ -267,6 +267,15 @@ describe("Tableau VMA en secondes", () => {
     const p = await env.page("index.html");
     const r = await p.evaluate(() => { docSpecialOuvrir("vma-tableau"); document.getElementById("vmaMode").value = "temps"; vmaRendre(); const i = document.getElementById("vmaD0"); i.value = "1200"; i.dispatchEvent(new Event("input")); return document.getElementById("vmaC100_0").textContent; });
     assert.match(r, /^36\.0 s/);
+    await p.close();
+  });
+});
+
+describe("Cartons de poinçonnage", () => {
+  it("génère 10 cartons avec le bon nombre de cases", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => { docSpecialOuvrir("co-cartons"); document.getElementById("coN").value = "12"; coCartonsGenerer(); const b = document.getElementById("docPrint"); return [b.querySelectorAll(".ct").length, b.querySelectorAll(".ct")[0].querySelectorAll(".c").length]; });
+    assert.deepEqual(r, [10, 12]);
     await p.close();
   });
 });

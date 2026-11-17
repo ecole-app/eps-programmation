@@ -2870,7 +2870,9 @@ function docAppImprimer(){
 // ═══ DOCUMENTS INTERACTIFS : programmation cliquable + fiche de suivi (course longue) ═══
 const DOCS_SPECIAUX=[
   {id:'renfo-word', icone:'💪', titre:'Fiche de suivi · renforcement 3e (PDF)', etat:'PDF · 2 élèves · 10 exercices · barème au dos', fichier:'docs-files/Fiche-suivi-renforcement-3e.pdf'},
-  {id:'co-meons', icone:'🧭', titre:'Carte course d\'orientation · Parc de Méons (PDF)', etat:'Carte FFCO 1/3500 · balises numérotées · À imprimer en A4', fichier:'docs-files/Carte-orientation-Parc-de-Meons.pdf'},
+  {id:'co-meons-cachee', icone:'🧭', titre:'Carte orientation · Méons · balises sans numéros (élèves)', etat:'PDF A4 · cercles seuls : l\'élève écrit le numéro trouvé', fichier:'docs-files/Carte-Meons-balises-cachees.pdf'},
+  {id:'co-cartons', icone:'🎫', titre:'Cartons de poinçonnage · course d\'orientation', etat:'10 cartons par page · choisis le nombre de cases'},
+  {id:'co-meons', icone:'🗺️', titre:'Carte orientation · Méons · corrigé prof (PDF)', etat:'Avec les numéros de balises · 1/3500 · A4', fichier:'docs-files/Carte-orientation-Parc-de-Meons.pdf'},
   {id:'vma-tableau', icone:'⏱️', titre:'Tableau VMA · demi-Cooper', etat:'Tape la distance de chaque élève · la VMA se calcule seule'},
   {id:'prog-sports', icone:'📚', titre:'Programmation des sports (fiches APSA)', etat:'Touche les fiches à ajouter · un seul PDF à envoyer'},
   {id:'renfo-suivi', icone:'💪', titre:'Fiche de suivi · renforcement musculaire', etat:'Une page par groupe · 10 exercices · séances + évaluation'},
@@ -2894,7 +2896,7 @@ function docSpecialOuvrir(id){
   const d=DOCS_SPECIAUX.find(x=>x.id===id); if(!d) return;
   docSpecialId=id;
   document.getElementById('docAppTitre').textContent=d.icone+' '+d.titre;
-  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():id==='renfo-suivi'?renfoSuiviHtml():id==='vma-tableau'?vmaHtml():suiviClHtml();
+  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():id==='renfo-suivi'?renfoSuiviHtml():id==='vma-tableau'?vmaHtml():id==='co-cartons'?coCartonsHtml():suiviClHtml();
   const b=document.getElementById('docAppImpBtn'); b.style.display='none';
   document.getElementById('docAppOverlay').classList.add('open');
   document.getElementById('docAppOverlay').classList.toggle('vma-mode',id==='vma-tableau');
@@ -2905,6 +2907,23 @@ function docSpecialOuvrir(id){
   if(id==='vma-tableau') vmaRendre();
 }
 
+
+// — Cartons de poinçonnage (course d'orientation) —
+function coCartonsHtml(){
+  const n=localStorage.getItem('co-cases')||'10';
+  return `<label style="display:block;font-size:0.72rem;font-weight:700;color:var(--muted)">Nombre de cases (balises à poinçonner)<input id="coN" type="number" min="4" max="20" value="${n}" style="width:100%;box-sizing:border-box;padding:8px;font-size:1rem;margin-top:2px"></label>
+  <p style="font-size:0.78rem;color:var(--muted);line-height:1.4">Chaque carton : nom, classe, heures de départ et d'arrivée, temps, et une case par balise (dans l'ordre). L'élève poinçonne à chaque balise et note son numéro sur la carte. 10 cartons par page A4, à découper.</p>
+  <button type="button" class="btn btn-teal" onclick="coCartonsGenerer()">🖨️ Imprimer / PDF</button>`;
+}
+function coCartonsGenerer(){
+  let n=parseInt(document.getElementById('coN').value,10); if(!(n>=4&&n<=20)) n=10;
+  try{ localStorage.setItem('co-cases',String(n)); }catch(e){}
+  const cols=n<=10?5:n<=15?5:5, rows=Math.ceil(n/cols);
+  const cases=Array.from({length:n},(_,i)=>`<div class="c"><span>${i+1}</span></div>`).join('');
+  const carton=`<div class="ct"><div class="l1"><b>Nom :</b> ...................................... <b>Classe :</b> ........</div><div class="l1"><b>Départ :</b> ........ <b>Arrivée :</b> ........ <b>Temps :</b> ........</div><div class="g">${cases}</div></div>`;
+  const css=`@page{size:A4 portrait;margin:8mm}.pg{display:grid;grid-template-columns:1fr 1fr;gap:0}.ct{box-sizing:border-box;width:97mm;height:54mm;border:0.3mm dashed #666;padding:3mm;font-size:8.5pt;overflow:hidden}.l1{margin-bottom:2mm}.g{display:grid;grid-template-columns:repeat(${cols},1fr);gap:1.2mm}.c{border:0.4mm solid #222;height:${rows>2?'9':'14'}mm;position:relative}.c span{position:absolute;left:1mm;top:0;font-size:7pt;color:#555}`;
+  docImprimerHtml(`<html><head><style>${css}</style></head><body><div class="pg">${Array(10).fill(carton).join('')}</div></body></html>`);
+}
 // — Tableau VMA (demi-Cooper) —
 const vmaCle=(cl,n)=>`vma-${currentYear}-${cl}-${n}`;
 function vmaLire(cl,n){ try{ return JSON.parse(localStorage.getItem(vmaCle(cl,n))||'{}'); }catch(e){ return {}; } }
