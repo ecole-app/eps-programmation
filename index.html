@@ -2876,8 +2876,20 @@ const DOCS_APP = [
 function docAppRender(){
   const box=document.getElementById('docAppListe'); if(!box) return;
   const RAPPORTS=[{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
-  box.innerHTML=DOCS_SPECIAUX.map(d=>d.fichier?`<a class="da-card" href="${d.fichier}" target="_blank" rel="noopener"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></a>`:`<button type="button" class="da-card" onclick="docSpecialOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')+DOCS_APP.map(d=>`<button type="button" class="da-card" onclick="docAppOuvrir('${d.id}')"><span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span></button>`).join('')
-  box.innerHTML+=RAPPORTS.map(r=>`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>${r.s||'Rapport Claude · s\'ouvre dans un nouvel onglet'}</small></span><span class="da-go">›</span></a>`).join('');
+  const CAT={relais:'🏃 Relais',
+    'vma-tableau':'⏱️ Course longue et demi-fond','suivi-cl':'⏱️ Course longue et demi-fond','memo-vma':'⏱️ Course longue et demi-fond',
+    'co-meons-cachee':'🧭 Course d\'orientation','co-meons':'🧭 Course d\'orientation','co-cartons':'🧭 Course d\'orientation',
+    'renfo-suivi':'💪 Renforcement musculaire','renfo-word':'💪 Renforcement musculaire'};
+  const ORDRE=['🏃 Relais','⏱️ Course longue et demi-fond','🧭 Course d\'orientation','💪 Renforcement musculaire','📚 Programmation et programmes'];
+  const carte=(d,lien)=>{
+    const c=`<span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span>`;
+    return lien?`<a class="da-card" href="${lien}" target="_blank" rel="noopener">${c}</a>`:`<button type="button" class="da-card" onclick="${d.clic}">${c}</button>`;
+  };
+  const items=[];
+  DOCS_SPECIAUX.forEach(d=>items.push({cat:CAT[d.id]||ORDRE[4],h:d.fichier?carte(d,d.fichier):carte(Object.assign({},d,{clic:`docSpecialOuvrir('${d.id}')`}))}));
+  DOCS_APP.forEach(d=>items.push({cat:CAT[d.id]||ORDRE[4],h:carte(Object.assign({},d,{clic:`docAppOuvrir('${d.id}')`}))}));
+  RAPPORTS.forEach(r=>items.push({cat:ORDRE[4],h:`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>${r.s||'Rapport Claude · s\'ouvre dans un nouvel onglet'}</small></span><span class="da-go">›</span></a>`}));
+  box.innerHTML=ORDRE.filter(c=>items.some(i=>i.cat===c)).map(c=>`<div class="da-sec"><div class="da-sec-t">${c}</div><div class="da-liste">${items.filter(i=>i.cat===c).map(i=>i.h).join('')}</div></div>`).join('');
 }
 function docAppOuvrir(id){
   const d=DOCS_APP.find(x=>x.id===id); if(!d) return;
