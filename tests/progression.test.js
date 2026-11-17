@@ -279,3 +279,16 @@ describe("Cartons de poinçonnage", () => {
     await p.close();
   });
 });
+
+describe("Notation par numéro d'élève", () => {
+  it("accepte un n° et garde la liste dans l'ordre de la classe", async () => {
+    const p = await env.page("baremes.html");
+    const r = await p.evaluate(() => {
+      const sid = SPORTS[0].id;
+      ["9", "3", "7"].forEach((n) => { const i = document.getElementById(sid + "-c3-prenom"); i.value = n; checkReady(sid, "c3"); marquerStatut(sid, "c3", "abs"); });
+      return state[sid].c3.eleves.map((e) => e.prenom);
+    });
+    assert.deepEqual(r, ["Élève 3", "Élève 7", "Élève 9"]);
+    await p.close();
+  });
+});
