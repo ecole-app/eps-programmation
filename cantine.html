@@ -27,7 +27,11 @@ th.we,td.we{background:#c9d6e8}
 td.nom,th.nom{width:46mm;text-align:left;padding-left:2mm;font-size:10px}
 th.nom{text-align:center}
 td.dp,th.dp{width:8mm;font-size:9px}
-td.j i{display:inline-block;width:2.6mm;height:2.6mm;border:.3mm solid #222;vertical-align:middle}
+td.j i{display:inline-block;width:2.6mm;height:2.6mm;border:.3mm solid #222;vertical-align:middle;position:relative}
+td.j.on i::after{content:'\2715';position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);font-size:4.6mm;line-height:1;font-weight:700;color:#1d3fa8;font-style:normal}
+td.dp{font-weight:700;color:#1d3fa8}
+tr.isdp td.nom{background:#f6ff6b}
+td.j,td.dp{cursor:pointer;-webkit-tap-highlight-color:rgba(14,124,123,.25)}
 @media screen and (max-width:900px){
   .bar{padding:8px 10px;gap:8px}.bar b{width:100%;margin:0}.bar select,.bar input{padding:6px;font-size:.9rem}.bar input{width:72px}.bar button{padding:8px 12px;font-size:.9rem;margin-left:auto}
   #feuilles{padding:0 8px 24px;overflow:visible}
@@ -38,6 +42,7 @@ td.j i{display:inline-block;width:2.6mm;height:2.6mm;border:.3mm solid #222;vert
   table{width:auto;min-width:900px}
   td.nom,th.nom{position:sticky;left:0;z-index:2;width:84px;min-width:84px;background:#fff;font-size:12px;padding-left:4px;white-space:nowrap}
   th.nom{background:#dbe5f1}
+  tr.isdp td.nom{background:#f6ff6b}
   th{font-size:10px}
   td.dp,th.dp{width:28px}
   td.j i{width:3.4mm;height:3.4mm}
@@ -51,7 +56,7 @@ td.j i{display:inline-block;width:2.6mm;height:2.6mm;border:.3mm solid #222;vert
   #feuilles{padding:0;overflow:visible}
   section{margin:0;box-shadow:none;page-break-after:always;width:auto;min-height:0}
   section:last-child{page-break-after:auto}
-  th,td,th.we,td.we{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  th,td,th.we,td.we,tr.isdp td.nom{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 </head>
@@ -79,14 +84,19 @@ function eleves(){
   try{const y=anneeCourante();if(!y)return {};return JSON.parse(localStorage.getItem('eleves-'+y)||'{}');}catch(e){return {};}
 }
 
+// Cases cochées : gardées sur cet appareil, par mois et par classe.
+const cleEtat=(cl,mois,an)=>'cantine-'+an+'-'+(mois+1)+'-'+cl;
+function lireEtat(cl,mois,an){try{return JSON.parse(localStorage.getItem(cleEtat(cl,mois,an))||'{}');}catch(e){return {};}}
 function page(cl,noms,mois,an){
+  const etat=lireEtat(cl,mois,an);
   const nbJ=new Date(an,mois+1,0).getDate(),L=['D','L','M','M','J','V','S'];
   const jours=Array.from({length:nbJ},(_,i)=>{const w=new Date(an,mois,i+1).getDay();return {d:i+1,l:L[w],we:w===0||w===6};});
   const lignes=noms.length?noms:Array.from({length:25},()=>'');
   const h=Math.max(4.8,Math.min(8,130/(lignes.length+1))).toFixed(2);
   const entete=`<tr><th class="nom" rowspan="2">Nom et prénom</th><th class="dp" rowspan="2">DP</th>${jours.map(j=>`<th class="${j.we?'we':''}">${j.d}</th>`).join('')}</tr><tr>${jours.map(j=>`<th class="${j.we?'we':''}">${j.l}</th>`).join('')}</tr>`;
-  const corps=lignes.map(n=>`<tr style="height:${h}mm"><td class="nom">${esc(n)}</td><td class="dp"></td>${jours.map(j=>`<td class="j${j.we?' we':''}"><i></i></td>`).join('')}</tr>`).join('');
-  return `<section><h1>COLLÈGE LUQMÂN — SUIVI CANTINE</h1><h2>${cl.replace('e','ème')} — ${MOIS[mois]} ${an}</h2>
+  const corps=lignes.map((n,idx)=>{const k=n||('#'+idx),e=etat[k]||{};
+    return `<tr style="height:${h}mm" class="${e.dp?'isdp':''}" data-k="${esc(k)}"><td class="nom">${esc(n)}</td><td class="dp">${e.dp?'✓':''}</td>${jours.map(j=>`<td class="j${j.we?' we':''}${(e.j||[]).includes(j.d)?' on':''}" data-d="${j.d}"><i></i></td>`).join('')}</tr>`;}).join('');
+  return `<section data-cl="${cl}"><h1>COLLÈGE LUQMÂN — SUIVI CANTINE</h1><h2>${cl.replace('e','ème')} — ${MOIS[mois]} ${an}</h2>
   <p class="cons">Cocher la case correspondant au jour où l'élève a effectivement mangé à la cantine. La colonne « DP » indique le régime habituel ; tous les élèves de la classe sont présents, y compris les externes susceptibles de manger occasionnellement.</p>
   <div class="tw"><table>${entete}${corps}</table></div><p class="pied">DP = demi-pensionnaire.</p></section>`;
 }
@@ -100,9 +110,19 @@ function rendre(){
   document.getElementById('feuilles').innerHTML=cls.map(c=>page(c,el[c]||[],mois,an)).join('');
   const manque=cls.filter(c=>!(el[c]||[]).length);
   document.getElementById('info').textContent=cls.length+' page'+(cls.length>1?'s':'')+' · '+cls.map(c=>c+' : '+((el[c]||[]).length||'vierge')).join(' · ')
-    +(manque.length?' — pas de prénoms pour '+manque.join(', ')+' : ouvre le site EPS sur cet appareil/navigateur (Élèves) pour les récupérer.':'');
+    +' · Touche une case pour cocher, « DP » pour marquer un demi-pensionnaire.'+(manque.length?' — pas de prénoms pour '+manque.join(', ')+' : ouvre le site EPS sur cet appareil/navigateur (Élèves) pour les récupérer.':'');
 }
 
+document.getElementById('feuilles').addEventListener('click',ev=>{
+  const td=ev.target.closest('td.j,td.dp'); if(!td) return;
+  const tr=td.parentNode, sec=tr.closest('section'), cl=sec.dataset.cl;
+  const mois=parseInt(document.getElementById('mois').value,10), an=parseInt(document.getElementById('an').value,10);
+  const etat=lireEtat(cl,mois,an), k=tr.dataset.k; const e=etat[k]||(etat[k]={j:[],dp:false}); e.j=e.j||[];
+  if(td.classList.contains('dp')){ e.dp=!e.dp; td.textContent=e.dp?'✓':''; tr.classList.toggle('isdp',e.dp); }
+  else{ const d=parseInt(td.dataset.d,10), i=e.j.indexOf(d); if(i<0)e.j.push(d); else e.j.splice(i,1); td.classList.toggle('on',i<0); }
+  if(!e.dp&&!e.j.length) delete etat[k];
+  try{localStorage.setItem(cleEtat(cl,mois,an),JSON.stringify(etat));}catch(x){}
+});
 const now=new Date();
 document.getElementById('mois').innerHTML=MOIS.map((m,i)=>`<option value="${i}"${i===now.getMonth()?' selected':''}>${m}</option>`).join('');
 document.getElementById('an').value=now.getFullYear();
