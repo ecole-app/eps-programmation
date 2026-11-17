@@ -3380,8 +3380,39 @@ function showPage(id,btn){
   if(id==='documents'){ docRender(); docCloudSync().then(r=>{ if(r&&r.ok&&r.recus) showToast('☁️ '+r.recus+' document'+(r.recus>1?'s':'')+' reçu'+(r.recus>1?'s':'')); docRender(); }); }
   if(id==='baremes'){const f=document.getElementById('baremesFrame');if(f&&!f.getAttribute('src')){f.addEventListener('load',()=>setTimeout(scheduleCloudSync,1500),{once:true});f.setAttribute('src','baremes.html?v='+Date.now());}}
   majBottomNav(id);
-  try{ if(location.hash!=='#'+id) history.replaceState(null,'','#'+id); }catch(e){}
+  try{ const h='#'+id; if(location.hash!==h){ if(pageCourante) history.pushState(null,'',h); else history.replaceState(null,'',h); } }catch(e){}
+  pageCourante=id;
 }
+let pageCourante=null;
+
+// ═══ BOUTON RETOUR (Samsung/Android) : ferme la fenêtre ouverte, puis revient à la page précédente ═══
+(function(){
+  const SEL='.modal-overlay.open,.fiche-modal-overlay.open';
+  const ouverts=()=>Array.from(document.querySelectorAll(SEL));
+  let empile=0, ignore=0;
+  function fermer(el){
+    const id=el.id;
+    if(id==='docAppOverlay') return docAppFermer();
+    if(id==='modalSeanceFiche') return closeSeanceFiche();
+    if(id==='ficheModalOverlay') return closeFicheModal();
+    if(el.classList.contains('modal-overlay')) return closeModal(id);
+    el.classList.remove('open'); document.body.classList.remove('modal-open');
+  }
+  function sync(){
+    const n=ouverts().length;
+    while(empile<n){ try{ history.pushState({couche:1},'',location.href); }catch(e){} empile++; }
+    if(empile>n){ // fenêtre fermée au bouton : on retire l'entrée d'historique créée à l'ouverture
+      const k=empile-n; empile=n;
+      if(history.state&&history.state.couche){ ignore+=1; try{ history.back(); }catch(e){ ignore=0; } }
+    }
+  }
+  window.addEventListener('popstate',()=>{
+    if(ignore>0){ ignore--; return; }
+    const o=ouverts();
+    if(o.length){ empile=Math.max(0,empile-1); fermer(o[o.length-1]); }
+  });
+  new MutationObserver(sync).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['class']});
+})();
 
 // ═══ TÉLÉPHONE : barre du bas, feuille « Plus », planning par classe ═══
 const PAGES_BAS=['aujourdhui','seances','baremes','appreciations'];

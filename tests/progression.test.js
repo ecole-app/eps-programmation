@@ -322,3 +322,19 @@ describe("Accès direct au tableau VMA", () => {
     await p.close();
   });
 });
+
+describe("Bouton retour Android", () => {
+  it("ferme la fenêtre ouverte puis revient à la page précédente", async () => {
+    const p = await env.page("index.html#aujourdhui");
+    const etat = () => p.evaluate(() => [document.querySelector(".page.active").id, !!document.querySelector(".modal-overlay.open,.fiche-modal-overlay.open")]);
+    await p.evaluate(() => navMobile("seances"));
+    await p.evaluate(() => docSpecialOuvrir("vma-tableau"));
+    await p.waitForTimeout(150);
+    assert.deepEqual(await etat(), ["page-seances", true]);
+    await p.goBack(); await p.waitForTimeout(250);
+    assert.deepEqual(await etat(), ["page-seances", false]);
+    await p.goBack(); await p.waitForTimeout(250);
+    assert.deepEqual(await etat(), ["page-aujourdhui", false]);
+    await p.close();
+  });
+});
