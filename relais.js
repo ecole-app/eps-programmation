@@ -268,7 +268,7 @@ function relaisOuvrir(cl, s) {
 }
 function relaisRendre() {
   const root = document.getElementById('rlRoot'); if (!root) return;
-  const onglets = [['groupes', '👥 Groupes'], ['terrain', '🏟️ Terrain'], ['zone', '📋 Zone'], ['exos', '🎬 Exercices']];
+  const onglets = [['groupes', '👥 Groupes'], ['terrain', '🏟️ Terrain'], ['zone', '✅ Notation'], ['exos', '🎬 Exercices']];
   root.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
     <label style="font-size:0.66rem;font-weight:700;color:var(--muted)">Classe<select id="rlCl" style="width:100%;padding:8px;font-size:1rem">${['6e', '5e', '4e', '3e'].map((c) => `<option${c === rlSt.cl ? ' selected' : ''}>${c}</option>`).join('')}</select></label>
     <label style="font-size:0.66rem;font-weight:700;color:var(--muted)">Séance<select id="rlS" style="width:100%;padding:8px;font-size:1rem">${Array.from({ length: RL_NSEANCES }, (_, i) => `<option value="${i + 1}"${i + 1 === rlSt.s ? ' selected' : ''}>Séance ${i + 1}</option>`).join('')}</select></label></div>
@@ -355,38 +355,118 @@ function rlTabTerrain() {
   maj();
 }
 
-/* ── Onglet Zone : fiche d'observation ── */
-const RL_ETATS = [['ok', '✓', 'Dans la zone', '#2a9d8f'], ['hors', '✗', 'Hors zone', '#c8382e'], ['tombe', '⬇', 'Tombé', '#d98a00']];
+/* ── Onglet Notation : on coche bons points et erreurs, la note vient du barème de la classe ── */
+const RL_PASS = [['ok', '✓ Bon', '2 pts', '#2a9d8f', 2], ['lim', '~ Limite', '1 pt', '#d98a00', 1], ['ko', '✗ Raté', '0 pt', '#c8382e', 0]];
+const RL_ENG = [['fond', '✓ À fond', 1], ['enc', '✓ Encourage', 1], ['rel', '✗ Relâche', 0], ['ral', '✗ Ralentit avant la fin', 0], ['des', '✗ Se désintéresse', 0]];
+function rlNum(t) { return parseFloat(String(t).replace(',', '.')); }
+function rlBareme(cl) {
+  try { return baremeNiveau(SPORTS.find((x) => x.id === 'relais'), cl); } catch (e) { return null; }
+}
+function rlCrit(b, id) { return b && b.criteres.find((c) => c.id === id); }
+// Points du temps, lus dans le tableau du barème de la classe (« 106–114 s » = de 106 inclus à 114 exclu)
+function rlPtsTemps(b, t) {
+  const c = rlCrit(b, 'temps'); if (!c || !(t > 0)) return null;
+  for (const [lib, pts] of c.table) {
+    const l = lib.replace(/\s/g, '').replace(/,/g, '.');
+    let m;
+    if ((m = l.match(/^<([\d.]+)/))) { if (t < +m[1]) return +pts; }
+    else if ((m = l.match(/^>([\d.]+)/))) { if (t >= +m[1]) return +pts; }
+    else if ((m = l.match(/^([\d.]+)[–-]([\d.]+)/))) { if (t >= +m[1] && t < +m[2]) return +pts; }
+  }
+  return null;
+}
+// Régularité : écart entre meilleur et moins bon essai valide, disqualifications (seuils lus dans le barème)
+function rlPtsRegul(b, essais) {
+  const c = rlCrit(b, 'regul'); if (!c) return null;
+  const faits = essais.filter((e) => e && (e.dq || rlNum(e.t) > 0));
+  if (faits.length < 3) return null;
+  const dq = faits.filter((e) => e.dq).length; if (dq >= 3) return 0; if (dq === 2) return 1; if (dq === 1) return 2;
+  const ts = faits.map((e) => rlNum(e.t)), ec = Math.max(...ts) - Math.min(...ts);
+  const l0 = c.table[0][0].replace(/,/g, '.'), l1 = c.table[1][0].replace(/,/g, '.');
+  const a = parseFloat((l0.match(/<\s*([\d.]+)/) || [])[1]), bb = parseFloat((l1.match(/[\d.]+\s*[–-]\s*([\d.]+)/) || [])[1]);
+  if (!(a > 0) || !(bb > 0)) return null;
+  return ec < a ? 4 : ec < bb ? 3 : 2;
+}
+function rlPtsEngage(e) {
+  if (!e) return null; const n = ['fond', 'enc', 'rel', 'ral', 'des'].filter((k) => e[k]).length; if (!n) return null;
+  if (e.des) return 1; if (e.ral) return 2; if (e.rel || !e.fond) return 3; return e.enc ? 4 : 3;
+}
+function rlBilan(cl, s, g) {
+  const d = rlLire(cl), b = rlBareme(cl), z = ((d.zone[s] || {})[g]) || {}, o = rlOrdreEffectif(d, s, g, cl);
+  const ess = z.essais || [{}, {}, {}];
+  const valides = ess.filter((e) => e && !e.dq && rlNum(e.t) > 0).map((e) => rlNum(e.t));
+  const meilleur = valides.length ? Math.min(...valides) : null;
+  const ptsT = meilleur !== null ? rlPtsTemps(b, meilleur) : (ess.filter((e) => e && e.dq).length >= 3 ? 0 : null);
+  const ptsR = rlPtsRegul(b, ess);
+  const np = Math.max(1, o.length - 1), ps = (z.p || []).slice(0, np);
+  const nbP = ps.filter(Boolean).length;
+  const somme = ps.reduce((a, x) => a + (({ ok: 2, lim: 1, ko: 0 })[x] || 0), 0);
+  const ptsP = nbP === np ? Math.round(somme / (2 * np) * 6) : null;
+  const sous = ptsP === null ? null : [Math.min(2, ptsP), Math.min(2, Math.max(0, ptsP - 2)), Math.max(0, ptsP - 4)];
+  return { d, b, z, o, meilleur, ptsT, ptsR, ptsP, sous, np, nbP, ess };
+}
 function rlTabZone() {
-  const cl = rlSt.cl, s = rlSt.s, d = rlLire(cl), el = document.getElementById('rlTab'); const ng = rlNbGroupes(d, cl);
-  const gs = Array.from({ length: ng }, (_, g) => g).filter((g) => rlMembres(d, s, g, cl).length);
+  const cl = rlSt.cl, s = rlSt.s, el = document.getElementById('rlTab');
+  const d0 = rlLire(cl), ng = rlNbGroupes(d0, cl);
+  const gs = Array.from({ length: ng }, (_, g) => g).filter((g) => rlMembres(d0, s, g, cl).length);
   if (!gs.length) { el.innerHTML = `<div class="card" style="padding:12px;font-size:0.85rem">Forme d'abord les groupes de la séance ${s}.</div>`; return; }
   if (!gs.includes(rlSt.g)) rlSt.g = gs[0];
-  const g = rlSt.g, o = rlOrdreEffectif(d, s, g, cl), z = ((d.zone[s] || {})[g]) || {};
-  const rows = o.slice(0, -1).map((n, i) => {
-    const v = (z.p || [])[i];
-    return `<div style="padding:8px 0;border-top:1px solid var(--border)"><div style="font-size:0.84rem;margin-bottom:5px"><b>Passage ${i + 1}</b> · ${rlEsc(n)} → ${rlEsc(o[i + 1])}</div><div style="display:flex;gap:6px">${RL_ETATS.map(([k, ic, l, col]) => `<button type="button" data-z="${i}|${k}" style="flex:1;border:2px solid ${col};background:${v === k ? col : 'transparent'};color:${v === k ? '#fff' : 'inherit'};border-radius:9px;padding:7px 2px;font:700 0.76rem inherit;font-family:inherit;cursor:pointer">${ic} ${l}</button>`).join('')}</div></div>`;
-  }).join('');
-  const faits = (z.p || []).filter(Boolean).length, ok = (z.p || []).filter((x) => x === 'ok').length, tot = Math.max(1, o.length - 1);
+  const g = rlSt.g, B = rlBilan(cl, s, g), d = B.d, o = B.o;
+  const chip = (on, col) => `border:2px solid ${col};background:${on ? col : 'transparent'};color:${on ? '#fff' : 'inherit'};border-radius:9px;font:700 0.74rem inherit;font-family:inherit;cursor:pointer`;
+  const pts = (v, max) => (v === null || v === undefined ? '—' : v + '/' + max);
+  const essais = [0, 1, 2].map((i) => { const e = B.ess[i] || {}; return `<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--border)"><b style="width:58px;font-size:0.82rem">Essai ${i + 1}</b><input data-t="${i}" type="number" step="0.1" inputmode="decimal" value="${rlEsc(e.t || '')}" placeholder="temps (s)" ${e.dq ? 'disabled' : ''} style="flex:1;min-width:0;padding:8px;font-size:1rem"><button type="button" data-dq="${i}" style="${chip(e.dq, '#c8382e')};padding:8px 10px">✗ Disqualifié</button></div>`; }).join('');
+  const passages = o.slice(0, -1).map((n, i) => { const v = (B.z.p || [])[i];
+    return `<div style="padding:7px 0;border-top:1px solid var(--border)"><div style="font-size:0.82rem;margin-bottom:5px"><b>Passage ${i + 1}</b> · ${rlEsc(n)} → ${rlEsc(o[i + 1])}</div><div style="display:flex;gap:6px">${RL_PASS.map(([k, l, p, col]) => `<button type="button" data-z="${i}|${k}" style="${chip(v === k, col)};flex:1;padding:7px 2px">${l}<br><small>${p}</small></button>`).join('')}</div></div>`; }).join('');
+  const eleves = o.map((n) => { const e = (B.z.eng || {})[n] || {}; const p = rlPtsEngage(e);
+    return `<div style="padding:7px 0;border-top:1px solid var(--border)"><div style="display:flex;justify-content:space-between;font-size:0.86rem;margin-bottom:5px"><b>${rlEsc(n)}</b><span style="color:var(--muted)">Engagement : <b>${pts(p, 4)}</b></span></div><div style="display:flex;gap:5px;flex-wrap:wrap">${RL_ENG.map(([k, l, bon]) => `<button type="button" data-e="${rlEsc(n)}|${k}" style="${chip(e[k], bon ? '#2a9d8f' : '#c8382e')};padding:6px 8px">${l}</button>`).join('')}</div></div>`; }).join('');
+  const recap = o.map((n) => { const p = rlPtsEngage(((B.z.eng || {})[n]) || {}); const tot = [B.ptsT, B.sous ? B.ptsP : null, p, B.ptsR]; const ok = tot.every((x) => x !== null); return `<tr><td>${rlEsc(n)}</td><td>${pts(B.ptsT, 6)}</td><td>${pts(B.ptsP, 6)}</td><td>${pts(p, 4)}</td><td>${pts(B.ptsR, 4)}</td><td><b>${ok ? tot.reduce((a, x) => a + x, 0) + '/20' : '—'}</b></td></tr>`; }).join('');
   el.innerHTML = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${gs.map((x) => `<button type="button" data-gz="${x}" style="border:2px solid ${RL_COL[x % 6]};background:${x === g ? RL_COL[x % 6] : 'var(--white,#fff)'};color:${x === g ? '#fff' : 'inherit'};border-radius:10px;padding:6px 10px;font:700 0.8rem inherit;font-family:inherit;cursor:pointer">G${x + 1}</button>`).join('')}</div>
-  <div class="card" style="padding:4px 12px">${rows}</div>
-  <label style="display:block;font-size:0.66rem;font-weight:700;color:var(--muted);margin-top:8px">Temps de l'équipe (s)<input id="rlTps" type="number" step="0.1" inputmode="decimal" value="${rlEsc(z.t || '')}" style="width:100%;padding:8px;font-size:1rem;box-sizing:border-box"></label>
-  <div class="card" style="padding:10px 12px;margin-top:8px"><div style="font-size:0.66rem;font-weight:700;color:var(--muted);text-transform:uppercase">Passages de témoin</div><div style="font-weight:800;font-size:1.2rem">${ok} / ${tot} réussis</div><div style="font-size:0.74rem;color:var(--muted)">${faits < tot ? 'Il reste ' + (tot - faits) + ' passage(s) à observer. ' : ''}Note proposée sur 6 : <b>${Math.round(6 * ok / tot)}</b> (à reporter dans le barème).</div></div>
-  <button type="button" class="btn btn-outline" id="rlImpZ" style="margin-top:8px;width:100%">🖨️ Imprimer la fiche vierge (papier)</button>`;
+  <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px">Barème ${cl} : tu coches, les points se calculent avec les seuils de cette classe. Équipe : temps, passages, régularité. Individuel : engagement.</div>
+  <div class="card" style="padding:6px 12px;margin-bottom:8px"><div style="font-size:0.66rem;font-weight:700;color:var(--muted);text-transform:uppercase;padding-top:4px">⏱ Essais de l'équipe · Temps ${pts(B.ptsT, 6)}${B.meilleur !== null ? ' (meilleur ' + B.meilleur + ' s)' : ''} · Régularité ${pts(B.ptsR, 4)}</div>${essais}<div style="font-size:0.68rem;color:var(--muted);padding:4px 0">Disqualifié : zone ratée, témoin tombé, hors couloir. L'essai ne compte pas pour toute l'équipe.</div></div>
+  <div class="card" style="padding:6px 12px;margin-bottom:8px"><div style="font-size:0.66rem;font-weight:700;color:var(--muted);text-transform:uppercase;padding-top:4px">🤝 Passages de témoin · ${pts(B.ptsP, 6)}</div>${passages}</div>
+  <div class="card" style="padding:6px 12px;margin-bottom:8px"><div style="display:flex;align-items:center;padding-top:4px"><span style="flex:1;font-size:0.66rem;font-weight:700;color:var(--muted);text-transform:uppercase">🔥 Engagement par élève</span><button type="button" id="rlToutBon" style="border:0;background:#d9efee;color:#0a5a5a;border-radius:8px;padding:5px 9px;font:700 0.7rem inherit;font-family:inherit;cursor:pointer">Tout le groupe : à fond + encourage</button></div>${eleves}</div>
+  <div class="card" style="padding:8px 10px;margin-bottom:8px;overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.76rem"><tr style="text-align:left;color:var(--muted)"><th>Élève</th><th>Temps</th><th>Passages</th><th>Engag.</th><th>Régul.</th><th>Total</th></tr>${recap}</table></div>
+  <button type="button" class="btn btn-teal" id="rlReport" style="width:100%">📥 Reporter les notes dans le barème (${cl})</button>
+  <button type="button" class="btn btn-outline" id="rlImpZ" style="margin-top:8px;width:100%">🖨️ Fiche papier d'observation</button>`;
+  const zz = () => { d.zone[s] = d.zone[s] || {}; return (d.zone[s][g] = d.zone[s][g] || { p: [], essais: [{}, {}, {}], eng: {} }); };
+  const garde = () => { const z = zz(); z.essais = z.essais || [{}, {}, {}]; z.eng = z.eng || {}; z.p = z.p || []; return z; };
   el.onclick = (e) => {
-    const b = e.target.closest('button[data-z]'), gb = e.target.closest('button[data-gz]');
+    const t = e.target, gb = t.closest('button[data-gz]'), pb = t.closest('button[data-z]'), dq = t.closest('button[data-dq]'), eb = t.closest('button[data-e]');
     if (gb) { rlSt.g = +gb.dataset.gz; rlTabZone(); return; }
-    if (!b) return; const [i, k] = b.dataset.z.split('|'); d.zone[s] = d.zone[s] || {}; const zz = d.zone[s][g] = d.zone[s][g] || { p: [], t: '' };
-    zz.p[+i] = zz.p[+i] === k ? undefined : k; rlSauver(cl, d); rlTabZone();
+    if (pb) { const [i, k] = pb.dataset.z.split('|'); const z = garde(); z.p[+i] = z.p[+i] === k ? undefined : k; }
+    else if (dq) { const z = garde(), i = +dq.dataset.dq; z.essais[i] = z.essais[i] || {}; z.essais[i].dq = !z.essais[i].dq; }
+    else if (eb) { const [n, k] = eb.dataset.e.split('|'); const z = garde(); const x = z.eng[n] = z.eng[n] || {}; x[k] = !x[k]; if (x[k] && k === 'fond') x.rel = x.ral = x.des = false; if (x[k] && (k === 'rel' || k === 'ral' || k === 'des')) x.fond = false; }
+    else if (t.closest('#rlToutBon')) { const z = garde(); o.forEach((n) => { z.eng[n] = { fond: true, enc: true }; }); }
+    else if (t.closest('#rlReport')) { rlReporter(cl, s, g); return; }
+    else if (t.closest('#rlImpZ')) { rlImprimerZone(cl, s); return; }
+    else return;
+    rlSauver(cl, d); rlTabZone();
   };
-  document.getElementById('rlTps').oninput = (e) => { d.zone[s] = d.zone[s] || {}; const zz = d.zone[s][g] = d.zone[s][g] || { p: [], t: '' }; zz.t = e.target.value; rlSauver(cl, d); };
-  document.getElementById('rlImpZ').onclick = () => rlImprimerZone(cl, s);
+  el.onchange = (e) => { const i = e.target.dataset.t; if (i === undefined) return; const z = garde(); z.essais[+i] = z.essais[+i] || {}; z.essais[+i].t = e.target.value; rlSauver(cl, d); rlTabZone(); };
+}
+// Écrit les notes dans le barème (notes-<année>.relais[classe]) puis recharge l'onglet Barèmes
+function rlReporter(cl, s, g) {
+  const B = rlBilan(cl, s, g);
+  if (B.ptsT === null || B.ptsP === null || B.ptsR === null) { showToast('Il manque le temps, les 3 essais ou les passages'); return; }
+  const sans = B.o.filter((n) => rlPtsEngage((B.z.eng || {})[n]) === null);
+  if (sans.length) { showToast('Engagement à cocher pour ' + sans[0] + (sans.length > 1 ? ' et ' + (sans.length - 1) + ' autre(s)' : '')); return; }
+  const k = 'notes-' + currentYear; let N = {}; try { N = JSON.parse(localStorage.getItem(k) || '{}'); } catch (e) {}
+  N.relais = N.relais || {}; const arr = (N.relais[cl] = N.relais[cl] || []);
+  B.o.forEach((n) => {
+    const eg = rlPtsEngage(B.z.eng[n]);
+    const e = { prenom: n, scores: { temps: B.ptsT, passage_p1: B.sous[0], passage_p2: B.sous[1], passage_p3: B.sous[2], engage: eg, regul: B.ptsR }, total: B.ptsT + B.ptsP + eg + B.ptsR, max: 20 };
+    const i = arr.findIndex((x) => x.prenom === n); if (i >= 0) arr[i] = e; else arr.push(e);
+  });
+  try { localStorage.setItem(k, JSON.stringify(N)); } catch (e) {}
+  if (typeof scheduleCloudSync === 'function') scheduleCloudSync();
+  const f = document.getElementById('baremesFrame'); if (f && f.getAttribute('src')) f.setAttribute('src', 'baremes.html?v=' + Date.now());
+  showToast('📥 ' + B.o.length + ' notes reportées dans le barème ' + cl);
 }
 function rlImprimerZone(cl, s) {
   const d = rlLire(cl), ng = rlNbGroupes(d, cl), n = d.nbEq;
   const fiche = (g) => { const o = rlOrdreEffectif(d, s, g, cl);
-    return `<div class="f"><h2>Groupe ${g + 1} · temps : ........ s</h2><table><tr><th>Passage</th><th>Qui → qui</th><th>Dans la zone</th><th>Hors zone</th><th>Tombé</th></tr>${Array.from({ length: n - 1 }, (_, i) => `<tr><td>${i + 1}</td><td>${rlEsc(o[i] || '')} → ${rlEsc(o[i + 1] || '')}</td><td>☐</td><td>☐</td><td>☐</td></tr>`).join('')}</table></div>`; };
-  docImprimerHtml(`<html><head><style>@page{size:A4 portrait;margin:10mm}h1{font-size:15pt;margin:0 0 4mm}.f{margin-bottom:6mm;break-inside:avoid}h2{font-size:11pt;margin:0 0 1.5mm}table{width:100%;border-collapse:collapse;font-size:10.5pt}th,td{border:0.3mm solid #333;padding:2mm 3mm;text-align:left}td:nth-child(n+3){text-align:center;font-size:14pt}</style></head><body><h1>Relais · ${cl} · Séance ${s} : fiche d'observation des zones</h1>${Array.from({ length: ng }, (_, g) => fiche(g)).join('')}</body></html>`);
+    return `<div class="f"><h2>Groupe ${g + 1}</h2><table><tr><th>Essai</th><th>Temps (s)</th><th>Disqualifié</th></tr>${[1, 2, 3].map((i) => `<tr><td>${i}</td><td></td><td>☐</td></tr>`).join('')}</table><table><tr><th>Passage</th><th>Qui → qui</th><th>Bon (2)</th><th>Limite (1)</th><th>Raté (0)</th></tr>${Array.from({ length: n - 1 }, (_, i) => `<tr><td>${i + 1}</td><td>${rlEsc(o[i] || '')} → ${rlEsc(o[i + 1] || '')}</td><td>☐</td><td>☐</td><td>☐</td></tr>`).join('')}</table><table><tr><th>Élève</th><th>À fond</th><th>Encourage</th><th>Relâche</th><th>Ralentit</th><th>Désintérêt</th></tr>${o.map((x) => `<tr><td>${rlEsc(x)}</td><td>☐</td><td>☐</td><td>☐</td><td>☐</td><td>☐</td></tr>`).join('')}</table></div>`; };
+  docImprimerHtml(`<html><head><style>@page{size:A4 portrait;margin:10mm}h1{font-size:14pt;margin:0 0 3mm}.f{margin-bottom:5mm;break-inside:avoid}h2{font-size:11pt;margin:0 0 1.5mm}table{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:2mm}th,td{border:0.3mm solid #333;padding:1.5mm 2.5mm;text-align:left}td:nth-child(n+3){text-align:center;font-size:12pt}</style></head><body><h1>Relais · ${cl} · Séance ${s} : fiche d'observation</h1>${Array.from({ length: ng }, (_, g) => fiche(g)).join('')}</body></html>`);
 }
 
 /* ── Onglet Exercices ── */

@@ -381,3 +381,31 @@ describe("Relais", () => {
     await p.close();
   });
 });
+
+describe("Relais : notation reliée au barème", () => {
+  it("calcule temps, régularité et engagement avec les seuils de la classe, puis reporte dans le barème", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const b6 = rlBareme("6e"), b4 = rlBareme("4e");
+      const t = [rlPtsTemps(b6, 100), rlPtsTemps(b6, 120), rlPtsTemps(b4, 100), rlPtsTemps(b4, 60)];
+      const reg = [rlPtsRegul(b6, [{ t: "110" }, { t: "112" }, { t: "113" }]), rlPtsRegul(b6, [{ t: "110" }, { t: "118" }, { t: "113" }]), rlPtsRegul(b6, [{ t: "110" }, { t: "130" }, { t: "113" }]), rlPtsRegul(b6, [{ t: "110" }, { dq: true }, { t: "113" }]), rlPtsRegul(b6, [{ dq: true }, { dq: true }, { t: "113" }])];
+      const eng = [rlPtsEngage({ fond: true, enc: true }), rlPtsEngage({ fond: true }), rlPtsEngage({ rel: true }), rlPtsEngage({ ral: true }), rlPtsEngage({ des: true }), rlPtsEngage({})];
+      const cl = "6e", noms = ["Ali", "Bob", "Cléo", "Dan"];
+      const e = JSON.parse(localStorage.getItem("eleves-" + currentYear) || "{}"); e[cl] = noms; localStorage.setItem("eleves-" + currentYear, JSON.stringify(e));
+      const d = rlLire(cl); d.groupes[1] = { Ali: 0, Bob: 0, Cléo: 0, Dan: 0 };
+      d.zone[1] = { 0: { essais: [{ t: "110" }, { t: "112" }, { t: "113" }], p: ["ok", "ok", "lim"], eng: { Ali: { fond: true, enc: true }, Bob: { fond: true, enc: true }, Cléo: { rel: true }, Dan: { fond: true } } } };
+      rlSauver(cl, d); rlSt.s = 1; rlSt.cl = cl;
+      rlReporter(cl, 1, 0);
+      const N = JSON.parse(localStorage.getItem("notes-" + currentYear)).relais["6e"];
+      return [t, reg, eng, N.length, N[0].scores, N[0].total, N[2].total];
+    });
+    assert.deepEqual(r[0], [6, 4, 5, 6]);
+    assert.deepEqual(r[1], [4, 3, 2, 2, 1]);
+    assert.deepEqual(r[2], [4, 3, 3, 2, 1, null]);
+    assert.equal(r[3], 4);
+    assert.deepEqual(r[4], { temps: 5, passage_p1: 2, passage_p2: 2, passage_p3: 1, engage: 4, regul: 4 });
+    assert.equal(r[5], 5 + 5 + 4 + 4);
+    assert.equal(r[6], 5 + 5 + 3 + 4);
+    await p.close();
+  });
+});
