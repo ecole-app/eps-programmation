@@ -1415,6 +1415,7 @@ a.da-card{text-decoration:none;color:inherit;margin-top:8px}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="baremes-data.js"></script>
 <script src="fiche-suivi.js"></script>
+<script src="relais.js"></script>
 <script src="situations-data.js"></script>
 <script>
 const allSports = {
@@ -2902,6 +2903,7 @@ const DOCS_SPECIAUX=[
   {id:'co-cartons', icone:'🎫', titre:'Cartons de poinçonnage · course d\'orientation', etat:'10 cartons par page · choisis le nombre de cases'},
   {id:'co-meons', icone:'🗺️', titre:'Carte orientation · Méons · corrigé prof (PDF)', etat:'Avec les numéros de balises · 1/3500 · A4', fichier:'docs-files/Carte-orientation-Parc-de-Meons.pdf'},
   {id:'vma-tableau', icone:'⏱️', titre:'Tableau VMA · demi-Cooper', etat:'Tape la distance de chaque élève · la VMA se calcule seule'},
+  {id:'relais', icone:'🏃', titre:'Relais · groupes, terrain, exercices animés', etat:'Groupes A/B/C équilibrés · ordre de passage · fiche de zone'},
   {id:'prog-sports', icone:'📚', titre:'Programmation des sports (fiches APSA)', etat:'Touche les fiches à ajouter · un seul PDF à envoyer'},
   {id:'renfo-suivi', icone:'💪', titre:'Fiche de suivi · renforcement musculaire', etat:'Une page par groupe · 10 exercices · séances + évaluation'},
   {id:'suivi-cl', icone:'🏃', titre:'Fiche de suivi élève · course longue', etat:'Une page par élève · choisis la classe et le nombre de séances'}
@@ -2924,7 +2926,7 @@ function docSpecialOuvrir(id){
   const d=DOCS_SPECIAUX.find(x=>x.id===id); if(!d) return;
   docSpecialId=id;
   document.getElementById('docAppTitre').textContent=d.icone+' '+d.titre;
-  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():id==='renfo-suivi'?renfoSuiviHtml():id==='vma-tableau'?vmaHtml():id==='co-cartons'?coCartonsHtml():suiviClHtml();
+  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():id==='renfo-suivi'?renfoSuiviHtml():id==='vma-tableau'?vmaHtml():id==='relais'?relaisHtml():id==='co-cartons'?coCartonsHtml():suiviClHtml();
   const b=document.getElementById('docAppImpBtn'); b.style.display='none';
   document.getElementById('docAppOverlay').classList.add('open');
   document.getElementById('docAppOverlay').classList.toggle('vma-mode',id==='vma-tableau');
@@ -2933,6 +2935,7 @@ function docSpecialOuvrir(id){
   if(id==='prog-sports') psRendre();
   if(id==='renfo-suivi') renfoInfo();
   if(id==='vma-tableau') vmaRendre();
+  if(id==='relais') relaisRendre();
 }
 
 
@@ -3612,7 +3615,7 @@ function installPWA(){
 // (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
 // jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
 function isEpsKey(k){
-  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma|adapte)-/.test(k);
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma|adapte|relais)-/.test(k);
 }
 function exportAllData(){
   const data = {};
@@ -4322,6 +4325,7 @@ function renderAujourdhui(){
           <div style="font-size:0.74rem;color:var(--muted)">${r.slot.debut}–${r.slot.fin} · ${r.cycle.name} · Séance ${s.num}/${r.total} (${semLabel} <a href="javascript:void(0)" onclick="calibrerSemaine('${r.cycle.id}',${r.rawWeek})" title="Corriger le numéro de semaine" style="color:var(--muted);text-decoration:underline">✏️</a>)</div>
         </div>
         ${boutonVma(findSportData(r.item.apsa),r.cl,col)}
+        ${boutonRelais(findSportData(r.item.apsa),r.cl,col,s.num)}
         ${s.type==='eval'?boutonBareme(findSportData(r.item.apsa),r.cl,col,true):''}
         <button onclick="openSeanceFiche('${r.key}')" title="Fiche de préparation" style="flex-shrink:0;background:${col};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">📄 Fiche</button>
       </div>

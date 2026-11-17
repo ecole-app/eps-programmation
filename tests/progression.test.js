@@ -174,7 +174,7 @@ describe("Documents préparés", () => {
   it("la séance de tests 6e, les attendus 2027 et le mémo VMA s'ouvrent depuis Documents", async () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
     await p.click(".nav-tab[onclick*=\"'documents'\"]");
-    assert.equal(await p.locator("button.da-card").count(), 8);
+    assert.equal(await p.locator("button.da-card").count(), 9);
     assert.equal(await p.locator("a.da-card").count(), 5);
     await p.evaluate(() => docAppOuvrir("tests-6e"));
     assert.match(await p.locator("#docAppBody").textContent(), /navette Luc-Léger/);
@@ -335,6 +335,49 @@ describe("Bouton retour Android", () => {
     assert.deepEqual(await etat(), ["page-seances", false]);
     await p.goBack(); await p.waitForTimeout(250);
     assert.deepEqual(await etat(), ["page-aujourdhui", false]);
+    await p.close();
+  });
+});
+
+describe("Relais", () => {
+  it("équilibre les groupes selon les niveaux A/B/C", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const noms = ["a1", "a2", "a3", "a4", "b1", "b2", "b3", "b4", "c1", "c2", "c3", "c4"];
+      const niv = {}; noms.forEach((n) => (niv[n] = n[0].toUpperCase()));
+      const g = rlEquilibrer(noms, niv, 3, null, false);
+      const cpt = [0, 1, 2].map((i) => noms.filter((n) => g[n] === i).map((n) => n[0]).sort().join(""));
+      const ordre = rlOrdrePropose(["a1", "c1", "b1"], niv);
+      return [cpt, ordre];
+    });
+    assert.deepEqual(r[0].map((x) => x.length), [4, 4, 4]);
+    assert.ok(r[0].every((x) => x.includes("a") && x.includes("c")));
+    assert.deepEqual(r[1], ["c1", "b1", "a1"]);
+    await p.close();
+  });
+  it("ouvre l'écran, forme des groupes et propose les exercices animés", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const cl = "6e"; const noms = ["Ali", "Bob", "Cléo", "Dan", "Eva", "Fay", "Gus", "Hal"];
+      const e = JSON.parse(localStorage.getItem("eleves-" + currentYear) || "{}"); e[cl] = noms; localStorage.setItem("eleves-" + currentYear, JSON.stringify(e));
+      relaisOuvrir(cl, 2);
+      const ouvert = document.getElementById("docAppOverlay").classList.contains("open");
+      document.getElementById("rlEq").click();
+      const d = rlLire(cl);
+      const n = Object.keys(d.groupes[2] || {}).length;
+      document.querySelector('#rlTabs button[data-tab="exos"]').click();
+      const canv = document.querySelectorAll("#rlTab canvas").length;
+      document.querySelector('#rlTabs button[data-tab="zone"]').click();
+      const btn = document.querySelectorAll("#rlTab button[data-z]").length;
+      return [ouvert, n, canv > 0, btn > 0, boutonRelais({ id: "relais" }, "6e", "#000", 1).includes("Relais"), boutonRelais({ id: "badminton" }, "6e", "#000", 1)];
+    });
+    assert.deepEqual(r, [true, 8, true, true, true, ""]);
+    await p.close();
+  });
+  it("génère un schéma à partir du texte", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => [rlGenerer("Navette", "équipes de 3", "").motif, rlGenerer("Zone de 20 m", "", "").motif, rlGenerer("Relais", "tour du terrain", "").motif]);
+    assert.deepEqual(r, ["navette", "zone", "tour"]);
     await p.close();
   });
 });
