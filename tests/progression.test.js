@@ -292,3 +292,24 @@ describe("Notation par numéro d'élève", () => {
     await p.close();
   });
 });
+
+describe("Barème adapté (PAI/PAP)", () => {
+  it("lit « Prénom, G, A » et sauvegarde les élèves adaptés", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const e = parseLigneEleve("Sarah, F, A"), f = parseLigneEleve("Amine, G");
+      openElevesModal();
+      document.getElementById("el_5e").value = "Amine, G\nSarah, F";
+      elChips("5e"); elToggleAdapte("5e", 1);
+      const ligne = document.getElementById("el_5e").value;
+      saveElevesModal();
+      return [e, f.adapte, ligne, getAdaptes(currentYear)["5e"], getEleves(currentYear)["5e"]];
+    });
+    assert.deepEqual(r[0], { nom: "Sarah", genre: "F", adapte: true });
+    assert.equal(r[1], false);
+    assert.equal(r[2], "Amine, G\nSarah, F, A");
+    assert.deepEqual(r[3], ["Sarah"]);
+    assert.deepEqual(r[4], ["Amine", "Sarah"]);
+    await p.close();
+  });
+});

@@ -541,6 +541,7 @@ function buildPanelHTML(s) {
             placeholder="ex : Karim ou 7" autocomplete="off" list="${s.id}-${cyc}-noms"
             oninput="checkReady('${s.id}','${cyc}')"/>
           <datalist id="${s.id}-${cyc}-noms" data-cyc="${cyc}"></datalist>
+          <div id="${s.id}-${cyc}-adapte" hidden style="margin-top:8px;background:rgba(217,138,0,.16);color:#8a5200;border-radius:9px;padding:8px 11px;font-size:.82rem;font-weight:700">♿ Barème adapté pour cet élève (PAI/PAP)</div>
           ${saisieCriteres}
           <div class="divider"></div>
           <div class="total-row">
@@ -691,6 +692,8 @@ function checkReady(sid, cyc) {
   });
   const btn=document.getElementById(`${sid}-${cyc}-valider`);
   if(btn) btn.disabled=!(prenomOk&&allFilled);
+  const ban=document.getElementById(`${sid}-${cyc}-adapte`);
+  if(ban) ban.hidden=!estAdapte(cyc, resoudrePrenom(cyc, document.getElementById(`${sid}-${cyc}-prenom`)?.value));
   ['abs','nn'].forEach(function(k){ var b=document.getElementById(sid+'-'+cyc+'-'+k); if(b) b.disabled=!prenomOk; });
 }
 // Numéro dans la liste de la classe : « 7 » → 7e élève de la liste (son nom si la liste est remplie, sinon « Élève 7 »).
@@ -767,7 +770,7 @@ function renderListe(sid, cyc) {
     const stLbl=e.statut?STATUT_LBL[e.statut]:null;
     item.innerHTML=`
       <div style="flex:1;min-width:0">
-        <div class="eleve-prenom">${e.prenom}</div>
+        <div class="eleve-prenom">${e.prenom}${estAdapte(cyc,e.prenom)?' <span title="Barème adapté" style="font-size:.7rem;background:rgba(217,138,0,.16);color:#8a5200;border-radius:99px;padding:1px 8px;font-weight:700">♿ adapté</span>':''}</div>
         <div class="eleve-detail">${stLbl?(e.statut==='abs'?'Absent(e)':'Non noté(e)'):detail}</div>
       </div>
       <div style="display:flex;align-items:center">
@@ -978,6 +981,10 @@ function anneeCourante(){
 }
 function getListeEleves(cl){
   try{const y=anneeCourante();if(!y)return [];return (JSON.parse(localStorage.getItem('eleves-'+y)||'{}')[cl])||[];}catch(e){return [];}
+}
+function estAdapte(cyc, prenom){
+  try{ const y=anneeCourante(); if(!y||!prenom) return false;
+    const a=(JSON.parse(localStorage.getItem('adapte-'+y)||'{}')[clDeCyc(cyc)])||[]; return a.indexOf(prenom)>=0; }catch(e){ return false; }
 }
 const CLASSES_CYC={c3:['6e'],c4:['5e','4e','3e']};
 function openFichePapier(sid, cyc){

@@ -2475,6 +2475,18 @@ function getGenres(y){
   try{ return JSON.parse(localStorage.getItem('genres-'+y)||'{}'); }
   catch(e){ return {}; }
 }
+// Élèves à barème adapté (PAI/PAP) : seulement le prénom, jamais de détail médical.
+function getAdaptes(y){
+  try{ return JSON.parse(localStorage.getItem('adapte-'+y)||'{}'); }
+  catch(e){ return {}; }
+}
+// Une ligne de la liste : « Prénom, F, A » → nom, genre (F/G/M), adapté (A).
+function parseLigneEleve(l){
+  const parts=String(l).split(/\s*[,;]\s*/).map(x=>x.trim()).filter(Boolean);
+  const nom=parts.shift()||''; let genre='', adapte=false;
+  parts.forEach(x=>{ if(/^[FfGgMm]$/.test(x)) genre=/[Ff]/.test(x)?'F':'M'; else if(/^(a|adapt[ée]?)$/i.test(x)) adapte=true; });
+  return {nom,genre,adapte};
+}
 // Pré-remplissage unique de la liste de 5e (basket) avec le genre ; ne touche rien si la 5e est déjà remplie.
 function seedEleves5e(){
   try{
@@ -2516,8 +2528,9 @@ function renderElevesList(){
   const list=document.getElementById('elevesList');
   if(!list)return;
   const el=getEleves(currentYear);
-  list.innerHTML=classes.map(cl=>{const n=(el[cl]||[]).length;
-    return `<div class="creneau-item"><div class="creneau-classe">${cl}</div><div class="creneau-detail"><span class="ctag">${n?n+' élève'+(n>1?'s':''):'à saisir'}</span></div></div>`;}).join('');
+  const ad=getAdaptes(currentYear);
+  list.innerHTML=classes.map(cl=>{const n=(el[cl]||[]).length, na=(ad[cl]||[]).length;
+    return `<div class="creneau-item"><div class="creneau-classe">${cl}</div><div class="creneau-detail"><span class="ctag">${n?n+' élève'+(n>1?'s':''):'à saisir'}</span>${na?` <span class="ctag" style="background:rgba(217,138,0,.16);color:#a86500">${na} barème adapté</span>`:''}</div></div>`;}).join('');
 }
 // Bascule : 6e→5e, 5e→4e, 4e→3e ; les 3e quittent le collège, la 6e est à saisir.
 function previousYearWithEleves(){
@@ -2540,6 +2553,18 @@ function elevesBascule(){
   });
   showToast('Bascule depuis '+py+' : retire les partants, ajoute les nouveaux, puis Sauvegarde');
 }
+function elLignes(cl){ return (document.getElementById('el_'+cl)?.value||'').split('\n').map(x=>x.trim()).filter(Boolean); }
+function elChips(cl){
+  const box=document.getElementById('elchips_'+cl); if(!box) return;
+  const L=elLignes(cl).map(parseLigneEleve);
+  box.innerHTML=L.length?L.map((e,i)=>`<button type="button" onclick="elToggleAdapte('${cl}',${i})" aria-pressed="${e.adapte}" style="border:1.5px solid ${e.adapte?'#d98a00':'var(--border)'};background:${e.adapte?'rgba(217,138,0,.16)':'var(--white,#fff)'};color:inherit;border-radius:8px;padding:5px 9px;font-size:0.78rem;cursor:pointer">${e.adapte?'♿ ':''}${escHtml(e.nom)}</button>`).join(''):'<span style="font-size:0.72rem;color:var(--muted)">Saisis d’abord les prénoms.</span>';
+}
+function elToggleAdapte(cl,i){
+  const ta=document.getElementById('el_'+cl); const lines=ta.value.split('\n'); let k=-1;
+  for(let j=0;j<lines.length;j++){ if(!lines[j].trim()) continue; k++; if(k!==i) continue;
+    const e=parseLigneEleve(lines[j]); lines[j]=e.nom+(e.genre?', '+e.genre:'')+(e.adapte?'':', A'); break; }
+  ta.value=lines.join('\n'); elChips(cl);
+}
 function updateElevesCount(cl){
   const v=(document.getElementById('el_'+cl)?.value||'').split('\n').map(x=>x.trim()).filter(Boolean);
   const c=document.getElementById('elc_'+cl); if(c) c.textContent=v.length+' élève'+(v.length>1?'s':'');
@@ -2551,23 +2576,26 @@ function openElevesModal(){
   ${py?`<button class="btn btn-outline" style="margin-bottom:10px" onclick="elevesBascule()">⬆️ Bascule depuis ${py} (6e→5e, 5e→4e, 4e→3e)</button>`:''}`+
   classes.map(cl=>`<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:var(--teal-d);margin-bottom:6px"><span>${cl}</span><span id="elc_${cl}" style="font-weight:600;color:var(--muted)"></span></div>
-      <textarea class="form-input" id="el_${cl}" rows="6" style="width:100%;box-sizing:border-box;resize:vertical" oninput="updateElevesCount('${cl}')" placeholder="Amine, G&#10;Sarah, F&#10;...">${escHtml((el[cl]||[]).map(n=>{const g=(gen[cl]||{})[n];return g?n+', '+g:n;}).join('\n'))}</textarea>
+      <textarea class="form-input" id="el_${cl}" rows="6" style="width:100%;box-sizing:border-box;resize:vertical" oninput="updateElevesCount('${cl}');elChips('${cl}')" placeholder="Amine, G&#10;Sarah, F, A&#10;...">${escHtml((el[cl]||[]).map(n=>{const g=(gen[cl]||{})[n]; const a=((getAdaptes(currentYear)[cl])||[]).includes(n); return n+(g?', '+g:'')+(a?', A':'');}).join('\n'))}</textarea>
+      <div style="font-size:0.7rem;color:var(--muted);margin:6px 0 4px">Touche un prénom pour marquer un <b>barème adapté</b> (PAI/PAP) :</div>
+      <div id="elchips_${cl}" style="display:flex;flex-wrap:wrap;gap:5px"></div>
     </div>`).join('');
-  classes.forEach(updateElevesCount);
+  classes.forEach(updateElevesCount); classes.forEach(elChips);
   document.getElementById('modalEleves').classList.add('open');hideSidebarBtn();
 }
 function saveElevesModal(){
-  const obj={}, gen={};
+  const obj={}, gen={}, ada={};
   classes.forEach(cl=>{
-    obj[cl]=[]; gen[cl]={};
-    (document.getElementById('el_'+cl)?.value||'').split('\n').map(x=>x.trim()).filter(Boolean).forEach(l=>{
-      const m=l.match(/^(.*?)\s*[,;]\s*([FfGgMm])$/);
-      const nom=m?m[1].trim():l; if(!nom) return;
-      obj[cl].push(nom);
-      if(m) gen[cl][nom]=/[Ff]/.test(m[2])?'F':'M';
+    obj[cl]=[]; gen[cl]={}; ada[cl]=[];
+    elLignes(cl).forEach(l=>{
+      const e=parseLigneEleve(l); if(!e.nom) return;
+      obj[cl].push(e.nom);
+      if(e.genre) gen[cl][e.nom]=e.genre;
+      if(e.adapte) ada[cl].push(e.nom);
     });
   });
   localStorage.setItem('genres-'+currentYear,JSON.stringify(gen));
+  localStorage.setItem('adapte-'+currentYear,JSON.stringify(ada));
   saveEleves(currentYear,obj);
   closeModal('modalEleves');renderElevesList();rafraichirIframesEleves();
   showToast('✅ Élèves sauvegardés !');
@@ -3545,7 +3573,7 @@ function installPWA(){
 // (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
 // jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
 function isEpsKey(k){
-  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma)-/.test(k);
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma|adapte)-/.test(k);
 }
 function exportAllData(){
   const data = {};
