@@ -1417,6 +1417,7 @@ a.da-card{text-decoration:none;color:inherit;margin-top:8px}
 <script src="fiche-suivi.js"></script>
 <script src="relais.js"></script>
 <script src="basket.js"></script>
+<script src="badminton.js"></script>
 <script src="situations-data.js"></script>
 <script>
 const allSports = {
@@ -1491,7 +1492,7 @@ const SPORTS_DATA = [
   {id:"ultimate",nom:"Ultimate",emoji:"🥏",ca:"CA4",famille:"Sports collectifs",seances:"10",fond:"Sport collectif sans contact joué avec un disque. L'auto-arbitrage est fondamental.",pb:"Gérer la contradiction entre progresser vers la zone d'en-but TOUT EN ne pouvant pas courir avec le disque.",materiel:"Disques ultimate, plots, dossards",temporel:"10 séances",espace:"Terrain extérieur",effectif:"Équipes de 5–7",afc1:"Lancer et réceptionner le disque avec précision.",afc2:"Construire une attaque collective.",afc3:"Auto-arbitrage. Spirit of the game.",ciblage:"COMPRENDRE LES PRINCIPES DU JEU SANS CONTACT ET DE L'AUTO-ARBITRAGE.",epreuve:"Tournoi 5v5. 3 matchs de 8 minutes.",axes:["Technique de lancer","Réception","Démarquage","Tactique","Tournoi"],bareme:[{pts:"5 pts",label:"Performance",detail:"Points marqués"},{pts:"7 pts",label:"Jeu collectif",detail:"Passes, progression"},{pts:"5 pts",label:"Spirit",detail:"Auto-arbitrage"},{pts:"3 pts",label:"Observation",detail:"Grille"}]},
   {id:"ballon-prisonnier",nom:"Ballon prisonnier",emoji:"🎯",ca:"CA4",famille:"Sports collectifs",seances:"8–10",fond:"Jeu collectif d'opposition où deux équipes cherchent à éliminer les adversaires avec le ballon.",pb:"Gérer la contradiction entre éliminer l'adversaire TOUT EN évitant d'être touché.",materiel:"Ballons mousse, plots, dossards",temporel:"8–10 séances",espace:"Gymnase ou extérieur",effectif:"Équipes de 6–10",afc1:"Lancer avec précision et esquiver.",afc2:"Organiser l'équipe.",afc3:"Respecter les règles. Arbitrer.",ciblage:"DÉVELOPPER LA RÉACTIVITÉ ET LA COOPÉRATION.",epreuve:"Tournoi 3 manches de 5 minutes.",axes:["Lancer","Esquive","Organisation","Libération","Tournoi"],bareme:[{pts:"5 pts",label:"Performance",detail:"Victoires"},{pts:"7 pts",label:"Stratégie",detail:"Organisation"},{pts:"4 pts",label:"Technique",detail:"Lancers, esquive"},{pts:"4 pts",label:"Rôles",detail:"Arbitrage"}]},
   {id:"rugby",nom:"Rugby à 7",emoji:"🏉",ca:"CA4",famille:"Sports collectifs",seances:"10–12",fond:"Version courte du rugby où deux équipes s'affrontent sur un terrain complet.",pb:"Gérer la contradiction entre avancer collectivement TOUT EN conservant le ballon.",materiel:"Ballons ovales, plots, dossards",temporel:"10–12 séances",espace:"Terrain extérieur",effectif:"Équipes de 5–7",afc1:"Passer en arrière pour faire avancer l'équipe.",afc2:"Créer des surnombres en attaque.",afc3:"Respecter les règles. Arbitrer.",ciblage:"UTILISER LE SURNOMBRE POUR CRÉER DES ESPACES ET APLATIR.",epreuve:"Tournoi 5v5. Matchs 7 minutes. Toucher-plaquage.",axes:["Technique de passe","Soutien","Surnombres","Défense","Tournoi"],bareme:[{pts:"5 pts",label:"Performance",detail:"Essais"},{pts:"8 pts",label:"Jeu collectif",detail:"Passes, soutiens"},{pts:"4 pts",label:"Règles",detail:"Respect"},{pts:"3 pts",label:"Observation",detail:"Grille"}]},
-  {id:"badminton",nom:"Badminton",emoji:"🏸",ca:"CA4",famille:"Raquettes",seances:"10–12",fond:"Sport de raquette où deux joueurs s'affrontent en envoyant le volant dans le camp adverse.",pb:"Gérer la contradiction entre placer le volant loin TOUT EN maintenant sa propre position optimale.",materiel:"Raquettes, volants, filet",temporel:"10–12 séances",espace:"Gymnase avec filets",effectif:"Simple et double",afc1:"Réaliser des frappes variées. Se replacer au centre.",afc2:"Exploiter les espaces adverses.",afc3:"Arbitrer en autonomie.",ciblage:"EXPLOITER LES ESPACES ADVERSES PAR LA VARIÉTÉ DES FRAPPES.",epreuve:"Tournoi simple et double. 15 points.",axes:["Frappes de base","Replacement","Construction échange","Double","Tournoi"],bareme:[{pts:"6 pts",label:"Performance",detail:"Résultats matchs"},{pts:"7 pts",label:"Technique",detail:"Variété, précision"},{pts:"4 pts",label:"Replacement",detail:"Retour centre"},{pts:"3 pts",label:"Arbitrage",detail:"Règles"}]},
+  {id:"badminton",nom:"Badminton",emoji:"🏸",ca:"CA4",famille:"Raquettes",seances:"10–12",fond:"Sport de raquette où deux joueurs s'affrontent en envoyant le volant dans le camp adverse.",pb:"Gérer la contradiction entre placer le volant loin TOUT EN maintenant sa propre position optimale.",materiel:"Raquettes, volants, filet",temporel:"10–12 séances",espace:"Gymnase avec filets",effectif:"Simple",afc1:"Réaliser des frappes variées. Se replacer au centre.",afc2:"Exploiter les espaces adverses.",afc3:"Arbitrer en autonomie.",ciblage:"EXPLOITER LES ESPACES ADVERSES PAR LA VARIÉTÉ DES FRAPPES.",epreuve:"Tournoi en simple. 15 points.",axes:["Frappes de base","Replacement","Construction échange","Jeu en simple","Tournoi"],bareme:[{pts:"6 pts",label:"Performance",detail:"Résultats matchs"},{pts:"7 pts",label:"Technique",detail:"Variété, précision"},{pts:"4 pts",label:"Replacement",detail:"Retour centre"},{pts:"3 pts",label:"Arbitrage",detail:"Règles"}]},
   {id:"tennis-table",nom:"Tennis de table",emoji:"🏓",ca:"CA4",famille:"Raquettes",seances:"10",fond:"Sport de raquette rapide sur table séparée par un filet.",pb:"Gérer la contradiction entre frapper fort TOUT EN contrôlant la balle.",materiel:"Tables, raquettes, balles",temporel:"10 séances",espace:"Salle avec tables",effectif:"Duels",afc1:"Frappes coup droit et revers avec contrôle.",afc2:"Construire des échanges en variant effets.",afc3:"Arbitrer et gérer le score en autonomie.",ciblage:"CONSTRUIRE L'ÉCHANGE PAR LA RÉGULARITÉ ET LA VARIATION.",epreuve:"Tournoi simple 11 points, format suédois.",axes:["Coup droit et revers","Régularité","Effets","Construction","Tournoi"],bareme:[{pts:"6 pts",label:"Performance",detail:"Résultats"},{pts:"6 pts",label:"Régularité",detail:"Échanges construits"},{pts:"5 pts",label:"Variété",detail:"Effets"},{pts:"3 pts",label:"Arbitrage",detail:"Score"}]},
   {id:"acrosport",nom:"Acrosport",emoji:"🤸",ca:"CA3",famille:"Gym / Renfo",seances:"10–12",fond:"Activité gymnique collective où des groupes créent des figures acrobatiques et chorégraphiques.",pb:"Gérer la contradiction entre prise de risque dans les figures TOUT EN garantissant la sécurité.",materiel:"Tapis de sol, tapis de réception, fiches de juge, tablette pour filmer",temporel:"10–12 séances",espace:"Gymnase avec tapis",effectif:"Groupes de 3–4",afc1:"Réaliser des figures à 3 ou 4.",afc2:"Composer et mémoriser un enchaînement.",afc3:"Respecter les règles de sécurité.",ciblage:"CRÉER UNE PRESTATION ACROBATIQUE COLLECTIVE MAÎTRISÉE ET ESTHÉTIQUE.",epreuve:"Présentation devant la classe (2–3 minutes).",axes:["Sécurité et rôles","Figures de base","Construction enchaînement","Liaisons","Présentation"],bareme:[{pts:"6 pts",label:"Difficulté",detail:"Niveau figures"},{pts:"6 pts",label:"Exécution",detail:"Tenue 3s"},{pts:"5 pts",label:"Composition",detail:"Liaisons, artistique"},{pts:"3 pts",label:"Sécurité",detail:"Parades"}]},
   {id:"renfo",nom:"Renfo musculaire",emoji:"💪",ca:"CA1",famille:"Gym / Renfo",seances:"10",fond:"Le renforcement musculaire développe la conscience corporelle et les bases de l'entretien physique.",pb:"Gérer la contradiction entre se pousser TOUT EN respectant son intégrité physique.",materiel:"Tapis de sol, élastiques, fiches LitoBox (haut du corps #771, bas du corps #801, tout le corps #750 / #751)",temporel:"10 séances",espace:"Gymnase (poids de corps)",effectif:"Groupes de 2 ou plus",afc1:"Réaliser les exercices avec la bonne technique.",afc2:"Suivre et respecter le programme de sa fiche en groupe.",afc3:"Observer et corriger son camarade.",ciblage:"S'ENTRAÎNER EN SÉCURITÉ ; CONSTRUIRE UN PROGRAMME ET MESURER SES PROGRÈS.",epreuve:"Circuit de 10 exercices évalués (3 haut du corps, 3 bas du corps, 4 tout le corps) sur la fiche du groupe. Fiche de progression.",axes:["Échauffement","Apprentissage","Programme","Circuit","Bilan"],bareme:[{pts:"5 pts",label:"Technique",detail:"Qualité exécution"},{pts:"5 pts",label:"Réalisation fiche",detail:"Exercices du groupe respectés"},{pts:"5 pts",label:"Progrès",detail:"Amélioration"},{pts:"5 pts",label:"Échauffement",detail:"Autonome"}]},
@@ -2877,19 +2878,19 @@ const DOCS_APP = [
 function docAppRender(){
   const box=document.getElementById('docAppListe'); if(!box) return;
   const RAPPORTS=[{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
-  const CAT={relais:'🏃 Relais',basket:'🏀 Basket-ball',
+  const CAT={relais:'🏃 Relais',basket:'🏀 Basket-ball',badminton:'🏸 Badminton',
     'vma-tableau':'⏱️ Course longue et demi-fond','suivi-cl':'⏱️ Course longue et demi-fond','memo-vma':'⏱️ Course longue et demi-fond',
     'co-meons-cachee':'🧭 Course d\'orientation','co-meons':'🧭 Course d\'orientation','co-cartons':'🧭 Course d\'orientation',
     'renfo-suivi':'💪 Renforcement musculaire','renfo-word':'💪 Renforcement musculaire'};
-  const ORDRE=['🏀 Basket-ball','🏃 Relais','⏱️ Course longue et demi-fond','🧭 Course d\'orientation','💪 Renforcement musculaire','📚 Programmation et programmes'];
+  const ORDRE=['🏀 Basket-ball','🏸 Badminton','🏃 Relais','⏱️ Course longue et demi-fond','🧭 Course d\'orientation','💪 Renforcement musculaire','📚 Programmation et programmes'];
   const carte=(d,lien)=>{
     const c=`<span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span>`;
     return lien?`<a class="da-card" href="${lien}" target="_blank" rel="noopener">${c}</a>`:`<button type="button" class="da-card" onclick="${d.clic}">${c}</button>`;
   };
   const items=[];
-  DOCS_SPECIAUX.forEach(d=>items.push({cat:CAT[d.id]||ORDRE[5],h:d.fichier?carte(d,d.fichier):carte(Object.assign({},d,{clic:`docSpecialOuvrir('${d.id}')`}))}));
-  DOCS_APP.forEach(d=>items.push({cat:CAT[d.id]||ORDRE[5],h:carte(Object.assign({},d,{clic:`docAppOuvrir('${d.id}')`}))}));
-  RAPPORTS.forEach(r=>items.push({cat:ORDRE[5],h:`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>${r.s||'Rapport Claude · s\'ouvre dans un nouvel onglet'}</small></span><span class="da-go">›</span></a>`}));
+  DOCS_SPECIAUX.forEach(d=>items.push({cat:CAT[d.id]||ORDRE[6],h:d.fichier?carte(d,d.fichier):carte(Object.assign({},d,{clic:`docSpecialOuvrir('${d.id}')`}))}));
+  DOCS_APP.forEach(d=>items.push({cat:CAT[d.id]||ORDRE[6],h:carte(Object.assign({},d,{clic:`docAppOuvrir('${d.id}')`}))}));
+  RAPPORTS.forEach(r=>items.push({cat:ORDRE[6],h:`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>${r.s||'Rapport Claude · s\'ouvre dans un nouvel onglet'}</small></span><span class="da-go">›</span></a>`}));
   box.innerHTML=ORDRE.filter(c=>items.some(i=>i.cat===c)).map(c=>`<div class="da-sec"><div class="da-sec-t">${c}</div><div class="da-liste">${items.filter(i=>i.cat===c).map(i=>i.h).join('')}</div></div>`).join('');
 }
 function docAppOuvrir(id){
@@ -2918,6 +2919,7 @@ const DOCS_SPECIAUX=[
   {id:'vma-tableau', icone:'⏱️', titre:'Tableau VMA · demi-Cooper', etat:'Tape la distance de chaque élève · la VMA se calcule seule'},
   {id:'relais', icone:'🏃', titre:'Relais · groupes, terrain, exercices animés', etat:'Groupes A/B/C équilibrés · ordre de passage · fiche de zone'},
   {id:'basket', icone:'🏀', titre:'Basket · équipes, tournoi, notation', etat:'Équipes A/B/C · calendrier et classement · observation par cases'},
+  {id:'badminton', icone:'🏸', titre:'Badminton · tournoi montante-descendante, notation', etat:'Terrain atteint = Performance · observation par cases'},
   {id:'prog-sports', icone:'📚', titre:'Programmation des sports (fiches APSA)', etat:'Touche les fiches à ajouter · un seul PDF à envoyer'},
   {id:'renfo-suivi', icone:'💪', titre:'Fiche de suivi · renforcement musculaire', etat:'Une page par groupe · 10 exercices · séances + évaluation'},
   {id:'suivi-cl', icone:'🏃', titre:'Fiche de suivi élève · course longue', etat:'Une page par élève · choisis la classe et le nombre de séances'}
@@ -2940,7 +2942,7 @@ function docSpecialOuvrir(id){
   const d=DOCS_SPECIAUX.find(x=>x.id===id); if(!d) return;
   docSpecialId=id;
   document.getElementById('docAppTitre').textContent=d.icone+' '+d.titre;
-  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():id==='renfo-suivi'?renfoSuiviHtml():id==='vma-tableau'?vmaHtml():id==='relais'?relaisHtml():id==='basket'?basketHtml():id==='co-cartons'?coCartonsHtml():suiviClHtml();
+  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():id==='renfo-suivi'?renfoSuiviHtml():id==='vma-tableau'?vmaHtml():id==='relais'?relaisHtml():id==='basket'?basketHtml():id==='badminton'?badmintonHtml():id==='co-cartons'?coCartonsHtml():suiviClHtml();
   const b=document.getElementById('docAppImpBtn'); b.style.display='none';
   document.getElementById('docAppOverlay').classList.add('open');
   document.getElementById('docAppOverlay').classList.toggle('vma-mode',id==='vma-tableau');
@@ -2951,6 +2953,7 @@ function docSpecialOuvrir(id){
   if(id==='vma-tableau') vmaRendre();
   if(id==='relais') relaisRendre();
   if(id==='basket') basketRendre();
+  if(id==='badminton') badmintonRendre();
 }
 
 
@@ -3630,7 +3633,7 @@ function installPWA(){
 // (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
 // jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
 function isEpsKey(k){
-  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma|adapte|relais|basket)-/.test(k);
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma|adapte|relais|basket|bad)-/.test(k);
 }
 function exportAllData(){
   const data = {};
@@ -3858,6 +3861,7 @@ const THEMES_SEANCES = {
     rugby: ["Découverte, règles, manipulation du ballon ovale","Passe en arrière, progression collective","Toucher-plaquage, règle du hors-jeu","Créer le surnombre, jeu à 3","Soutien du porteur de balle","Défense en ligne, replacement","Tournoi 5v5"],
   },
   '5e': {
+    badminton: ["Découverte, prise en main, service","Frappes de base (clear, amorti)","Replacement au centre","Construction de l'échange en simple","Tournoi en simple"],
     acrosport: ["Découverte, sécurité, rôles (porteur, voltigeur, pareur)","Figures à 2 puis à 3, montées et descentes en sécurité","Figures de niveau 2, tenue 3 secondes","Liaisons entre figures, comptes de 8 sans musique","Construire un enchaînement de 4 figures","Présenter et juger avec la fiche de juge","Répétition générale, derniers réglages","Présentation évaluée"],
     basket: ["Découverte, règles","Travail de passe","Dribble et déplacement","Dribble et passe combiné","Tir en course + dribble","Mini jeu dribble + passe","Tir en course + match"],
     ultimate: ["Rappel règles, lancers de base","Travail du démarquage","Jeu réduit 3v3, auto-arbitrage","Progression vers l'en-but, couloirs","Interceptions, transitions défense/attaque","Mini-tournoi 5v5","Tournoi final, spirit of the game"],
@@ -4127,6 +4131,7 @@ function renderSeances(){
               </div>
               ${boutonRelais(sd,cl,col,s.num,true)}
               ${boutonBasket(sd,cl,col,s.num,true)}
+              ${boutonBadminton(sd,cl,col,s.num,true)}
               ${s.type==='eval'?boutonBareme(sd,cl,col,false):''}
               <button onclick="openSeanceFiche('${key}')" title="Fiche de préparation" style="flex-shrink:0;background:#fff;border:1.5px solid ${col};color:${col};border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center">📄</button>
               <button onclick="toggleCancelSlot('${itemKey}','${s.key}')" title="Absence / événement : décaler cette séance à la suivante" style="flex-shrink:0;background:#fff;border:1.5px solid #f0a500;color:#f0a500;border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center">⏭️</button>
@@ -4344,6 +4349,7 @@ function renderAujourdhui(){
         ${boutonVma(findSportData(r.item.apsa),r.cl,col)}
         ${boutonRelais(findSportData(r.item.apsa),r.cl,col,s.num)}
         ${boutonBasket(findSportData(r.item.apsa),r.cl,col,s.num)}
+        ${boutonBadminton(findSportData(r.item.apsa),r.cl,col,s.num)}
         ${s.type==='eval'?boutonBareme(findSportData(r.item.apsa),r.cl,col,true):''}
         <button onclick="openSeanceFiche('${r.key}')" title="Fiche de préparation" style="flex-shrink:0;background:${col};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">📄 Fiche</button>
       </div>
@@ -4408,6 +4414,7 @@ function openSeanceFiche(key){
       <input class="fiche-edit-ta" id="sftitre" style="min-height:0;height:auto;font-weight:700" value="${(s.titre||'').replace(/"/g,'&quot;')}" placeholder="Titre de la séance">
       <textarea class="fiche-edit-ta" id="sfsous" style="min-height:60px;margin-top:6px" placeholder="Sous-titre / contenu">${s.contenu||''}</textarea>
       <div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Ex. badminton 5e : retire « double » → simple uniquement. <a href="javascript:void(0)" onclick="resetSeanceTitres()">Rétablir l'original</a></div></div>
+    ${sd&&sd.id==='badminton'&&cl!=='6e'?`<div class="fiche-section">${boutonBadminton(sd,cl,'#0e7c7b',s.num)} <span style="font-size:0.72rem;color:var(--muted)">Tournoi montante-descendante, notation par cases</span></div>`:''}
     ${sd&&sd.id==='basket'&&cl!=='6e'?`<div class="fiche-section">${boutonBasket(sd,cl,'#0e7c7b',s.num)} <span style="font-size:0.72rem;color:var(--muted)">Équipes, tournoi, notation par cases</span></div>`:''}
     ${sd&&sd.id==='relais'?`<div class="fiche-section">${boutonRelais(sd,cl,'#0e7c7b',s.num)} <span style="font-size:0.72rem;color:var(--muted)">Groupes, ordre de passage, exercices animés, notation</span></div>`:''}
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">📋</span><span class="fiche-section-title">Conditions</span></div>

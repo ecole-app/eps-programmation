@@ -174,7 +174,7 @@ describe("Documents préparés", () => {
   it("la séance de tests 6e, les attendus 2027 et le mémo VMA s'ouvrent depuis Documents", async () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
     await p.click(".nav-tab[onclick*=\"'documents'\"]");
-    assert.equal(await p.locator("button.da-card").count(), 10);
+    assert.equal(await p.locator("button.da-card").count(), 11);
     assert.equal(await p.locator("a.da-card").count(), 5);
     await p.evaluate(() => docAppOuvrir("tests-6e"));
     assert.match(await p.locator("#docAppBody").textContent(), /navette Luc-Léger/);
@@ -458,6 +458,45 @@ describe("Basket : tournoi et notation", () => {
       return [nb("5e") > 0, nb("6e"), boutonBasket({ id: "basket" }, "6e", "#000", 1), DOCS_SPECIAUX.some((d) => d.id === "basket")];
     });
     assert.deepEqual(r, [true, 0, "", true]);
+    await p.close();
+  });
+});
+
+describe("Badminton : tournoi montante-descendante", () => {
+  it("simule les montées/descentes, donne la Performance et reporte dans le barème", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const init = [["a", "b", "c", "d"], ["e", "f", "g", "h"]];
+      const t = bdSimuler(init, { "0|0": "a", "0|1": "f" });
+      const apres = bdApres(t[0]);
+      const F = bdFinal(init, { "0|0": "a", "0|1": "f" });
+      const pts = [1, 2, 3, 4].map((r) => bdPtsTerrain(r, 4));
+      const cl = "5e", noms = ["a", "b", "c", "d", "e", "f", "g", "h"];
+      const el = JSON.parse(localStorage.getItem("eleves-" + currentYear) || "{}"); el[cl] = noms; localStorage.setItem("eleves-" + currentYear, JSON.stringify(el));
+      const d = bdLire(cl); d.nbT = 2; const S = bdSeance(d, 1); S.present = noms; S.init = init; S.win = { "0|0": "a", "0|1": "f" };
+      noms.forEach((n) => { S.obs[n] = { traj: [true, true], frapp: [true], depl: [true, true] }; });
+      S.arb.a = [true, true, true];
+      bdSauver(cl, d); bdReporter(cl, 1);
+      const N = JSON.parse(localStorage.getItem("notes-" + currentYear)).badminton["5e"];
+      const na = N.find((x) => x.prenom === "a"), nb = N.find((x) => x.prenom === "h");
+      return [t.length, t[0].matchs[0].a, apres, F.rang, pts, N.length, na.scores, na.total, nb.scores.arb, bdPtsArb([true, true, false])];
+    });
+    assert.equal(r[0], 2);
+    assert.deepEqual(r[2], [["c", "d", "a", "f"], ["g", "h", "e", "b"].slice(0, 0).concat(["g", "h", "b", "e"])].map((x) => x));
+    assert.deepEqual(r[4], [6, 5, 3, 2]);
+    assert.equal(r[5], 8);
+    assert.equal(r[6].arb, 4);
+    assert.equal(r[8], "na");
+    assert.equal(r[9], 3);
+    await p.close();
+  });
+  it("bouton dans les séances de badminton (pas en 6e) ; plus de « double » en 5e", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const nb = (cl) => { document.getElementById("seancesClasse").value = cl; renderSeances(); return document.querySelectorAll('#page-seances button[onclick^="badmintonOuvrir"]').length; };
+      return [nb("5e") > 0, nb("6e"), THEMES_SEANCES["5e"].badminton.join(" ").toLowerCase().includes("double"), findSportData("Badminton").epreuve.toLowerCase().includes("double")];
+    });
+    assert.deepEqual(r, [true, 0, false, false]);
     await p.close();
   });
 });
