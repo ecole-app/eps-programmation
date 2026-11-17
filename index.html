@@ -1416,6 +1416,7 @@ a.da-card{text-decoration:none;color:inherit;margin-top:8px}
 <script src="baremes-data.js"></script>
 <script src="fiche-suivi.js"></script>
 <script src="relais.js"></script>
+<script src="basket.js"></script>
 <script src="situations-data.js"></script>
 <script>
 const allSports = {
@@ -2876,19 +2877,19 @@ const DOCS_APP = [
 function docAppRender(){
   const box=document.getElementById('docAppListe'); if(!box) return;
   const RAPPORTS=[{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
-  const CAT={relais:'🏃 Relais',
+  const CAT={relais:'🏃 Relais',basket:'🏀 Basket-ball',
     'vma-tableau':'⏱️ Course longue et demi-fond','suivi-cl':'⏱️ Course longue et demi-fond','memo-vma':'⏱️ Course longue et demi-fond',
     'co-meons-cachee':'🧭 Course d\'orientation','co-meons':'🧭 Course d\'orientation','co-cartons':'🧭 Course d\'orientation',
     'renfo-suivi':'💪 Renforcement musculaire','renfo-word':'💪 Renforcement musculaire'};
-  const ORDRE=['🏃 Relais','⏱️ Course longue et demi-fond','🧭 Course d\'orientation','💪 Renforcement musculaire','📚 Programmation et programmes'];
+  const ORDRE=['🏀 Basket-ball','🏃 Relais','⏱️ Course longue et demi-fond','🧭 Course d\'orientation','💪 Renforcement musculaire','📚 Programmation et programmes'];
   const carte=(d,lien)=>{
     const c=`<span class="da-ic">${d.icone}</span><span class="da-tx"><b>${d.titre}</b><small>${d.etat}</small></span><span class="da-go">›</span>`;
     return lien?`<a class="da-card" href="${lien}" target="_blank" rel="noopener">${c}</a>`:`<button type="button" class="da-card" onclick="${d.clic}">${c}</button>`;
   };
   const items=[];
-  DOCS_SPECIAUX.forEach(d=>items.push({cat:CAT[d.id]||ORDRE[4],h:d.fichier?carte(d,d.fichier):carte(Object.assign({},d,{clic:`docSpecialOuvrir('${d.id}')`}))}));
-  DOCS_APP.forEach(d=>items.push({cat:CAT[d.id]||ORDRE[4],h:carte(Object.assign({},d,{clic:`docAppOuvrir('${d.id}')`}))}));
-  RAPPORTS.forEach(r=>items.push({cat:ORDRE[4],h:`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>${r.s||'Rapport Claude · s\'ouvre dans un nouvel onglet'}</small></span><span class="da-go">›</span></a>`}));
+  DOCS_SPECIAUX.forEach(d=>items.push({cat:CAT[d.id]||ORDRE[5],h:d.fichier?carte(d,d.fichier):carte(Object.assign({},d,{clic:`docSpecialOuvrir('${d.id}')`}))}));
+  DOCS_APP.forEach(d=>items.push({cat:CAT[d.id]||ORDRE[5],h:carte(Object.assign({},d,{clic:`docAppOuvrir('${d.id}')`}))}));
+  RAPPORTS.forEach(r=>items.push({cat:ORDRE[5],h:`<a class="da-card" href="${r.u}" target="_blank" rel="noopener"><span class="da-ic">📄</span><span class="da-tx"><b>${r.t}</b><small>${r.s||'Rapport Claude · s\'ouvre dans un nouvel onglet'}</small></span><span class="da-go">›</span></a>`}));
   box.innerHTML=ORDRE.filter(c=>items.some(i=>i.cat===c)).map(c=>`<div class="da-sec"><div class="da-sec-t">${c}</div><div class="da-liste">${items.filter(i=>i.cat===c).map(i=>i.h).join('')}</div></div>`).join('');
 }
 function docAppOuvrir(id){
@@ -2916,6 +2917,7 @@ const DOCS_SPECIAUX=[
   {id:'co-meons', icone:'🗺️', titre:'Carte orientation · Méons · corrigé prof (PDF)', etat:'Avec les numéros de balises · 1/3500 · A4', fichier:'docs-files/Carte-orientation-Parc-de-Meons.pdf'},
   {id:'vma-tableau', icone:'⏱️', titre:'Tableau VMA · demi-Cooper', etat:'Tape la distance de chaque élève · la VMA se calcule seule'},
   {id:'relais', icone:'🏃', titre:'Relais · groupes, terrain, exercices animés', etat:'Groupes A/B/C équilibrés · ordre de passage · fiche de zone'},
+  {id:'basket', icone:'🏀', titre:'Basket · équipes, tournoi, notation', etat:'Équipes A/B/C · calendrier et classement · observation par cases'},
   {id:'prog-sports', icone:'📚', titre:'Programmation des sports (fiches APSA)', etat:'Touche les fiches à ajouter · un seul PDF à envoyer'},
   {id:'renfo-suivi', icone:'💪', titre:'Fiche de suivi · renforcement musculaire', etat:'Une page par groupe · 10 exercices · séances + évaluation'},
   {id:'suivi-cl', icone:'🏃', titre:'Fiche de suivi élève · course longue', etat:'Une page par élève · choisis la classe et le nombre de séances'}
@@ -2938,7 +2940,7 @@ function docSpecialOuvrir(id){
   const d=DOCS_SPECIAUX.find(x=>x.id===id); if(!d) return;
   docSpecialId=id;
   document.getElementById('docAppTitre').textContent=d.icone+' '+d.titre;
-  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():id==='renfo-suivi'?renfoSuiviHtml():id==='vma-tableau'?vmaHtml():id==='relais'?relaisHtml():id==='co-cartons'?coCartonsHtml():suiviClHtml();
+  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():id==='renfo-suivi'?renfoSuiviHtml():id==='vma-tableau'?vmaHtml():id==='relais'?relaisHtml():id==='basket'?basketHtml():id==='co-cartons'?coCartonsHtml():suiviClHtml();
   const b=document.getElementById('docAppImpBtn'); b.style.display='none';
   document.getElementById('docAppOverlay').classList.add('open');
   document.getElementById('docAppOverlay').classList.toggle('vma-mode',id==='vma-tableau');
@@ -2948,6 +2950,7 @@ function docSpecialOuvrir(id){
   if(id==='renfo-suivi') renfoInfo();
   if(id==='vma-tableau') vmaRendre();
   if(id==='relais') relaisRendre();
+  if(id==='basket') basketRendre();
 }
 
 
@@ -3627,7 +3630,7 @@ function installPWA(){
 // (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
 // jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
 function isEpsKey(k){
-  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma|adapte|relais)-/.test(k);
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma|adapte|relais|basket)-/.test(k);
 }
 function exportAllData(){
   const data = {};
@@ -4123,6 +4126,7 @@ function renderSeances(){
                 ${s.obs?`<div style="font-size:0.7rem;line-height:1.45;color:var(--muted);margin-top:3px">👀 Observateurs : ${s.obs}</div>`:''}
               </div>
               ${boutonRelais(sd,cl,col,s.num,true)}
+              ${boutonBasket(sd,cl,col,s.num,true)}
               ${s.type==='eval'?boutonBareme(sd,cl,col,false):''}
               <button onclick="openSeanceFiche('${key}')" title="Fiche de préparation" style="flex-shrink:0;background:#fff;border:1.5px solid ${col};color:${col};border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center">📄</button>
               <button onclick="toggleCancelSlot('${itemKey}','${s.key}')" title="Absence / événement : décaler cette séance à la suivante" style="flex-shrink:0;background:#fff;border:1.5px solid #f0a500;color:#f0a500;border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center">⏭️</button>
@@ -4339,6 +4343,7 @@ function renderAujourdhui(){
         </div>
         ${boutonVma(findSportData(r.item.apsa),r.cl,col)}
         ${boutonRelais(findSportData(r.item.apsa),r.cl,col,s.num)}
+        ${boutonBasket(findSportData(r.item.apsa),r.cl,col,s.num)}
         ${s.type==='eval'?boutonBareme(findSportData(r.item.apsa),r.cl,col,true):''}
         <button onclick="openSeanceFiche('${r.key}')" title="Fiche de préparation" style="flex-shrink:0;background:${col};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">📄 Fiche</button>
       </div>
@@ -4403,6 +4408,7 @@ function openSeanceFiche(key){
       <input class="fiche-edit-ta" id="sftitre" style="min-height:0;height:auto;font-weight:700" value="${(s.titre||'').replace(/"/g,'&quot;')}" placeholder="Titre de la séance">
       <textarea class="fiche-edit-ta" id="sfsous" style="min-height:60px;margin-top:6px" placeholder="Sous-titre / contenu">${s.contenu||''}</textarea>
       <div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Ex. badminton 5e : retire « double » → simple uniquement. <a href="javascript:void(0)" onclick="resetSeanceTitres()">Rétablir l'original</a></div></div>
+    ${sd&&sd.id==='basket'&&cl!=='6e'?`<div class="fiche-section">${boutonBasket(sd,cl,'#0e7c7b',s.num)} <span style="font-size:0.72rem;color:var(--muted)">Équipes, tournoi, notation par cases</span></div>`:''}
     ${sd&&sd.id==='relais'?`<div class="fiche-section">${boutonRelais(sd,cl,'#0e7c7b',s.num)} <span style="font-size:0.72rem;color:var(--muted)">Groupes, ordre de passage, exercices animés, notation</span></div>`:''}
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">📋</span><span class="fiche-section-title">Conditions</span></div>
       <div class="fiche-cond-grid">

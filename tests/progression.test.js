@@ -174,7 +174,7 @@ describe("Documents préparés", () => {
   it("la séance de tests 6e, les attendus 2027 et le mémo VMA s'ouvrent depuis Documents", async () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
     await p.click(".nav-tab[onclick*=\"'documents'\"]");
-    assert.equal(await p.locator("button.da-card").count(), 9);
+    assert.equal(await p.locator("button.da-card").count(), 10);
     assert.equal(await p.locator("a.da-card").count(), 5);
     await p.evaluate(() => docAppOuvrir("tests-6e"));
     assert.match(await p.locator("#docAppBody").textContent(), /navette Luc-Léger/);
@@ -421,6 +421,43 @@ describe("Relais : accès depuis les séances", () => {
       return [nb > 0, document.getElementById("seanceFicheBody").innerHTML.includes("relaisOuvrir")];
     });
     assert.deepEqual(r, [true, true]);
+    await p.close();
+  });
+});
+
+describe("Basket : tournoi et notation", () => {
+  it("calendrier, classement, performance et report dans le barème", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const cal = bkCalendrier(4); const nbM = cal.flat().length; const tousDifferents = new Set(cal.flat().map((m) => m.join("-"))).size;
+      const cl = "5e", noms = ["a", "b", "c", "d", "e", "f", "g", "h"];
+      const e = JSON.parse(localStorage.getItem("eleves-" + currentYear) || "{}"); e[cl] = noms; localStorage.setItem("eleves-" + currentYear, JSON.stringify(e));
+      const d = bkLire(cl); d.nb = 4; d.equipes[1] = { a: 0, b: 0, c: 1, d: 1, e: 2, f: 2, g: 3, h: 3 };
+      d.scores[1] = { "0-1": ["10", "4"], "2-3": ["6", "6"], "0-2": ["8", "3"], "1-3": ["2", "9"], "0-3": ["7", "5"], "1-2": ["4", "4"] };
+      const cls = bkClassement(d, 1, 4);
+      const perfs = [0, 1, 2, 3].map((i) => bkPerf(cls.find((x) => x.i === i), 4));
+      d.obs[1] = { a: { dem: [true, true, true], pass: [true, true, false], esp: [true, true], def: [true, true, false] }, b: { dem: [true], pass: [true], esp: [true], def: [true] } };
+      d.arb[1] = { a: [true, true, true] };
+      bkSauver(cl, d); bkReporter(cl, 1, 0);
+      const N = JSON.parse(localStorage.getItem("notes-" + currentYear)).basket["5e"];
+      return [nbM, tousDifferents, cls[0].i, perfs, N.length, N[0].scores, N[0].total, N[1].scores.arb, N[1].total, bkPtsArb([true, false, true])];
+    });
+    assert.deepEqual(r.slice(0, 4), [6, 6, 0, [5, 1, 1, 3]]);
+    assert.equal(r[4], 2);
+    assert.deepEqual(r[5], { perf: 5, jeu_dem: 3, jeu_pass: 2, jeu_esp: 2, arb: 4, def: 2 });
+    assert.equal(r[6], 5 + 7 + 4 + 2);
+    assert.equal(r[7], "na");
+    assert.equal(r[8], Math.round((5 + 1 + 1 + 1 + 1) / 16 * 20 * 2) / 2);
+    assert.equal(r[9], 3);
+    await p.close();
+  });
+  it("le bouton est dans les séances de basket (pas en 6e) et dans Documents", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const nb = (cl) => { document.getElementById("seancesClasse").value = cl; renderSeances(); return document.querySelectorAll('#page-seances button[onclick^="basketOuvrir"]').length; };
+      return [nb("5e") > 0, nb("6e"), boutonBasket({ id: "basket" }, "6e", "#000", 1), DOCS_SPECIAUX.some((d) => d.id === "basket")];
+    });
+    assert.deepEqual(r, [true, 0, "", true]);
     await p.close();
   });
 });
