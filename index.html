@@ -3316,6 +3316,14 @@ function ouvrirBareme(sportId, cl){
   showPage('baremes',btn);
   if(dejaCharge && f.contentWindow) f.contentWindow.postMessage({type:'openBareme',sid:sportId,cl:cl},location.origin);
 }
+function vmaOuvrir(cl){
+  docSpecialOuvrir('vma-tableau');
+  const s=document.getElementById('vmaCl'); if(s&&cl){ s.value=cl; vmaRendre(); }
+}
+function boutonVma(sd, cl, col){
+  if(!sd||(sd.id!=='course-longue'&&sd.id!=='demi-fond')) return '';
+  return `<button onclick="vmaOuvrir('${cl}')" title="Tableau VMA" style="background:${col};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">⏱️ Tableau VMA</button>`;
+}
 function boutonBareme(sd, cl, col, grand){
   if(!sd||!sd.id) return '';
   const st = grand
@@ -4282,6 +4290,7 @@ function renderAujourdhui(){
           <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800">${r.cl} — ${r.item.apsa}</div>
           <div style="font-size:0.74rem;color:var(--muted)">${r.slot.debut}–${r.slot.fin} · ${r.cycle.name} · Séance ${s.num}/${r.total} (${semLabel} <a href="javascript:void(0)" onclick="calibrerSemaine('${r.cycle.id}',${r.rawWeek})" title="Corriger le numéro de semaine" style="color:var(--muted);text-decoration:underline">✏️</a>)</div>
         </div>
+        ${boutonVma(findSportData(r.item.apsa),r.cl,col)}
         ${s.type==='eval'?boutonBareme(findSportData(r.item.apsa),r.cl,col,true):''}
         <button onclick="openSeanceFiche('${r.key}')" title="Fiche de préparation" style="flex-shrink:0;background:${col};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">📄 Fiche</button>
       </div>

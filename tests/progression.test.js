@@ -313,3 +313,12 @@ describe("Barème adapté (PAI/PAP)", () => {
     await p.close();
   });
 });
+
+describe("Accès direct au tableau VMA", () => {
+  it("vmaOuvrir ouvre le tableau sur la bonne classe", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => { vmaOuvrir("4e"); return [document.getElementById("docAppOverlay").classList.contains("open"), document.getElementById("vmaCl").value, boutonVma({ id: "demi-fond" }, "4e", "#000").includes("Tableau VMA"), boutonVma({ id: "badminton" }, "4e", "#000")]; });
+    assert.deepEqual(r, [true, "4e", true, ""]);
+    await p.close();
+  });
+});
