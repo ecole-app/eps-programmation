@@ -2845,6 +2845,47 @@ const DOCS_APP = [
     </ul>
     <p class="da-src">Sources : programme EPS cycle 3, BO n°22 du 28/05/2026 ; projet de programme EPS cycle 4 (juillet 2025), consultation de mai-juin 2026. Le texte définitif du cycle 4 n'était pas encore publié en novembre 2026.</p>` },
 
+  { id:'co-grille-cour', icone:'🧩', titre:"Grille d'orientation dans la cour : installation et séances", etat:"Adapté du kit Gymnase grille · 6e cette année, utilisable dans toutes les classes", html:()=>{
+    const codes=[[46,38,43,36,25,51],[45,56,53,21,32,23],[30,31,44,28,48,50],[52,29,24,40,55,47],[54,49,22,39,27,33],[37,26,34,35,41,42]];
+    const col='ABCDEF';
+    const etiq=codes.map((l,i)=>l.map((c,j)=>`<td style="border:1px dashed #888;padding:6px 4px;text-align:center"><small style="color:#666">${col[j]}${i+1}</small><br><b style="font-size:1.25rem">${c}</b></td>`).join('')).map(r=>`<tr>${r}</tr>`).join('');
+    return `
+    <p class="da-lead">Le kit « Gymnase grille » (MOOV'EPS) prévu pour un gymnase, installé dans la cour du collège : 36 coupelles à positions fixes, un code caché sous chacune, 72 parcours en 6 niveaux. Le PDF du kit contient les cartes élèves, les corrigés et la feuille de relevé. Cette fiche explique l'installation dans la cour et les trois premières séances.</p>
+    <h3>Installer la grille dans la cour</h3>
+    <ul>
+      <li><b>Taille :</b> 6 lignes × 6 colonnes, une coupelle tous les 3 m, soit environ 15 m × 15 m. Si la cour est plus petite, descends à 2 m (10 m × 10 m) : les parcours ne changent pas.</li>
+      <li><b>Positions fixes :</b> pas de lignes de gymnase, donc marque chaque position à la craie ou au ruban adhésif et repose toujours la coupelle au même endroit. Écris les repères A à F d'un côté et 1 à 6 de l'autre.</li>
+      <li><b>Nord :</b> un cône bleu fixe, posé contre un mur ou au bout de la grille. Sur les cartes de niveau Bleu et plus, la grille est tournée : l'élève tourne sa carte pour aligner sa flèche Nord sur le cône.</li>
+      <li><b>Codes :</b> les étiquettes ci-dessous se collent sous les coupelles, chaque numéro à la position indiquée (A1, B1…). Dans la cour, le vent soulève tout : utilise des coupelles lourdes ou colle l'étiquette sous le rebord et fixe-la avec du ruban.</li>
+      <li><b>Zone de jeu :</b> délimite la grille avec des plots ou des bancs pour qu'aucun élève de la récréation ne la traverse.</li>
+    </ul>
+    <h3>Les niveaux et les parcours</h3>
+    <ul>
+      <li><b>Vert</b> (parcours 01 à 12) : postes reliés, orientation simple.</li>
+      <li><b>Bleu</b> (13 à 24) : postes non reliés, carte tournée.</li>
+      <li><b>Orange</b> (25 à 36) : sans secteurs colorés, Nord variable.</li>
+      <li><b>Violet</b> (37 à 48) : seuls les six postes à trouver sont affichés.</li>
+      <li><b>Noir</b> (49 à 60) : l'élève place six coordonnées et construit son circuit.</li>
+      <li><b>Expert</b> (61 à 72) : déduire les postes avec les points cardinaux (« 2 Nord + 1 Est »). À garder pour la 4e et la 3e, ou en défi.</li>
+    </ul>
+    <h3>Déroulé d'une séance (environ 45 min dans la cour)</h3>
+    <ul>
+      <li><b>5 min :</b> consignes, démonstration du geste (soulever la coupelle, lire le code, la reposer au même endroit).</li>
+      <li><b>30 min :</b> par binômes, un élève navigue et l'autre vérifie. Départs échelonnés toutes les 30 secondes. Chaque binôme relève B1 à B6, calcule le total et note son heure d'arrivée.</li>
+      <li><b>5 min :</b> correction avec les corrigés du kit. Un total juste n'est qu'un indice : contrôle aussi l'ordre des six codes.</li>
+      <li><b>5 min :</b> bilan, rangement, on remet les coupelles à leur place.</li>
+    </ul>
+    <h3>Les trois premières séances de 6e</h3>
+    <ul>
+      <li><b>Séance 1, Vert :</b> découvrir la grille, lire les coordonnées, suivre un circuit relié. 3 parcours par binôme (par exemple 01, 05, 09).</li>
+      <li><b>Séance 2, Bleu puis Orange :</b> carte tournée puis sans secteurs colorés. Chrono et départs échelonnés. Quelques binômes passent à l'Orange dès qu'ils réussissent deux Bleus sans erreur.</li>
+      <li><b>Séance 3, Violet et Noir :</b> choisir son circuit, défi en duel : même parcours, qui revient le premier avec les bons codes. Les plus rapides tentent un Noir.</li>
+    </ul>
+    <p class="da-lead">Sécurité : on marche vite ou on trotte, jamais de course dans les croisements. Les coupelles se reposent doucement, le sol de la cour est dur. Prévoir un départ échelonné et un passage libre autour des coupelles.</p>
+    <h3>Étiquettes à découper (codes sous les 36 coupelles)</h3>
+    <p style="font-size:0.78rem;color:var(--muted);margin:0 0 6px">Colle chaque numéro sous la coupelle de la position indiquée en petit. À garder pour toi : les élèves ne doivent jamais voir ces codes sur une carte.</p>
+    <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:300px"><tr>${[...col].map(c=>`<th style="font-size:0.7rem;color:var(--muted)">${c}</th>`).join('')}</tr>${etiq}</table></div>
+    <p style="margin-top:10px"><a href="docs-files/Gymnase-grille-72-parcours.pdf" target="_blank" rel="noopener"><b>Ouvrir le kit complet (PDF, 86 pages)</b></a></p>`;} },
   { id:'memo-vma', icone:'📐', titre:"Mémo VMA : la mesurer et s'en servir", etat:"Mémo", html:()=>{
     const v=[9,10,11,12,13,14];
     const tours=m=>{const t=Math.floor(m/120),r=m-t*120;return t+' tours'+(r?' + '+r+' m':'');};
@@ -2880,7 +2921,7 @@ function docAppRender(){
   const RAPPORTS=[{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
   const CAT={relais:'🏃 Relais',basket:'🏀 Basket-ball',badminton:'🏸 Badminton',
     'vma-tableau':'⏱️ Course longue et demi-fond','suivi-cl':'⏱️ Course longue et demi-fond','memo-vma':'⏱️ Course longue et demi-fond',
-    'co-meons-cachee':'🧭 Course d\'orientation','co-meons':'🧭 Course d\'orientation','co-gymnase-grille':'🧭 Course d\'orientation','co-cartons':'🧭 Course d\'orientation',
+    'co-meons-cachee':'🧭 Course d\'orientation','co-meons':'🧭 Course d\'orientation','co-gymnase-grille':'🧭 Course d\'orientation','co-grille-cour':'🧭 Course d\'orientation','co-cartons':'🧭 Course d\'orientation',
     'renfo-suivi':'💪 Renforcement musculaire','renfo-word':'💪 Renforcement musculaire'};
   const ORDRE=['🏀 Basket-ball','🏸 Badminton','🏃 Relais','⏱️ Course longue et demi-fond','🧭 Course d\'orientation','💪 Renforcement musculaire','📚 Programmation et programmes'];
   const carte=(d,lien)=>{
@@ -3858,7 +3899,7 @@ const THEMES_SEANCES = {
     'course-longue': ["Découverte, échauffement, notion d'allure","Courir 8-10 min sans s'arrêter","Trouver son allure régulière (fractionné court)","Test VMA / vitesse repère","Courir à allure projet (individuel)","Courir en binôme, allure imposée","Course bilan, comparaison projet/réalisé"],
     ultimate: ["Découverte, règles, prise en main du disque","Lancer/réception à l'arrêt (revers, coup droit)","Se démarquer, recevoir en mouvement","Progresser vers l'en-but, jeu réduit 3v3","Interception, replacement défensif","Mini-tournoi 5v5, auto-arbitrage","Tournoi final"],
     combine: ["Découverte des 3 épreuves, sécurité du lancer, rôles (athlète, juge, chronométreur)","Course : départ arrêté, réaction, 30 m chronométré","5 bonds : pieds joints puis bonds alternés, trouver son rythme","Vortex : position de lancer, élan de 3 pas, zones de sécurité","Course : accélération et fréquence, chronos en binôme","5 bonds : marques au sol, mesure en binôme","Vortex : trajectoire, mesure et secrétaire","Ateliers tournants sur les 3 épreuves, fiche de performances","Où gagner des points ? Choisir sa stratégie","Combiné à blanc avec juges et chronométreurs","Derniers réglages, rôles tenus seuls","Combiné évalué"],
-    'course-orientation': ["Orienter une carte de la cour, légende simple","Retrouver des plots avec la carte, en binômes","Plan d'un petit parcours, poser des plots pour les autres","Parc de Montreynaud : parcours en étoile, balises proches","Parc de Montreynaud : parcours au score, retour à l'heure","Parcours bilan en binômes"],
+    'course-orientation': ["Grille de la cour, niveau Vert : découvrir la grille et suivre le circuit","Grille de la cour, niveaux Bleu et Orange : s'orienter sans secteurs colorés, départs échelonnés","Grille de la cour, niveaux Violet et Noir : choisir son circuit, défi en duel","Parc de Montreynaud : parcours en étoile, balises proches","Parc de Montreynaud : parcours au score, retour à l'heure","Parcours bilan en binômes"],
     rugby: ["Découverte, règles, manipulation du ballon ovale","Passe en arrière, progression collective","Toucher-plaquage, règle du hors-jeu","Créer le surnombre, jeu à 3","Soutien du porteur de balle","Défense en ligne, replacement","Tournoi 5v5"],
   },
   '5e': {
@@ -3890,7 +3931,7 @@ const THEMES_SEANCES = {
 // les 6 dernières étant : 4 au parc de Montreynaud + 2 à Méons (découverte puis évaluation).
 const SEANCES_TOTAL_FIXE = {'4e':{'course-orientation':9}};
 // Lieu imposé pour certaines séances (index 0 = 1re séance) : sinon lieu du sport.
-const LIEU_SEANCE_FIXE = {'4e':{'course-orientation':{0:'paganini',1:'paganini',2:'paganini',7:'siteCO',8:'siteCO'}}};
+const LIEU_SEANCE_FIXE = {'6e':{'course-orientation':{0:'paganini',1:'paganini',2:'paganini'}},'4e':{'course-orientation':{0:'paganini',1:'paganini',2:'paganini',7:'siteCO',8:'siteCO'}}};
 function getThemeSeance(cl, sportId, i){
   const arr = THEMES_SEANCES[cl] && THEMES_SEANCES[cl][sportId];
   return (arr && arr[i]) || null;
