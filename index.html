@@ -1418,6 +1418,7 @@ a.da-card{text-decoration:none;color:inherit;margin-top:8px}
 <script src="relais.js"></script>
 <script src="basket.js"></script>
 <script src="badminton.js"></script>
+<script src="suivi-oublis.js"></script>
 <script src="situations-data.js"></script>
 <script>
 const allSports = {
@@ -2920,7 +2921,7 @@ function docAppRender(){
   const box=document.getElementById('docAppListe'); if(!box) return;
   const RAPPORTS=[{t:"Contrôle des programmations et barèmes 2026-27",u:"https://claude.ai/artifact/Gt9JxLK5so4gQSmFh1TQGF"},{t:"Programmation EPS comparée (PDF du collège)",u:"https://claude.ai/artifact/1ctxyjnXbDJ98QVRGniM7g"}];
   const CAT={relais:'🏃 Relais',basket:'🏀 Basket-ball',badminton:'🏸 Badminton',
-    'vma-tableau':'⏱️ Course longue et demi-fond','suivi-cl':'⏱️ Course longue et demi-fond','memo-vma':'⏱️ Course longue et demi-fond',
+    'vma-tableau':'⏱️ Course longue et demi-fond','suivi-cl':'⏱️ Course longue et demi-fond','suivi-oublis':'⏱️ Course longue et demi-fond','memo-vma':'⏱️ Course longue et demi-fond',
     'co-meons-cachee':'🧭 Course d\'orientation','co-meons':'🧭 Course d\'orientation','co-gymnase-grille':'🧭 Course d\'orientation','co-grille-cour':'🧭 Course d\'orientation','co-cartons':'🧭 Course d\'orientation',
     'renfo-suivi':'💪 Renforcement musculaire','renfo-word':'💪 Renforcement musculaire'};
   const ORDRE=['🏀 Basket-ball','🏸 Badminton','🏃 Relais','⏱️ Course longue et demi-fond','🧭 Course d\'orientation','💪 Renforcement musculaire','📚 Programmation et programmes'];
@@ -2962,6 +2963,7 @@ const DOCS_SPECIAUX=[
   {id:'relais', icone:'🏃', titre:'Relais · groupes, terrain, exercices animés', etat:'Groupes A/B/C équilibrés · ordre de passage · fiche de zone'},
   {id:'basket', icone:'🏀', titre:'Basket · équipes, tournoi, notation', etat:'Équipes A/B/C · calendrier et classement · observation par cases'},
   {id:'badminton', icone:'🏸', titre:'Badminton · tournoi montante-descendante, notation', etat:'Terrain atteint = Performance · observation par cases'},
+  {id:'suivi-oublis', icone:'📋', titre:'Fiche de suivi · oublis par séance (course longue)', etat:'Coche qui a oublié sa fiche, séance par séance · points /3 automatiques'},
   {id:'prog-sports', icone:'📚', titre:'Programmation des sports (fiches APSA)', etat:'Touche les fiches à ajouter · un seul PDF à envoyer'},
   {id:'renfo-suivi', icone:'💪', titre:'Fiche de suivi · renforcement musculaire', etat:'Une page par groupe · 10 exercices · séances + évaluation'},
   {id:'suivi-cl', icone:'🏃', titre:'Fiche de suivi élève · course longue', etat:'Une page par élève · choisis la classe et le nombre de séances'}
@@ -2984,7 +2986,7 @@ function docSpecialOuvrir(id){
   const d=DOCS_SPECIAUX.find(x=>x.id===id); if(!d) return;
   docSpecialId=id;
   document.getElementById('docAppTitre').textContent=d.icone+' '+d.titre;
-  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():id==='renfo-suivi'?renfoSuiviHtml():id==='vma-tableau'?vmaHtml():id==='relais'?relaisHtml():id==='basket'?basketHtml():id==='badminton'?badmintonHtml():id==='co-cartons'?coCartonsHtml():suiviClHtml();
+  document.getElementById('docAppBody').innerHTML=id==='prog-sports'?progSportsHtml():id==='renfo-suivi'?renfoSuiviHtml():id==='vma-tableau'?vmaHtml():id==='relais'?relaisHtml():id==='basket'?basketHtml():id==='badminton'?badmintonHtml():id==='suivi-oublis'?fsHtml():id==='co-cartons'?coCartonsHtml():suiviClHtml();
   const b=document.getElementById('docAppImpBtn'); b.style.display='none';
   document.getElementById('docAppOverlay').classList.add('open');
   document.getElementById('docAppOverlay').classList.toggle('vma-mode',id==='vma-tableau');
@@ -2996,6 +2998,7 @@ function docSpecialOuvrir(id){
   if(id==='relais') relaisRendre();
   if(id==='basket') basketRendre();
   if(id==='badminton') badmintonRendre();
+  if(id==='suivi-oublis') fsRendre();
 }
 
 
@@ -3675,7 +3678,7 @@ function installPWA(){
 // (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
 // jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
 function isEpsKey(k){
-  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma|adapte|relais|basket|bad)-/.test(k);
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma|adapte|relais|basket|bad|fsuivi)-/.test(k);
 }
 function exportAllData(){
   const data = {};
@@ -4389,6 +4392,7 @@ function renderAujourdhui(){
           <div style="font-size:0.74rem;color:var(--muted)">${r.slot.debut}–${r.slot.fin} · ${r.cycle.name} · Séance ${s.num}/${r.total} (${semLabel} <a href="javascript:void(0)" onclick="calibrerSemaine('${r.cycle.id}',${r.rawWeek})" title="Corriger le numéro de semaine" style="color:var(--muted);text-decoration:underline">✏️</a>)</div>
         </div>
         ${boutonVma(findSportData(r.item.apsa),r.cl,col)}
+        ${boutonFiche(findSportData(r.item.apsa),r.cl,col)}
         ${boutonRelais(findSportData(r.item.apsa),r.cl,col,s.num)}
         ${boutonBasket(findSportData(r.item.apsa),r.cl,col,s.num)}
         ${boutonBadminton(findSportData(r.item.apsa),r.cl,col,s.num)}

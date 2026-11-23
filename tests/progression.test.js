@@ -174,7 +174,7 @@ describe("Documents préparés", () => {
   it("la séance de tests 6e, les attendus 2027 et le mémo VMA s'ouvrent depuis Documents", async () => {
     const p = await env.page("index.html", { stockage: { "eps-v2": APP } });
     await p.click(".nav-tab[onclick*=\"'documents'\"]");
-    assert.equal(await p.locator("button.da-card").count(), 12);
+    assert.equal(await p.locator("button.da-card").count(), 13);
     assert.equal(await p.locator("a.da-card").count(), 6);
     await p.evaluate(() => docAppOuvrir("tests-6e"));
     assert.match(await p.locator("#docAppBody").textContent(), /navette Luc-Léger/);
@@ -501,15 +501,24 @@ describe("Badminton : tournoi montante-descendante", () => {
   });
 });
 
-describe("Badminton : noms des terrains", () => {
-  it("les terrains peuvent s'appeler 1 2 3 4 ou A B C D", async () => {
+describe("Fiche de suivi : oublis par séance", () => {
+  it("calcule les points /3 et mémorise les cases, anciennes séances comprises", async () => {
     const p = await env.page("index.html");
     const r = await p.evaluate(() => {
-      const d = bdLire("5e"); const a = bdBadge(0).includes("Terrain 1");
-      d.nomT = "let"; bdSauver("5e", d); bdSt.cl = "5e";
-      return [a, bdBadge(0).includes("Terrain A"), bdBadge(3).includes("Terrain D")];
+      const pts = (c, n) => fsPoints(c, n).pts;
+      const calc = [pts(["", "", "", "", "", ""], 6), pts(["x", "", "", "", "", ""], 6), pts(["x", "x", "", "", "", ""], 6), pts(["x", "x", "x", "", "", ""], 6), pts(["x", "x", "x", "x", "x", "x"], 6), pts(["x", "a", "a", "a", "a", "a"], 6), pts(["a", "a", "a", "a", "a", "a"], 6)];
+      const e = JSON.parse(localStorage.getItem("eleves-" + currentYear) || "{}"); e["6e"] = ["Ali", "Bob"]; localStorage.setItem("eleves-" + currentYear, JSON.stringify(e));
+      fsOuvrir("6e");
+      const clic = (x, i) => document.querySelector('button[data-c="' + x + '|' + i + '"]').click();
+      clic("Ali", 1); clic("Ali", 3); clic("Bob", 0); clic("Bob", 0);
+      const d = fsLire("6e");
+      return [calc, d.c.Ali.slice(0, 4), d.c.Bob[0], document.querySelectorAll("#fsRoot td b").length, boutonFiche({ id: "course-longue" }, "6e", "#000").includes("Fiches de suivi"), boutonFiche({ id: "relais" }, "6e", "#000")];
     });
-    assert.deepEqual(r, [true, true, true]);
+    assert.deepEqual(r[0], [3, 2, 2, 1, 0, 0, null]);
+    assert.deepEqual(r[1], ["", "x", "", "x"]);
+    assert.equal(r[2], "a");
+    assert.equal(r[3], 2);
+    assert.deepEqual(r.slice(4), [true, ""]);
     await p.close();
   });
 });
