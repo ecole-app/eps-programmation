@@ -500,3 +500,16 @@ describe("Badminton : tournoi montante-descendante", () => {
     await p.close();
   });
 });
+
+describe("Badminton : noms des terrains", () => {
+  it("les terrains peuvent s'appeler 1 2 3 4 ou A B C D", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const d = bdLire("5e"); const a = bdBadge(0).includes("Terrain 1");
+      d.nomT = "let"; bdSauver("5e", d); bdSt.cl = "5e";
+      return [a, bdBadge(0).includes("Terrain A"), bdBadge(3).includes("Terrain D")];
+    });
+    assert.deepEqual(r, [true, true, true]);
+    await p.close();
+  });
+});
