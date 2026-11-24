@@ -4176,7 +4176,7 @@ function renderSeances(){
               </div>
               ${boutonRelais(sd,cl,col,s.num,true)}
               ${boutonBasket(sd,cl,col,s.num,true)}
-              ${boutonBadminton(sd,cl,col,s.num,true)}
+              ${boutonBadminton(sd,cl,col,s.num,true,s.type==='eval')}
               ${s.type==='eval'?boutonBareme(sd,cl,col,false):''}
               <button onclick="openSeanceFiche('${key}')" title="Fiche de préparation" style="flex-shrink:0;background:#fff;border:1.5px solid ${col};color:${col};border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center">📄</button>
               <button onclick="toggleCancelSlot('${itemKey}','${s.key}')" title="Absence / événement : décaler cette séance à la suivante" style="flex-shrink:0;background:#fff;border:1.5px solid #f0a500;color:#f0a500;border-radius:7px;width:30px;height:30px;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center">⏭️</button>
@@ -4395,7 +4395,7 @@ function renderAujourdhui(){
         ${boutonFiche(findSportData(r.item.apsa),r.cl,col)}
         ${boutonRelais(findSportData(r.item.apsa),r.cl,col,s.num)}
         ${boutonBasket(findSportData(r.item.apsa),r.cl,col,s.num)}
-        ${boutonBadminton(findSportData(r.item.apsa),r.cl,col,s.num)}
+        ${boutonBadminton(findSportData(r.item.apsa),r.cl,col,s.num,false,s.type==='eval')}
         ${s.type==='eval'?boutonBareme(findSportData(r.item.apsa),r.cl,col,true):''}
         <button onclick="openSeanceFiche('${r.key}')" title="Fiche de préparation" style="flex-shrink:0;background:${col};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">📄 Fiche</button>
       </div>
@@ -4460,7 +4460,7 @@ function openSeanceFiche(key){
       <input class="fiche-edit-ta" id="sftitre" style="min-height:0;height:auto;font-weight:700" value="${(s.titre||'').replace(/"/g,'&quot;')}" placeholder="Titre de la séance">
       <textarea class="fiche-edit-ta" id="sfsous" style="min-height:60px;margin-top:6px" placeholder="Sous-titre / contenu">${s.contenu||''}</textarea>
       <div style="font-size:0.7rem;color:var(--muted);margin-top:4px">Ex. badminton 5e : retire « double » → simple uniquement. <a href="javascript:void(0)" onclick="resetSeanceTitres()">Rétablir l'original</a></div></div>
-    ${sd&&sd.id==='badminton'&&cl!=='6e'?`<div class="fiche-section">${boutonBadminton(sd,cl,'#0e7c7b',s.num)} <span style="font-size:0.72rem;color:var(--muted)">Tournoi montante-descendante, notation par cases</span></div>`:''}
+    ${sd&&sd.id==='badminton'&&cl!=='6e'?`<div class="fiche-section">${boutonBadminton(sd,cl,'#0e7c7b',s.num,false,s.type==='eval')} <span style="font-size:0.72rem;color:var(--muted)">Tournoi montante-descendante, notation par cases</span></div>`:''}
     ${sd&&sd.id==='basket'&&cl!=='6e'?`<div class="fiche-section">${boutonBasket(sd,cl,'#0e7c7b',s.num)} <span style="font-size:0.72rem;color:var(--muted)">Équipes, tournoi, notation par cases</span></div>`:''}
     ${sd&&sd.id==='relais'?`<div class="fiche-section">${boutonRelais(sd,cl,'#0e7c7b',s.num)} <span style="font-size:0.72rem;color:var(--muted)">Groupes, ordre de passage, exercices animés, notation</span></div>`:''}
     <div class="fiche-section"><div class="fiche-section-hd"><span class="fiche-section-icon">📋</span><span class="fiche-section-title">Conditions</span></div>

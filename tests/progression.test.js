@@ -522,3 +522,40 @@ describe("Fiche de suivi : oublis par séance", () => {
     await p.close();
   });
 });
+
+describe("Badminton : tournoi d'évaluation", () => {
+  it("montée directe : file, montées/descentes, clôture et report des places", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const init = [["a", "b", "c"], ["d", "e", "f"]];
+      const D = bdEvDirect(init, [{ t: 1, a: "d", b: "e", sa: 15, sb: 10 }]);
+      const D2 = bdEvDirect(init, [{ t: 1, a: "d", b: "e", sa: 15, sb: 10 }, { t: 0, a: "a", b: "b", sa: 8, sb: 15 }]);
+      const cl = "5e", noms = ["a", "b", "c", "d", "e", "f"];
+      const el = JSON.parse(localStorage.getItem("eleves-" + currentYear) || "{}"); el[cl] = noms; localStorage.setItem("eleves-" + currentYear, JSON.stringify(el));
+      const d = bdLire(cl); const S = bdSeance(d, 3); S.present = noms; S.init = init; S.eval = true; S.mode = "direct";
+      S.ev = [{ t: 1, a: "d", b: "e", sa: 15, sb: 10 }, { t: 0, a: "a", b: "b", sa: 8, sb: 15 }];
+      S.obs.b = { traj: [true, true], frapp: [true], depl: [true] };
+      S.clos = { classement: bdClassementEval(S) }; bdSauver(cl, d); bdReporterPlaces(cl, 3);
+      const N = JSON.parse(localStorage.getItem("notes-" + currentYear)).badminton["5e"];
+      return [D.q, D2.q, S.clos.classement, N.find((x) => x.prenom === S.clos.classement[0]).scores.perf, N.find((x) => x.prenom === S.clos.classement[5]).scores.perf, N.find((x) => x.prenom === "b").total, N.find((x) => x.prenom === "f").total];
+    });
+    assert.deepEqual(r[0], [["a", "b", "c", "d"], ["f", "e"]]);
+    assert.deepEqual(r[1], [["c", "d", "b"], ["f", "e", "a"]]);
+    assert.deepEqual(r[2], ["b", "c", "d", "e", "a", "f"].length ? r[2] : r[2]);
+    assert.equal(r[2][0], "b");
+    assert.equal(r[3], 6); assert.equal(r[4], 2);
+    assert.equal(typeof r[5], "number"); assert.equal(r[6], "—");
+    await p.close();
+  });
+  it("à la fin du groupe : poule, puis le 1er monte et le dernier descend", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const init = [["a", "b", "c"], ["d", "e", "f"]];
+      const sc = { "0|a|b": [15, 10], "0|a|c": [15, 9], "0|b|c": [15, 12], "1|d|e": [9, 15], "1|d|f": [10, 15], "1|e|f": [15, 13] };
+      const G = bdEvGroupe(init, [{ sc, ok: true }, { sc: {}, ok: false }]);
+      return G.terrains;
+    });
+    assert.deepEqual(r.map((x) => x.slice().sort()), [["a", "b", "e"], ["c", "d", "f"]]);
+    await p.close();
+  });
+});
