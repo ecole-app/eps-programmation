@@ -613,6 +613,15 @@ describe("Barèmes : menu déroulant des élèves", () => {
       return [opts, document.getElementById("course-longue-c3-prenom").value];
     });
     assert.equal(r[0][2], "2. Karim ♿"); assert.equal(r[1], "Karim");
+    const r2 = await p.evaluate(() => {
+      const sc = state["course-longue"].c3.scores; const k = Object.keys(sc);
+      k.forEach((x) => { sc[x] = 2; }); state["course-longue"].c3.eleves.push({ prenom: "Lina", scores: { ...sc, duree: 6 }, total: 0, max: 20 });
+      k.forEach((x) => { sc[x] = null; });
+      choisirEleve("course-longue", "c3", "Lina");
+      const a = state["course-longue"].c3.scores.duree; choisirEleve("course-longue", "c3", "Zakarya");
+      return [a, state["course-longue"].c3.scores.duree, document.getElementById("course-longue-c3-prenom").style.display];
+    });
+    assert.equal(r2[0], 6); assert.equal(r2[1], null); assert.equal(r2[2], "none");
     await p.close();
   });
 });

@@ -537,11 +537,11 @@ function buildPanelHTML(s) {
       <div id="${s.id}-${cyc}-saisie">
         <div class="card">
           <label class="field-lbl" for="${s.id}-${cyc}-prenom">Prénom de l'élève <span style="font-weight:400;color:var(--muted,#888)">(ou son n° dans la liste, ex : 7)</span></label>
+          <select class="eleve-select" data-sid="${s.id}" data-cyc="${cyc}" onchange="choisirEleve('${s.id}','${cyc}',this.value)" style="width:100%;margin-bottom:8px;padding:10px;font-size:1rem;border-radius:10px;border:1.5px solid var(--border,#ddd);background:#fff"></select>
           <input class="prenom-input" type="text" id="${s.id}-${cyc}-prenom"
             placeholder="ex : Karim ou 7" autocomplete="off" list="${s.id}-${cyc}-noms"
             oninput="checkReady('${s.id}','${cyc}')"/>
           <datalist id="${s.id}-${cyc}-noms" data-cyc="${cyc}"></datalist>
-          <select class="eleve-select" data-sid="${s.id}" data-cyc="${cyc}" onchange="choisirEleve('${s.id}','${cyc}',this.value)" style="width:100%;margin-top:8px;padding:10px;font-size:1rem;border-radius:10px;border:1.5px solid var(--border,#ddd);background:#fff"></select>
           <div id="${s.id}-${cyc}-adapte" hidden style="margin-top:8px;background:rgba(217,138,0,.16);color:#8a5200;border-radius:9px;padding:8px 11px;font-size:.82rem;font-weight:700">♿ Barème adapté pour cet élève (PAI/PAP)</div>
           ${saisieCriteres}
           <div class="divider"></div>
@@ -740,7 +740,8 @@ function valider(sid, cyc) {
   const scoresCopy={...sc};
   const total=computeTotal(sport[cyc].criteres, scoresCopy);
   const mxT=maxTotal(sport[cyc].criteres);
-  state[sid][cyc].eleves.push({prenom, scores:scoresCopy, total, max:mxT});
+  const ex=state[sid][cyc].eleves.findIndex(x=>x.prenom===prenom);
+  if(ex>=0) state[sid][cyc].eleves[ex]={prenom, scores:scoresCopy, total, max:mxT}; else state[sid][cyc].eleves.push({prenom, scores:scoresCopy, total, max:mxT});
   renderListe(sid, cyc);
   saveNotes();
   showToast(prenom+' enregistré ✓');
@@ -1043,11 +1044,29 @@ function remplirNoms(){
     let h='<option value="">'+(liste.length?'▾ Choisir un élève ('+liste.filter(n=>!faits.has(n)).length+' restant'+(liste.filter(n=>!faits.has(n)).length>1?'s':'')+')':'Aucun élève dans la liste « Élèves »')+'</option>';
     liste.forEach((n,i)=>{ h+='<option value="'+n.replace(/"/g,'&quot;')+'">'+(faits.has(n)?'✓ ':'')+(i+1)+'. '+n+(estAdapte(cyc,n)?' ♿':'')+'</option>'; });
     sel.innerHTML=h; sel.style.display=liste.length?'':'none';
+    const inp=document.getElementById(`${sid}-${cyc}-prenom`); if(inp) inp.style.display=liste.length?'none':'';
   });
 }
 function choisirEleve(sid,cyc,nom){
   const i=document.getElementById(`${sid}-${cyc}-prenom`); if(!i||!nom) return;
-  i.value=nom; checkReady(sid,cyc); i.dispatchEvent(new Event('input',{bubbles:true}));
+  chargerNotes(sid,cyc,nom);
+  i.value=nom; checkReady(sid,cyc);
+}
+// Choisir un élève déjà noté recharge ses notes dans la grille (modifiables, re-validées = remplacées).
+function chargerNotes(sid,cyc,nom){
+  const sport=SPORTS.find(x=>x.id===sid); if(!sport) return;
+  const e=state[sid][cyc].eleves.find(x=>x.prenom===nom);
+  const sc=state[sid][cyc].scores;
+  Object.keys(sc).forEach(k=>{ sc[k]=null; });
+  document.getElementById(`${sid}-${cyc}-block`).querySelectorAll('.pts-btn').forEach(b=>b.classList.remove('sel'));
+  if(!e){ document.getElementById(`${sid}-${cyc}-total`).innerHTML='—<span> / '+maxTotal(sport[cyc].criteres)+'</span>'; return; }
+  Object.keys(e.scores).forEach(k=>{
+    const v=e.scores[k]; if(!(k in sc)||v===null||v===undefined) return;
+    sc[k]=v;
+    const cont=document.getElementById(`${sid}-${cyc}-btn-${k}`); if(!cont) return;
+    const btns=cont.querySelectorAll('.pts-btn'); const b=v==='na'?btns[btns.length-1]:btns[v]; if(b) b.classList.add('sel');
+  });
+  updateTotal(sport,cyc);
 }
 function fichePapier(sid, cyc, cl) {
   const sport=SPORTS.find(s=>s.id===sid);
