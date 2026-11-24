@@ -3679,7 +3679,7 @@ function installPWA(){
 // (donc aussi par l'app ASMB Basket etc.) — on ne prend/écrase QUE les clés EPS,
 // jamais tout le localStorage, pour ne jamais toucher aux données des autres apps.
 function isEpsKey(k){
-  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma|adapte|relais|basket|bad|fsuivi)-/.test(k);
+  return k===STORAGE_KEY || /^(creneaux|vacances|params|fiche-prog|fiche-seance|seances-cancel|seances-saut|semaine-calib|phase|effectifs|eleves|notes|seances-motif|cycle-clos|genres|vma|adapte|relais|basket|bad|fsuivi)-/.test(k);
 }
 function exportAllData(){
   const data = {};
@@ -3947,7 +3947,7 @@ function slotKey(semaine, partie){ return semaine+'-'+(partie||1); }
 // Génère les slots (semaine, partie) en continuant le motif hebdo au-delà du
 // cycle nominal, pour pouvoir décaler une séance annulée sur les semaines
 // suivantes sans perdre de séance.
-function buildSeances(cl, apsa, semaines, parSem, cancelledSet, phaseShift){
+function buildSeances(cl, apsa, semaines, parSem, cancelledSet, phaseShift, sautSet){
   const sd = findSportData(apsa);
   const axes = (sd && sd.axes && sd.axes.length) ? sd.axes : ['Découverte','Apprentissage','Application','Complexification','Évaluation'];
   const fixe = SEANCES_TOTAL_FIXE[cl] && SEANCES_TOTAL_FIXE[cl][sd?sd.id:null];
@@ -3980,7 +3980,10 @@ function buildSeances(cl, apsa, semaines, parSem, cancelledSet, phaseShift){
   }
   const n = Math.max(1, activeSlots.length);
   const out = [];
+  const saut = sautSet || new Set();
+  let slotIdx = 0; // séances passées : elles ne prennent pas de créneau, les suivantes avancent
   for(let i=0;i<n;i++){
+    if(saut.has(i+1) && i<n-1) continue;
     let titre, type, contenu;
     const theme = getThemeSeance(cl, sd?sd.id:null, i);
     if(theme){
@@ -4002,9 +4005,10 @@ function buildSeances(cl, apsa, semaines, parSem, cancelledSet, phaseShift){
     }
     const lieuKey = (LIEU_SEANCE_FIXE[cl] && LIEU_SEANCE_FIXE[cl][sd?sd.id:null] || {})[i] || null;
     const obs = (i>0 && sd && OBSERVATION[sd.id]) ? texteObservation(sd.id) : '';
-    out.push({num:i+1, titre, type, contenu, obs, lieuKey, semaine:activeSlots[i].semaine, partie:activeSlots[i].partie, totalPart:activeSlots[i].totalPart, key:activeSlots[i].key});
+    out.push({num:i+1, titre, type, contenu, obs, lieuKey, semaine:activeSlots[slotIdx].semaine, partie:activeSlots[slotIdx].partie, totalPart:activeSlots[slotIdx].totalPart, key:activeSlots[slotIdx].key});
+    slotIdx++;
   }
-  return {list:out, cancelledInfo};
+  return {list:out, cancelledInfo, nominal:n, passees:[...saut].filter(x=>x<n).sort((a,b)=>a-b)};
 }
 
 function getCancelledSlots(itemKey){
@@ -4030,6 +4034,14 @@ function setMotif(itemKey, slotKey, val){
   localStorage.setItem('seances-motif-'+itemKey, JSON.stringify(m));
   scheduleCloudSync();
 }
+function getSauts(itemKey){ try{ return new Set(JSON.parse(localStorage.getItem('seances-saut-'+itemKey)||'[]')); }catch(e){ return new Set(); } }
+function saveSauts(itemKey,set){ localStorage.setItem('seances-saut-'+itemKey, JSON.stringify([...set])); scheduleCloudSync(); }
+function sauterVers(itemKey, cur, selId){
+  const t=+document.getElementById(selId).value; if(!t||t<=cur) return;
+  const set=getSauts(itemKey); for(let n=cur;n<t;n++) set.add(n);
+  saveSauts(itemKey,set); renderSeances(); renderAujourdhui(); showToast('⏩ Séances '+cur+(t-1>cur?' à '+(t-1):'')+' passées — direction la séance '+t);
+}
+function retablirSauts(itemKey){ saveSauts(itemKey,new Set()); renderSeances(); renderAujourdhui(); showToast('Séances rétablies'); }
 function getCycleClos(itemKey){ try{ return JSON.parse(localStorage.getItem('cycle-clos-'+itemKey)||'null'); }catch(e){ return null; } }
 function setCycleClos(itemKey, val){
   if(val) localStorage.setItem('cycle-clos-'+itemKey, JSON.stringify(val)); else localStorage.removeItem('cycle-clos-'+itemKey);
@@ -4136,8 +4148,8 @@ function renderSeances(){
       const f = familleConfig[item.famille]||{icon:'🏃',label:''};
       const itemKey = `${currentYear}_${p.id}_${cl}_${itemIdx}_${slugSport(item.apsa)}`;
       const cancelledSet = getCancelledSlots(itemKey);
-      const {list, cancelledInfo} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet, getPhaseShift(currentYear, p.id, cl));
-      const nb = list.length;
+      const {list, cancelledInfo, nominal, passees} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet, getPhaseShift(currentYear, p.id, cl), getSauts(itemKey));
+      const nb = nominal;
       const sd = findSportData(item.apsa);
       html += `
       <div class="section-card" style="margin-bottom:1rem">
@@ -4152,6 +4164,7 @@ function renderSeances(){
         </div>
         ${sd&&sd.pb?`<div style="background:var(--teal-g);border-left:3px solid var(--teal);border-radius:0 7px 7px 0;padding:8px 11px;margin-bottom:0.875rem;font-size:0.76rem;font-style:italic;color:var(--teal-d)">${sd.pb}</div>`:''}
         ${getCycleClos(itemKey)?(()=>{const c=getCycleClos(itemKey);return `<div style="background:#d8f3dc;color:#2d6a4f;border-radius:8px;padding:8px 11px;margin-bottom:0.875rem;font-size:0.76rem;font-weight:600">✅ Cycle clôturé le ${new Date(c.date).toLocaleDateString('fr-FR')} — ${c.motif}${c.detail?' ('+c.detail+')':''} <a href="javascript:void(0)" onclick="rouvrirCycle('${itemKey}')" style="margin-left:8px;color:#2d6a4f;text-decoration:underline">↩️ Rouvrir</a></div>`;})():''}
+        ${passees.length?`<div style="background:#fff3cd;color:#8a6100;border-radius:8px;padding:8px 11px;margin-bottom:0.875rem;font-size:0.76rem;font-weight:600">⏩ Séances passées : ${passees.join(', ')} <a href="javascript:void(0)" onclick="retablirSauts('${itemKey}')" style="margin-left:8px;color:#8a6100">↩️ rétablir</a></div>`:''}
         ${cancelledInfo.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:0.875rem">${cancelledInfo.map(ci=>{
           const l=ci.partie?`S${ci.semaine} · ${ci.partie}/${ci.totalPart}`:`S${ci.semaine}`;
           const mo=getMotifs(itemKey)[ci.key];
@@ -4301,7 +4314,7 @@ function getAujourdhuiInfo(){
       items.forEach((item, itemIdx)=>{
         const itemKey = `${currentYear}_${activeCycle.id}_${cl}_${itemIdx}_${slugSport(item.apsa)}`;
         const cancelledSet = getCancelledSlots(itemKey);
-        const {list, cancelledInfo} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet, phaseShift);
+        const {list, cancelledInfo, nominal} = buildSeances(cl, item.apsa, item.semaines, parSem, cancelledSet, phaseShift, getSauts(itemKey));
         const seance = list.find(s => s.semaine===rawWeek && (s.partie||1)===slot.partie);
         const clos = getCycleClos(itemKey);
         if(seance){
@@ -4311,8 +4324,8 @@ function getAujourdhuiInfo(){
             results.push({cl, item, cycle:activeCycle, slot, closed:true, clos, itemKey, rawWeek, dispSemaine: rawWeek + dispOffset});
           } else {
             const seanceE = seanceEdit(seance,key);
-            seanceDataMap[key] = {item, p:activeCycle, cl, s:seanceE, sd:findSportData(item.apsa), total:list.length};
-            results.push({cl, item, cycle:activeCycle, slot, seance:seanceE, key, itemKey, rawWeek, dispSemaine: rawWeek + dispOffset, total: list.length, hasAlternance: (parSem % 1) !== 0});
+            seanceDataMap[key] = {item, p:activeCycle, cl, s:seanceE, sd:findSportData(item.apsa), total:nominal};
+            results.push({cl, item, cycle:activeCycle, slot, seance:seanceE, key, itemKey, rawWeek, dispSemaine: rawWeek + dispOffset, total: nominal, suite:list.filter(x=>x.num>seance.num).map(x=>[x.num,x.titre]), hasAlternance: (parSem % 1) !== 0});
           }
         } else {
           const ci = (cancelledInfo||[]).find(c => c.semaine===rawWeek && (c.partie||1)===slot.partie);
@@ -4407,6 +4420,7 @@ function renderAujourdhui(){
         <button onclick="openSeanceAction('report','${r.itemKey}','${s.key}','${r.cl} — ${r.item.apsa.replace(/'/g,"\\'")}')" style="background:#fff;border:1.5px solid #f0a500;color:#b97a00;border-radius:8px;padding:6px 12px;font-size:0.74rem;font-weight:700;cursor:pointer">⏭️ Reporter la séance</button>
         <button onclick="openSeanceAction('clos','${r.itemKey}','','${r.cl} — ${r.item.apsa.replace(/'/g,"\\'")}')" style="background:#fff;border:1.5px solid #2d6a4f;color:#2d6a4f;border-radius:8px;padding:6px 12px;font-size:0.74rem;font-weight:700;cursor:pointer">✅ Clôturer le cycle</button>
       </div>
+      ${(r.suite&&r.suite.length)?`<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:0.6rem"><span style="font-size:0.74rem;font-weight:700;color:var(--muted)">⏩ Passer à :</span><select id="saut_${r.key}" style="flex:1;min-width:150px;padding:6px;font-size:0.8rem;border-radius:8px">${r.suite.map(([n,t])=>`<option value="${n}">${n} · ${String(t).slice(0,40)}</option>`).join('')}</select><button onclick="sauterVers('${r.itemKey}',${s.num},'saut_${r.key}')" style="background:#fff;border:1.5px solid ${col};color:${col};border-radius:8px;padding:6px 12px;font-size:0.74rem;font-weight:700;cursor:pointer">Aller</button></div>`:''}
       ${r.hasAlternance ? `<div style="margin-top:0.6rem"><a href="javascript:void(0)" onclick="toggleAujourdhuiPhase('${r.cycle.id}','${r.cl}')" style="font-size:0.7rem;color:var(--muted);text-decoration:underline">🔀 La ${r.cl} n'a pas cours cette semaine ? Corriger l'alternance</a></div>` : ''}
     </div>`;
   }).join('');

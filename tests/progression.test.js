@@ -559,3 +559,25 @@ describe("Badminton : tournoi d'évaluation", () => {
     await p.close();
   });
 });
+
+describe("Passer des séances (semaine d'évaluation)", () => {
+  it("les séances passées libèrent leur créneau : l'éval avance, la numérotation reste", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      const b = buildSeances("5e", "Badminton", 4, 2, new Set(), 0, new Set([5, 6, 7]));
+      return { nums: b.list.map((x) => x.num), nominal: b.nominal, eval: b.list[b.list.length - 1].type, sem: b.list[4].semaine };
+    });
+    assert.deepEqual(r.nums, [1, 2, 3, 4, 8]);
+    assert.equal(r.nominal, 8); assert.equal(r.eval, "eval"); assert.equal(r.sem, 3);
+    await p.close();
+  });
+  it("sauterVers enregistre les séances passées et retablirSauts les remet", async () => {
+    const p = await env.page("index.html");
+    const r = await p.evaluate(() => {
+      document.body.insertAdjacentHTML("beforeend", '<select id="tsaut"><option value="8" selected>8</option></select>');
+      sauterVers("K", 5, "tsaut"); const a = [...getSauts("K")]; retablirSauts("K"); return [a, [...getSauts("K")]];
+    });
+    assert.deepEqual(r[0], [5, 6, 7]); assert.deepEqual(r[1], []);
+    await p.close();
+  });
+});
