@@ -693,7 +693,10 @@ function checkReady(sid, cyc) {
   const btn=document.getElementById(`${sid}-${cyc}-valider`);
   if(btn) btn.disabled=!(prenomOk&&allFilled);
   const ban=document.getElementById(`${sid}-${cyc}-adapte`);
-  if(ban) ban.hidden=!estAdapte(cyc, resoudrePrenom(cyc, document.getElementById(`${sid}-${cyc}-prenom`)?.value));
+  const ada=estAdapte(cyc, resoudrePrenom(cyc, document.getElementById(`${sid}-${cyc}-prenom`)?.value));
+  if(ban){ ban.hidden=!ada; const sp=ADAPTE_SPEC[sid+'|'+cyc]; ban.innerHTML='♿ Barème adapté pour cet élève (PAI/PAP)'+(ada&&sp?'<br><span style="font-weight:600">'+sp.banniere+'</span>':''); }
+  const sp=ADAPTE_SPEC[sid+'|'+cyc];
+  if(sp) Object.keys(sp.hints).forEach(function(cid){ var h=document.getElementById(`${sid}-${cyc}-hint-${cid}`); if(h){ if(h.dataset.orig===undefined) h.dataset.orig=h.textContent; h.textContent=ada?sp.hints[cid]:h.dataset.orig; } });
   ['abs','nn'].forEach(function(k){ var b=document.getElementById(sid+'-'+cyc+'-'+k); if(b) b.disabled=!prenomOk; });
 }
 // Numéro dans la liste de la classe : « 7 » → 7e élève de la liste (son nom si la liste est remplie, sinon « Élève 7 »).
@@ -982,6 +985,16 @@ function anneeCourante(){
 function getListeEleves(cl){
   try{const y=anneeCourante();if(!y)return [];return (JSON.parse(localStorage.getItem('eleves-'+y)||'{}')[cl])||[];}catch(e){return [];}
 }
+// Barème adapté (PAI/PAP) : consignes affichées à la place des consignes normales pour l'élève marqué « adapté ».
+const ADAPTE_SPEC={
+  'course-longue|c3':{
+    banniere:'Course de 12 min au lieu de 15 : 12 min = 15 min (6 pts).',
+    hints:{
+      duree:'ADAPTÉ : 12 min max au lieu de 15. 12 min = 6 pts · 10–11 min = 5 · 8–9 min = 4 · 5–7 min = 3 · 3–4 min = 2 · 0–2 min = 1.',
+      projet:'ADAPTÉ : durée cible annoncée sur 12 min maximum — même calcul d\'écart (≤ 1 min = 5 pts … > 4 min = 1 pt).'
+    }
+  }
+};
 function estAdapte(cyc, prenom){
   try{ const y=anneeCourante(); if(!y||!prenom) return false;
     const a=(JSON.parse(localStorage.getItem('adapte-'+y)||'{}')[clDeCyc(cyc)])||[]; return a.indexOf(prenom)>=0; }catch(e){ return false; }

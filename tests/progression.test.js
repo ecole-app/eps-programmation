@@ -581,3 +581,18 @@ describe("Passer des séances (semaine d'évaluation)", () => {
     await p.close();
   });
 });
+
+describe("Course longue 6e : élève adapté (PAP) court 12 min", () => {
+  it("la consigne de durée passe à 12 min pour un élève adapté, et revient pour les autres", async () => {
+    const p = await env.page("baremes.html");
+    const r = await p.evaluate(() => {
+      localStorage.setItem("eps-v2", JSON.stringify({ currentYear: "2026-2027" }));
+      localStorage.setItem("adapte-2026-2027", JSON.stringify({ "6e": ["Karim"] }));
+      const i = document.getElementById("course-longue-c3-prenom"), h = () => document.getElementById("course-longue-c3-hint-duree").textContent;
+      i.value = "Karim"; checkReady("course-longue", "c3"); const a = h();
+      i.value = "Zoe"; checkReady("course-longue", "c3"); return [a, h()];
+    });
+    assert.match(r[0], /12 min max au lieu de 15/); assert.match(r[1], /15 min maximum/);
+    await p.close();
+  });
+});
