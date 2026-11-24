@@ -2,7 +2,7 @@
 // Pages du site : réseau d'abord (toujours la dernière version en ligne), copie locale si pas de réseau.
 // Polices et scripts Firebase : copie locale d'abord, mise à jour en arrière-plan.
 // Le nom du cache est propre à ce site : les autres applis du domaine (ASMB…) ne sont jamais touchées.
-const CACHE = 'eps-programmation-v20';
+const CACHE = 'eps-programmation-v21';
 const BASE = new URL('./', self.location).pathname;
 const FICHIERS = ['./', 'index.html', 'baremes.html', 'cantine.html', 'baremes-data.js', 'situations-data.js', 'fiche-suivi.js', 'relais.js', 'basket.js', 'badminton.js', 'suivi-oublis.js', 'docs-files/Fiche-suivi-renforcement-3e.pdf', 'docs-files/Carte-orientation-Parc-de-Meons.pdf', 'docs-files/Carte-Meons-balises-cachees.pdf', 'docs-files/Gymnase-grille-72-parcours.pdf', 'appreciations.html', 'appreciations-ia.html',
   'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/logo-luqman.png'];

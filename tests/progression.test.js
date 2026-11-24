@@ -596,3 +596,23 @@ describe("Course longue 6e : élève adapté (PAP) court 12 min", () => {
     await p.close();
   });
 });
+
+describe("Barèmes : menu déroulant des élèves", () => {
+  it("liste la classe (♿ pour les adaptés) et remplit le prénom au choix", async () => {
+    const p = await env.page("baremes.html");
+    await p.evaluate(() => {
+      localStorage.setItem("eps-v2", JSON.stringify({ currentYear: "2026-2027" }));
+      localStorage.setItem("eleves-2026-2027", JSON.stringify({ "6e": ["Zakarya", "Karim", "Lina"] }));
+      localStorage.setItem("adapte-2026-2027", JSON.stringify({ "6e": ["Karim"] }));
+    });
+    await p.reload();
+    const r = await p.evaluate(() => {
+      const sel = document.querySelector('select[data-sid="course-longue"][data-cyc="c3"]');
+      const opts = [...sel.options].map((o) => o.text);
+      sel.value = "Karim"; sel.dispatchEvent(new Event("change"));
+      return [opts, document.getElementById("course-longue-c3-prenom").value];
+    });
+    assert.equal(r[0][2], "2. Karim ♿"); assert.equal(r[1], "Karim");
+    await p.close();
+  });
+});

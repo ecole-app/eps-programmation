@@ -541,6 +541,7 @@ function buildPanelHTML(s) {
             placeholder="ex : Karim ou 7" autocomplete="off" list="${s.id}-${cyc}-noms"
             oninput="checkReady('${s.id}','${cyc}')"/>
           <datalist id="${s.id}-${cyc}-noms" data-cyc="${cyc}"></datalist>
+          <select class="eleve-select" data-sid="${s.id}" data-cyc="${cyc}" onchange="choisirEleve('${s.id}','${cyc}',this.value)" style="width:100%;margin-top:8px;padding:10px;font-size:1rem;border-radius:10px;border:1.5px solid var(--border,#ddd);background:#fff"></select>
           <div id="${s.id}-${cyc}-adapte" hidden style="margin-top:8px;background:rgba(217,138,0,.16);color:#8a5200;border-radius:9px;padding:8px 11px;font-size:.82rem;font-weight:700">♿ Barème adapté pour cet élève (PAI/PAP)</div>
           ${saisieCriteres}
           <div class="divider"></div>
@@ -744,6 +745,7 @@ function valider(sid, cyc) {
   saveNotes();
   showToast(prenom+' enregistré ✓');
   resetSport(sid, cyc);
+  remplirNoms();
   refreshHomeCard(sid);
 }
 
@@ -1034,6 +1036,18 @@ function remplirNoms(){
     (cyc==='c3'?['6e']:[currentClasse]).forEach(cl=>getListeEleves(cl).forEach(n=>{h+='<option value="'+n.replace(/"/g,'&quot;')+'" label="'+cl+'">';}));
     dl.innerHTML=h;
   });
+  document.querySelectorAll('select.eleve-select').forEach(sel=>{
+    const sid=sel.dataset.sid, cyc=sel.dataset.cyc, cl=cyc==='c3'?'6e':currentClasse;
+    const faits=new Set(((state[sid]&&state[sid][cyc]&&state[sid][cyc].eleves)||[]).map(e=>e.prenom));
+    const liste=getListeEleves(cl);
+    let h='<option value="">'+(liste.length?'▾ Choisir un élève ('+liste.filter(n=>!faits.has(n)).length+' restant'+(liste.filter(n=>!faits.has(n)).length>1?'s':'')+')':'Aucun élève dans la liste « Élèves »')+'</option>';
+    liste.forEach((n,i)=>{ h+='<option value="'+n.replace(/"/g,'&quot;')+'">'+(faits.has(n)?'✓ ':'')+(i+1)+'. '+n+(estAdapte(cyc,n)?' ♿':'')+'</option>'; });
+    sel.innerHTML=h; sel.style.display=liste.length?'':'none';
+  });
+}
+function choisirEleve(sid,cyc,nom){
+  const i=document.getElementById(`${sid}-${cyc}-prenom`); if(!i||!nom) return;
+  i.value=nom; checkReady(sid,cyc); i.dispatchEvent(new Event('input',{bubbles:true}));
 }
 function fichePapier(sid, cyc, cl) {
   const sport=SPORTS.find(s=>s.id===sid);
