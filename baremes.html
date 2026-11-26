@@ -64,6 +64,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* CARD */
 .card{background:var(--white);border-radius:14px;padding:22px 18px;width:100%;box-shadow:0 2px 12px rgba(14,124,123,.08);margin-bottom:12px}
 .field-lbl{display:block;font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
+.eleve-nav{display:flex;gap:8px;align-items:stretch;margin-bottom:18px}
+.eleve-nav .eleve-select{flex:1;min-width:0;font-family:'DM Sans',sans-serif;font-size:1.05rem;font-weight:600;padding:10px 12px;border:2px solid var(--gray);border-radius:10px;color:var(--text);background:var(--bg);outline:none}
+.eleve-nav .eleve-select:focus{border-color:var(--teal)}
+.eleve-pas{flex:0 0 46px;border:none;border-radius:10px;background:var(--teal-l);color:var(--teal);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .13s,transform .1s}
+.eleve-pas:hover,.eleve-pas:active{background:var(--teal);color:#fff}
+.eleve-pas:active{transform:scale(.94)}
+.eleve-pas svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 .prenom-input{width:100%;font-family:'DM Sans',sans-serif;font-size:1.1rem;font-weight:600;padding:10px 13px;border:2px solid var(--gray);border-radius:10px;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;margin-bottom:20px}
 .prenom-input:focus{border-color:var(--teal);background:var(--white)}
 
@@ -537,7 +544,7 @@ function buildPanelHTML(s) {
       <div id="${s.id}-${cyc}-saisie">
         <div class="card">
           <label class="field-lbl" for="${s.id}-${cyc}-prenom">Prénom de l'élève <span style="font-weight:400;color:var(--muted,#888)">(ou son n° dans la liste, ex : 7)</span></label>
-          <div class="eleve-nav" style="display:flex;gap:6px;margin-bottom:8px"><button type="button" onclick="elevePas('${s.id}','${cyc}',-1)" aria-label="Élève précédent" style="flex:0 0 52px;font-size:1.3rem;border:1.5px solid var(--border,#ddd);background:#fff;border-radius:10px;cursor:pointer">◀</button><select class="eleve-select" data-sid="${s.id}" data-cyc="${cyc}" onchange="choisirEleve('${s.id}','${cyc}',this.value)" style="flex:1;min-width:0;padding:10px;font-size:1rem;border-radius:10px;border:1.5px solid var(--border,#ddd);background:#fff"></select><button type="button" onclick="elevePas('${s.id}','${cyc}',1)" aria-label="Élève suivant" style="flex:0 0 52px;font-size:1.3rem;border:1.5px solid var(--border,#ddd);background:#fff;border-radius:10px;cursor:pointer">▶</button></div>
+          <div class="eleve-nav"><button type="button" class="eleve-pas" onclick="elevePas('${s.id}','${cyc}',-1)" aria-label="Élève précédent"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><select class="eleve-select" data-sid="${s.id}" data-cyc="${cyc}" onchange="choisirEleve('${s.id}','${cyc}',this.value)"></select><button type="button" class="eleve-pas" onclick="elevePas('${s.id}','${cyc}',1)" aria-label="Élève suivant"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></div>
           <input class="prenom-input" type="text" id="${s.id}-${cyc}-prenom"
             placeholder="ex : Karim ou 7" autocomplete="off" list="${s.id}-${cyc}-noms"
             oninput="checkReady('${s.id}','${cyc}')"/>
@@ -1043,7 +1050,7 @@ function remplirNoms(){
     const liste=getListeEleves(cl);
     let h='<option value="">'+(liste.length?'▾ Choisir un élève ('+liste.filter(n=>!faits.has(n)).length+' restant'+(liste.filter(n=>!faits.has(n)).length>1?'s':'')+')':'Aucun élève dans la liste « Élèves »')+'</option>';
     liste.forEach((n,i)=>{ h+='<option value="'+n.replace(/"/g,'&quot;')+'">'+(faits.has(n)?'✓ ':'')+(i+1)+'. '+n+(estAdapte(cyc,n)?' ♿':'')+'</option>'; });
-    sel.innerHTML=h; (sel.parentElement||sel).style.display=liste.length?'flex':'none';
+    sel.innerHTML=h; (sel.parentElement||sel).style.display=liste.length?'':'none';
     const inp=document.getElementById(`${sid}-${cyc}-prenom`); if(inp) inp.style.display=liste.length?'none':'';
   });
 }
