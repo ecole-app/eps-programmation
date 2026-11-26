@@ -669,3 +669,23 @@ describe("Barèmes : notes gardées en changeant d'élève, 2e appui = retirer l
     await p.close();
   });
 });
+
+describe("Barèmes : Valider passe à l'élève suivant", () => {
+  it("enregistre puis sélectionne le suivant", async () => {
+    const p = await env.page("baremes.html");
+    await p.evaluate(() => {
+      localStorage.setItem("eps-v2", JSON.stringify({ currentYear: "2026-2027" }));
+      localStorage.setItem("eleves-2026-2027", JSON.stringify({ "6e": ["Zakarya", "Karim", "Lina"] }));
+    });
+    await p.reload();
+    const r = await p.evaluate(() => {
+      const S = "course-longue", C = "c3", st = state[S][C];
+      choisirEleve(S, C, "Karim"); document.querySelector(`select.eleve-select[data-sid="${S}"]`).selectedIndex = 2;
+      Object.keys(st.scores).forEach((k) => document.getElementById(`${S}-${C}-btn-${k}`).querySelectorAll(".pts-btn")[1].click());
+      valider(S, C);
+      return [st.eleves.map((e) => e.prenom), document.getElementById(`${S}-${C}-prenom`).value];
+    });
+    assert.deepEqual(r[0], ["Karim"]); assert.equal(r[1], "Lina");
+    await p.close();
+  });
+});

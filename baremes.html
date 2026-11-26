@@ -760,6 +760,12 @@ function valider(sid, cyc) {
   showToast(prenom+' enregistré ✓');
   resetSport(sid, cyc);
   remplirNoms();
+  // Après validation : on passe directement à l'élève suivant de la liste (retour au début en fin de liste).
+  const sel=document.querySelector(`select.eleve-select[data-sid="${sid}"][data-cyc="${cyc}"]`);
+  if(sel && sel.options.length>2){
+    const pos=[...sel.options].findIndex(o=>o.value===prenom), n=sel.options.length-1;
+    if(pos>0){ const nx=(pos%n)+1; sel.selectedIndex=nx; sel.dataset.last=nx; choisirEleve(sid,cyc,sel.value); }
+  }
   refreshHomeCard(sid);
 }
 
