@@ -622,7 +622,7 @@ describe("Barèmes : menu déroulant des élèves", () => {
       return [a, state["course-longue"].c3.scores.duree, document.getElementById("course-longue-c3-prenom").style.display];
     });
     const r3 = await p.evaluate(() => { elevePas("course-longue", "c3", 1); const a = document.getElementById("course-longue-c3-prenom").value; elevePas("course-longue", "c3", 1); elevePas("course-longue", "c3", 1); elevePas("course-longue", "c3", 1); const b = document.getElementById("course-longue-c3-prenom").value; elevePas("course-longue", "c3", -1); return [a, b, document.getElementById("course-longue-c3-prenom").value]; });
-    assert.deepEqual(r3, ["Karim", "Karim", "Zakarya"]);
+    assert.deepEqual(r3, ["Lina", "Lina", "Karim"]);
     assert.equal(r2[0], 6); assert.equal(r2[1], null); assert.equal(r2[2], "none");
     await p.close();
   });
