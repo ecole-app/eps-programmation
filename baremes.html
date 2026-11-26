@@ -537,7 +537,7 @@ function buildPanelHTML(s) {
       <div id="${s.id}-${cyc}-saisie">
         <div class="card">
           <label class="field-lbl" for="${s.id}-${cyc}-prenom">Prénom de l'élève <span style="font-weight:400;color:var(--muted,#888)">(ou son n° dans la liste, ex : 7)</span></label>
-          <select class="eleve-select" data-sid="${s.id}" data-cyc="${cyc}" onchange="choisirEleve('${s.id}','${cyc}',this.value)" style="width:100%;margin-bottom:8px;padding:10px;font-size:1rem;border-radius:10px;border:1.5px solid var(--border,#ddd);background:#fff"></select>
+          <div class="eleve-nav" style="display:flex;gap:6px;margin-bottom:8px"><button type="button" onclick="elevePas('${s.id}','${cyc}',-1)" aria-label="Élève précédent" style="flex:0 0 52px;font-size:1.3rem;border:1.5px solid var(--border,#ddd);background:#fff;border-radius:10px;cursor:pointer">◀</button><select class="eleve-select" data-sid="${s.id}" data-cyc="${cyc}" onchange="choisirEleve('${s.id}','${cyc}',this.value)" style="flex:1;min-width:0;padding:10px;font-size:1rem;border-radius:10px;border:1.5px solid var(--border,#ddd);background:#fff"></select><button type="button" onclick="elevePas('${s.id}','${cyc}',1)" aria-label="Élève suivant" style="flex:0 0 52px;font-size:1.3rem;border:1.5px solid var(--border,#ddd);background:#fff;border-radius:10px;cursor:pointer">▶</button></div>
           <input class="prenom-input" type="text" id="${s.id}-${cyc}-prenom"
             placeholder="ex : Karim ou 7" autocomplete="off" list="${s.id}-${cyc}-noms"
             oninput="checkReady('${s.id}','${cyc}')"/>
@@ -1043,12 +1043,21 @@ function remplirNoms(){
     const liste=getListeEleves(cl);
     let h='<option value="">'+(liste.length?'▾ Choisir un élève ('+liste.filter(n=>!faits.has(n)).length+' restant'+(liste.filter(n=>!faits.has(n)).length>1?'s':'')+')':'Aucun élève dans la liste « Élèves »')+'</option>';
     liste.forEach((n,i)=>{ h+='<option value="'+n.replace(/"/g,'&quot;')+'">'+(faits.has(n)?'✓ ':'')+(i+1)+'. '+n+(estAdapte(cyc,n)?' ♿':'')+'</option>'; });
-    sel.innerHTML=h; sel.style.display=liste.length?'':'none';
+    sel.innerHTML=h; (sel.parentElement||sel).style.display=liste.length?'flex':'none';
     const inp=document.getElementById(`${sid}-${cyc}-prenom`); if(inp) inp.style.display=liste.length?'none':'';
   });
 }
+// ◀ ▶ : élève précédent / suivant dans la liste (depuis « Choisir », ▶ repart après le dernier élève consulté).
+function elevePas(sid,cyc,d){
+  const sel=document.querySelector(`select.eleve-select[data-sid="${sid}"][data-cyc="${cyc}"]`); if(!sel) return;
+  const n=sel.options.length-1; if(n<1) return;
+  let i=sel.selectedIndex>0?sel.selectedIndex:(+sel.dataset.last||(d>0?0:n+1));
+  i=((i-1+d+n)%n)+1;
+  sel.selectedIndex=i; sel.dataset.last=i; choisirEleve(sid,cyc,sel.value);
+}
 function choisirEleve(sid,cyc,nom){
   const i=document.getElementById(`${sid}-${cyc}-prenom`); if(!i||!nom) return;
+  const sl=document.querySelector(`select.eleve-select[data-sid="${sid}"][data-cyc="${cyc}"]`); if(sl) sl.dataset.last=sl.selectedIndex;
   chargerNotes(sid,cyc,nom);
   i.value=nom; checkReady(sid,cyc);
 }
