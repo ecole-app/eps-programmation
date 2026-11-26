@@ -649,6 +649,15 @@ describe("Barèmes : notes gardées en changeant d'élève, 2e appui = retirer l
       return [vide, rechargee, st.scores[ids[0]]];
     });
     assert.equal(r[0], null); assert.equal(r[1], 3); assert.equal(r[2], null);
+    const r3 = await p.evaluate(() => {
+      const S = "course-longue", C = "c3", st = state[S][C], k = Object.keys(st.scores)[0];
+      choisirEleve(S, C, "Karim"); choisirEleve(S, C, "Zakarya"); // Zakarya sans note : absent de la liste
+      const sans = st.eleves.some((e) => e.prenom === "Zakarya");
+      document.getElementById(`${S}-${C}-btn-${k}`).querySelectorAll(".pts-btn")[4].click();
+      choisirEleve(S, C, "Karim");
+      return [sans, st.eleves.some((e) => e.prenom === "Zakarya")];
+    });
+    assert.deepEqual(r3, [false, true]);
     const r2 = await p.evaluate(() => {
       const S = "course-longue", C = "c3", st = state[S][C];
       choisirEleve(S, C, "Zakarya");
