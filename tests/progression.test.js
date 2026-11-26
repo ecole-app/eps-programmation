@@ -627,3 +627,36 @@ describe("Barèmes : menu déroulant des élèves", () => {
     await p.close();
   });
 });
+
+describe("Barèmes : notes gardées en changeant d'élève, 2e appui = retirer la note", () => {
+  it("garde, retire et recharge", async () => {
+    const p = await env.page("baremes.html");
+    await p.evaluate(() => {
+      localStorage.setItem("eps-v2", JSON.stringify({ currentYear: "2026-2027" }));
+      localStorage.setItem("eleves-2026-2027", JSON.stringify({ "6e": ["Zakarya", "Karim"] }));
+    });
+    await p.reload();
+    const r = await p.evaluate(() => {
+      const S = "course-longue", C = "c3", st = state[S][C], ids = Object.keys(st.scores);
+      const clic = (k, i) => document.getElementById(`${S}-${C}-btn-${k}`).querySelectorAll(".pts-btn")[i].click();
+      choisirEleve(S, C, "Zakarya");
+      clic(ids[0], 3);                       // note partielle
+      choisirEleve(S, C, "Karim");           // change : brouillon gardé
+      const vide = st.scores[ids[0]];
+      choisirEleve(S, C, "Zakarya");         // revient : note rechargée
+      const rechargee = st.scores[ids[0]];
+      clic(ids[0], 3);                       // 2e appui : retire
+      return [vide, rechargee, st.scores[ids[0]]];
+    });
+    assert.equal(r[0], null); assert.equal(r[1], 3); assert.equal(r[2], null);
+    const r2 = await p.evaluate(() => {
+      const S = "course-longue", C = "c3", st = state[S][C];
+      choisirEleve(S, C, "Zakarya");
+      Object.keys(st.scores).forEach((k, n) => document.getElementById(`${S}-${C}-btn-${k}`).querySelectorAll(".pts-btn")[2].click());
+      choisirEleve(S, C, "Karim");
+      return st.eleves.map((e) => e.prenom + ":" + e.total);
+    });
+    assert.equal(r2.length, 1); assert.match(r2[0], /^Zakarya:/);
+    await p.close();
+  });
+});

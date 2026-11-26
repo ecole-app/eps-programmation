@@ -652,7 +652,9 @@ function mkBtns(cid, max, key, scObj, cb) {
     const b=document.createElement('button');
     b.className='pts-btn'; b.textContent=i;
     b.onclick=()=>{
+      const deja=b.classList.contains('sel');
       c.querySelectorAll('.pts-btn').forEach(x=>x.classList.remove('sel'));
+      if(deja){ scObj[key]=null; if(cb)cb(); return; } // 2e appui sur la note choisie : on l'enlève
       b.classList.add('sel'); scObj[key]=i; if(cb)cb();
     };
     c.appendChild(b);
@@ -660,7 +662,9 @@ function mkBtns(cid, max, key, scObj, cb) {
   const na=document.createElement('button');
   na.className='pts-btn pts-na'; na.textContent='NE'; na.title='Non évalué (retiré du calcul)';
   na.onclick=()=>{
+    const deja=na.classList.contains('sel');
     c.querySelectorAll('.pts-btn').forEach(x=>x.classList.remove('sel'));
+    if(deja){ scObj[key]=null; if(cb)cb(); return; }
     na.classList.add('sel'); scObj[key]='na'; if(cb)cb();
   };
   c.appendChild(na);
@@ -686,6 +690,8 @@ function updateTotal(sport, cyc) {
     const t=computeTotal(sport[cyc].criteres,sc);
     const mxT=maxTotal(sport[cyc].criteres);
     document.getElementById(`${sport.id}-${cyc}-total`).innerHTML=t+`<span> / ${mxT}</span>`;
+  } else {
+    document.getElementById(`${sport.id}-${cyc}-total`).innerHTML=`—<span> / ${maxTotal(sport[cyc].criteres)}</span>`;
   }
   checkReady(sport.id, cyc);
 }
@@ -1062,16 +1068,35 @@ function elevePas(sid,cyc,d){
   i=((i-1+d+n)%n)+1;
   sel.selectedIndex=i; sel.dataset.last=i; choisirEleve(sid,cyc,sel.value);
 }
+// En changeant d'élève, les notes en cours sont gardées : enregistrées si tout est rempli, sinon mises de côté (brouillon).
+const brouillons={};
+function sauverCourant(sid,cyc){
+  const sport=SPORTS.find(x=>x.id===sid); if(!sport) return;
+  const inp=document.getElementById(`${sid}-${cyc}-prenom`); const prenom=resoudrePrenom(cyc,inp?inp.value:''); if(!prenom) return;
+  const sc=state[sid][cyc].scores, cles=Object.keys(sc), bk=sid+'|'+cyc;
+  brouillons[bk]=brouillons[bk]||{};
+  const rempli=cles.filter(k=>sc[k]!==null).length;
+  const eleves=state[sid][cyc].eleves, ex=eleves.findIndex(x=>x.prenom===prenom);
+  if(rempli===cles.length){
+    const copie={...sc}, total=computeTotal(sport[cyc].criteres,copie), max=maxTotal(sport[cyc].criteres);
+    const e={prenom,scores:copie,total,max};
+    if(ex>=0) eleves[ex]=e; else eleves.push(e);
+    delete brouillons[bk][prenom];
+    renderListe(sid,cyc); saveNotes(); refreshHomeCard(sid);
+  } else if(rempli>0){ brouillons[bk][prenom]={...sc}; if(ex>=0){ eleves.splice(ex,1); renderListe(sid,cyc); saveNotes(); refreshHomeCard(sid); } }
+  else { delete brouillons[bk][prenom]; if(ex>=0){ eleves.splice(ex,1); renderListe(sid,cyc); saveNotes(); refreshHomeCard(sid); } }
+}
 function choisirEleve(sid,cyc,nom){
   const i=document.getElementById(`${sid}-${cyc}-prenom`); if(!i||!nom) return;
   const sl=document.querySelector(`select.eleve-select[data-sid="${sid}"][data-cyc="${cyc}"]`); if(sl) sl.dataset.last=sl.selectedIndex;
+  sauverCourant(sid,cyc);
   chargerNotes(sid,cyc,nom);
   i.value=nom; checkReady(sid,cyc);
 }
 // Choisir un élève déjà noté recharge ses notes dans la grille (modifiables, re-validées = remplacées).
 function chargerNotes(sid,cyc,nom){
   const sport=SPORTS.find(x=>x.id===sid); if(!sport) return;
-  const e=state[sid][cyc].eleves.find(x=>x.prenom===nom);
+  const e=state[sid][cyc].eleves.find(x=>x.prenom===nom) || (brouillons[sid+'|'+cyc]&&brouillons[sid+'|'+cyc][nom]?{scores:brouillons[sid+'|'+cyc][nom]}:null);
   const sc=state[sid][cyc].scores;
   Object.keys(sc).forEach(k=>{ sc[k]=null; });
   document.getElementById(`${sid}-${cyc}-block`).querySelectorAll('.pts-btn').forEach(b=>b.classList.remove('sel'));
