@@ -71,6 +71,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .eleve-pas:hover,.eleve-pas:active{background:var(--teal);color:#fff}
 .eleve-pas:active{transform:scale(.94)}
 .eleve-pas svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.auto-row{display:flex;align-items:center;gap:10px;margin:2px 0 10px}
+.auto-row input{width:130px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;padding:8px 10px;border:2px solid var(--gray);border-radius:10px;background:var(--bg);color:var(--text);outline:none}
+.auto-row input:focus{border-color:var(--teal)}
+.auto-res{font-size:.82rem;font-weight:700;color:var(--teal-d)}
+.auto-res small{display:block;font-weight:600;color:#8a5200}
 .prenom-input{width:100%;font-family:'DM Sans',sans-serif;font-size:1.1rem;font-weight:600;padding:10px 13px;border:2px solid var(--gray);border-radius:10px;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;margin-bottom:20px}
 .prenom-input:focus{border-color:var(--teal);background:var(--white)}
 
@@ -234,6 +239,7 @@ tr:last-child td{border-bottom:none}
 <div class="toast" id="toast"></div>
 
 <script src="baremes-data.js"></script>
+<script src="bareme-auto.js"></script>
 <script src="fiche-suivi.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════
@@ -532,6 +538,7 @@ function buildPanelHTML(s) {
             <span class="critere-max">/ ${c.max} pts</span>
           </div>
           <p class="critere-hint" id="${s.id}-${cyc}-hint-${c.id}">${c.hint||''}</p>
+          ${(()=>{const t=window.BaremeAuto&&BaremeAuto.tableau(s.id,c); return t?`<div class="auto-row"><input type="number" inputmode="decimal" step="any" min="0" id="${s.id}-${cyc}-mes-${c.id}" placeholder="Mesure (${t.unite||'valeur'})" oninput="autoNote('${s.id}','${cyc}','${c.id}',this.value)"><span class="auto-res" id="${s.id}-${cyc}-res-${c.id}"></span></div>`:'';})()}
           ${c.terrains?`<div class="terrains" data-sid="${s.id}" data-cyc="${cyc}" data-cid="${c.id}"></div>`:''}
           <div class="pts-row" id="${s.id}-${cyc}-btn-${c.id}"></div>
         </div>`;
@@ -708,7 +715,7 @@ function checkReady(sid, cyc) {
   if(btn) btn.disabled=!(prenomOk&&allFilled);
   const ban=document.getElementById(`${sid}-${cyc}-adapte`);
   const ada=estAdapte(cyc, resoudrePrenom(cyc, document.getElementById(`${sid}-${cyc}-prenom`)?.value));
-  if(ban){ ban.hidden=!ada; const sp=ADAPTE_SPEC[sid+'|'+cyc]; ban.innerHTML='♿ Barème adapté pour cet élève (PAI/PAP)'+(ada&&sp?'<br><span style="font-weight:600">'+sp.banniere+'</span>':''); }
+  if(ban){ ban.hidden=!ada; const sp=ADAPTE_SPEC[sid+'|'+cyc]; ban.innerHTML='♿ Barème adapté pour cet élève (PAI/PAP)'+(ada&&sp?'<br><span style="font-weight:600">'+sp.banniere+'</span>':'')+(ada?resumeAdapte(sid,cyc):''); }
   const sp=ADAPTE_SPEC[sid+'|'+cyc];
   if(sp) Object.keys(sp.hints).forEach(function(cid){ var h=document.getElementById(`${sid}-${cyc}-hint-${cid}`); if(h){ if(h.dataset.orig===undefined) h.dataset.orig=h.textContent; h.textContent=ada?sp.hints[cid]:h.dataset.orig; } });
   ['abs','nn'].forEach(function(k){ var b=document.getElementById(sid+'-'+cyc+'-'+k); if(b) b.disabled=!prenomOk; });
@@ -754,7 +761,8 @@ function valider(sid, cyc) {
   const total=computeTotal(sport[cyc].criteres, scoresCopy);
   const mxT=maxTotal(sport[cyc].criteres);
   const ex=state[sid][cyc].eleves.findIndex(x=>x.prenom===prenom);
-  if(ex>=0) state[sid][cyc].eleves[ex]={prenom, scores:scoresCopy, total, max:mxT}; else state[sid][cyc].eleves.push({prenom, scores:scoresCopy, total, max:mxT});
+  const ne={prenom, scores:scoresCopy, total, max:mxT}; if(state[sid][cyc].mesures&&Object.keys(state[sid][cyc].mesures).length) ne.mesures={...state[sid][cyc].mesures};
+  if(ex>=0) state[sid][cyc].eleves[ex]=ne; else state[sid][cyc].eleves.push(ne);
   renderListe(sid, cyc);
   saveNotes();
   showToast(prenom+' enregistré ✓');
@@ -833,6 +841,7 @@ function resetSport(sid, cyc) {
   sport[cyc].criteres.forEach(c=>{
     if(c.sous){ const el=document.getElementById(`${sid}-${cyc}-run-${c.id}`); if(el) el.textContent='0'; }
   });
+  afficherMesures(sid,cyc,{});
   const inp=document.getElementById(`${sid}-${cyc}-prenom`);
   if(inp){inp.value='';inp.focus();}
   document.getElementById(`${sid}-${cyc}-valider`).disabled=true;
@@ -1007,6 +1016,14 @@ function anneeCourante(){
 function getListeEleves(cl){
   try{const y=anneeCourante();if(!y)return [];return (JSON.parse(localStorage.getItem('eleves-'+y)||'{}')[cl])||[];}catch(e){return [];}
 }
+// Critères dont la mesure est évaluée avec tolérance (−20 % sur la performance) pour un élève adapté.
+function resumeAdapte(sid,cyc){
+  try{
+    const sport=SPORTS.find(x=>x.id===sid); const L=[];
+    eff(sport,cyc).criteres.forEach(c=>{ const t=window.BaremeAuto&&BaremeAuto.tableau(sid,c); if(t&&t.adapte) L.push(c.label.replace(/^[^\wÀ-ÿ]*/,'')); });
+    return L.length?'<br><span style="font-weight:600">Tolérance sur : '+L.join(', ')+' (performance ×0,8 : 12 min comptent 15 min, temps +25 %).</span>':'';
+  }catch(e){ return ''; }
+}
 // Barème adapté (PAI/PAP) : consignes affichées à la place des consignes normales pour l'élève marqué « adapté ».
 const ADAPTE_SPEC={
   'course-longue|c3':{
@@ -1085,7 +1102,7 @@ function sauverCourant(sid,cyc){
   const eleves=state[sid][cyc].eleves, ex=eleves.findIndex(x=>x.prenom===prenom);
   if(rempli>0){ // au moins une note : l'élève reste dans la liste (même incomplet)
     const copie={...sc}, total=computeTotal(sport[cyc].criteres,copie), max=maxTotal(sport[cyc].criteres);
-    const e={prenom,scores:copie,total,max};
+    const e={prenom,scores:copie,total,max}; if(state[sid][cyc].mesures&&Object.keys(state[sid][cyc].mesures).length) e.mesures={...state[sid][cyc].mesures};
     if(ex>=0) eleves[ex]=e; else eleves.push(e);
     delete brouillons[bk][prenom];
     renderListe(sid,cyc); saveNotes(); refreshHomeCard(sid);
@@ -1098,6 +1115,38 @@ function choisirEleve(sid,cyc,nom){
   chargerNotes(sid,cyc,nom);
   i.value=nom; checkReady(sid,cyc);
 }
+// ── Note automatique : on tape la mesure, la note se déduit du barème de la classe (tolérance pour un élève adapté) ──
+function setScoreUI(sid,cyc,key,val){
+  const sc=state[sid][cyc].scores; sc[key]=val;
+  const cont=document.getElementById(`${sid}-${cyc}-btn-${key}`); if(!cont) return;
+  const btns=cont.querySelectorAll('.pts-btn'); btns.forEach(b=>b.classList.remove('sel'));
+  if(val!==null){ const b=val==='na'?btns[btns.length-1]:btns[val]; if(b) b.classList.add('sel'); }
+}
+function critAuto(sid,cyc,cid){
+  const sport=SPORTS.find(x=>x.id===sid); const c=eff(sport,cyc).criteres.find(x=>x.id===cid);
+  return c?BaremeAuto.tableau(sid,c):null;
+}
+function autoNote(sid,cyc,cid,val){
+  const st=state[sid][cyc]; st.mesures=st.mesures||{};
+  const res=document.getElementById(`${sid}-${cyc}-res-${cid}`); const t=critAuto(sid,cyc,cid); if(!t||!res) return;
+  if(String(val).trim()===''){ delete st.mesures[cid]; res.innerHTML=''; setScoreUI(sid,cyc,cid,null); updateTotal(SPORTS.find(x=>x.id===sid),cyc); return; }
+  const ada=estAdapte(cyc, resoudrePrenom(cyc, document.getElementById(`${sid}-${cyc}-prenom`)?.value));
+  const r=BaremeAuto.points(t,val,ada); if(!r) return;
+  st.mesures[cid]=String(val);
+  const crit=eff(SPORTS.find(x=>x.id===sid),cyc).criteres.find(x=>x.id===cid);
+  const pts=Math.min(r.pts,crit.max);
+  setScoreUI(sid,cyc,cid,pts); updateTotal(SPORTS.find(x=>x.id===sid),cyc);
+  res.innerHTML='→ '+pts+' pt'+(pts>1?'s':'')+((ada&&t.adapte)?'<small>♿ tolérance : '+val+' '+(t.unite||'')+' compté'+' '+(Math.round(r.equiv*10)/10)+'</small>':'');
+}
+function afficherMesures(sid,cyc,mes){
+  document.querySelectorAll(`#${sid}-${cyc}-block .auto-row input`).forEach(i=>{ i.value=''; });
+  document.querySelectorAll(`#${sid}-${cyc}-block .auto-res`).forEach(r=>{ r.innerHTML=''; });
+  state[sid][cyc].mesures={...(mes||{})};
+  Object.keys(mes||{}).forEach(cid=>{
+    const i=document.getElementById(`${sid}-${cyc}-mes-${cid}`), r=document.getElementById(`${sid}-${cyc}-res-${cid}`); if(!i) return;
+    i.value=mes[cid]; const v=state[sid][cyc].scores[cid]; if(r&&v!==null&&v!==undefined) r.innerHTML='→ '+v+' pt'+(v>1?'s':'');
+  });
+}
 // Choisir un élève déjà noté recharge ses notes dans la grille (modifiables, re-validées = remplacées).
 function chargerNotes(sid,cyc,nom){
   const sport=SPORTS.find(x=>x.id===sid); if(!sport) return;
@@ -1105,13 +1154,14 @@ function chargerNotes(sid,cyc,nom){
   const sc=state[sid][cyc].scores;
   Object.keys(sc).forEach(k=>{ sc[k]=null; });
   document.getElementById(`${sid}-${cyc}-block`).querySelectorAll('.pts-btn').forEach(b=>b.classList.remove('sel'));
-  if(!e){ document.getElementById(`${sid}-${cyc}-total`).innerHTML='—<span> / '+maxTotal(sport[cyc].criteres)+'</span>'; return; }
+  if(!e){ afficherMesures(sid,cyc,{}); document.getElementById(`${sid}-${cyc}-total`).innerHTML='—<span> / '+maxTotal(sport[cyc].criteres)+'</span>'; return; }
   Object.keys(e.scores).forEach(k=>{
     const v=e.scores[k]; if(!(k in sc)||v===null||v===undefined) return;
     sc[k]=v;
     const cont=document.getElementById(`${sid}-${cyc}-btn-${k}`); if(!cont) return;
     const btns=cont.querySelectorAll('.pts-btn'); const b=v==='na'?btns[btns.length-1]:btns[v]; if(b) b.classList.add('sel');
   });
+  afficherMesures(sid,cyc,e.mesures);
   updateTotal(sport,cyc);
 }
 function fichePapier(sid, cyc, cl) {

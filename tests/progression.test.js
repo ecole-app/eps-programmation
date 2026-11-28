@@ -689,3 +689,64 @@ describe("Barèmes : Valider passe à l'élève suivant", () => {
     await p.close();
   });
 });
+
+describe("Note automatique (mesure → note) et tolérance PAI/PAP", () => {
+  it("tous les critères mesurables des 15 sports sont lisibles et donnent des notes cohérentes", async () => {
+    const p = await env.page("baremes.html");
+    const r = await p.evaluate(() => {
+      const bad = [], n = { total: 0 };
+      SPORTS.forEach((s) => [["6e", "c3"], ["5e", "c4"], ["4e", "c4"], ["3e", "c4"]].forEach(([cl, cyc]) => {
+        const cd = baremeNiveau(s, cl) || s[cyc]; if (!cd) return;
+        (cd.criteres || []).forEach((c) => {
+          const t = BaremeAuto.tableau(s.id, c); if (!t) return; n.total++;
+          const mx = Math.max(...t.lignes.map((l) => l.ptsMax));
+          if (mx > c.max) bad.push(s.id + cl + c.id + " pts>max");
+          // chaque ligne : sa valeur représentative redonne ses points (bas de la fourchette)
+          t.lignes.forEach((l) => { const v = isFinite(l.lo) && isFinite(l.hi) ? (l.lo + l.hi) / 2 : isFinite(l.lo) ? l.lo + (l.loS ? 0.01 : 0) : l.hi - (l.hiS ? 0.01 : 0);
+            const g = BaremeAuto.points(t, v, false); if (!g || g.pts < l.pts - 1e-9 || g.pts > l.ptsMax + 1e-9) bad.push(s.id + cl + c.id + " @" + v + " → " + (g && g.pts) + " attendu " + l.pts); });
+        });
+      }));
+      return { bad, total: n.total };
+    });
+    assert.deepEqual(r.bad, []); assert.ok(r.total >= 60, "critères automatisés : " + r.total);
+    await p.close();
+  });
+  it("exemples : sprint, course longue 6e, tolérance adaptée", async () => {
+    const p = await env.page("baremes.html");
+    const r = await p.evaluate(() => {
+      const crit = (sid, cl, cyc, id) => (baremeNiveau(SPORTS.find((s) => s.id === sid), cl) || SPORTS.find((s) => s.id === sid)[cyc]).criteres.find((c) => c.id === id);
+      const T = (sid, cl, cyc, id) => BaremeAuto.tableau(sid, crit(sid, cl, cyc, id));
+      return [
+        BaremeAuto.points(T("sprint", "6e", "c3", "perf"), 6.8, false).pts,
+        BaremeAuto.points(T("course-longue", "6e", "c3", "duree"), 14.7, false).pts,
+        BaremeAuto.points(T("course-longue", "6e", "c3", "duree"), 12, true).pts,
+        BaremeAuto.points(T("course-longue", "6e", "c3", "duree"), 12, false).pts,
+        BaremeAuto.points(T("sprint", "6e", "c3", "perf"), 7.5, true).pts,
+        BaremeAuto.points(T("sprint", "6e", "c3", "perf"), 7.5, false).pts,
+        BaremeAuto.points(T("basket", "6e", "c3", "regles"), 2, true).pts,
+        BaremeAuto.points(T("basket", "6e", "c3", "perf"), 4, false).pts,
+      ];
+    });
+    assert.deepEqual(r, [6, 5, 6, 5, 7, 5, 3, 3]);
+    await p.close();
+  });
+  it("saisir une mesure remplit la note, et la mesure est gardée avec l'élève", async () => {
+    const p = await env.page("baremes.html");
+    await p.evaluate(() => {
+      localStorage.setItem("eps-v2", JSON.stringify({ currentYear: "2026-2027" }));
+      localStorage.setItem("eleves-2026-2027", JSON.stringify({ "6e": ["Zakarya", "Karim"] }));
+      localStorage.setItem("adapte-2026-2027", JSON.stringify({ "6e": ["Karim"] }));
+    });
+    await p.reload();
+    const r = await p.evaluate(() => {
+      const S = "course-longue", C = "c3", st = state[S][C];
+      const saisir = (v) => { const i = document.getElementById(`${S}-${C}-mes-duree`); i.value = v; i.dispatchEvent(new Event("input")); };
+      choisirEleve(S, C, "Zakarya"); saisir("12"); const a = st.scores.duree;
+      choisirEleve(S, C, "Karim"); saisir("12"); const b = st.scores.duree;
+      choisirEleve(S, C, "Zakarya");
+      return [a, b, document.getElementById(`${S}-${C}-mes-duree`).value, st.scores.duree];
+    });
+    assert.deepEqual(r, [5, 6, "12", 5]);
+    await p.close();
+  });
+});
